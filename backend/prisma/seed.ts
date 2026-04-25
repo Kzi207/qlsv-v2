@@ -13,17 +13,22 @@ async function main() {
       username: 'admin',
       password: hashedPassword,
       name: 'System Admin',
+      role: 'QTV'
     },
   });
 
   console.log({ admin });
 
-  // Create Class first
+  // Create Class first and link to major
+  const cdtMajor = await prisma.major.findUnique({ where: { code: 'CDT' } });
   const className = 'CNCD2511';
   await prisma.class.upsert({
     where: { name: className },
-    update: {},
-    create: { name: className },
+    update: { majorId: cdtMajor?.id },
+    create: { 
+      name: className,
+      majorId: cdtMajor?.id
+    },
   });
 
   const student = await prisma.student.upsert({

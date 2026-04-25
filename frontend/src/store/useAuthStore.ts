@@ -1,14 +1,29 @@
 import { create } from 'zustand';
 import api from '../api/axios';
 
+interface Student {
+  id: number;
+  mssv: string;
+  name: string;
+  birthday?: string;
+  gender?: string;
+  id_card?: string;
+  hometown?: string;
+  address?: string;
+  phone?: string;
+  class_id?: string;
+}
+
 interface User {
   id: number;
   username: string;
   name: string;
   email?: string | null;
-  role: 'ADMIN' | 'BCH' | 'STUDENT';
+  role: 'QTV' | 'LECTURER' | 'BCH' | 'STUDENT';
   studentId?: number | null;
   class_id?: string | null;
+  phone?: string | null;
+  student?: Student | null;
 }
 
 interface AuthState {

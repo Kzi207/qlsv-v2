@@ -36,3 +36,7 @@ export const roleMiddleware = (roles: string[]) => {
     next();
   };
 };
+
+// Backward-compatible aliases for legacy route files.
+export const protect = authMiddleware;
+export const admin = roleMiddleware(['QTV', 'BCH']);

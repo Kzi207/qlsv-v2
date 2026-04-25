@@ -3,6 +3,7 @@ import { Users, CalendarCheck, Award, ClipboardList, TrendingUp, BookOpen } from
 import { motion } from 'framer-motion';
 import api from '../api/axios';
 import { Link } from 'react-router-dom';
+import { useAuthStore } from '../store/useAuthStore';
 
 const StatCard = ({ title, value, icon: Icon, color, delay, to }: any) => (
   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }}
@@ -32,24 +33,32 @@ const Dashboard = () => {
     activeSessions: 0,
   });
 
+  const { user } = useAuthStore();
+  const role = user?.role?.toUpperCase();
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [studentRes, scoreRes, sessionRes] = await Promise.all([
-          api.get('/students'),
-          api.get('/training?status=PENDING'),
-          api.get('/attendance/sessions/active'),
-        ]);
+        const isAdmin = role === 'QTV' || role === 'BCH';
+        
+        const requests = [
+          isAdmin ? api.get('/students/count') : Promise.resolve({ data: { total: 0 } }),
+          isAdmin ? api.get('/training/stats') : Promise.resolve({ data: { pending: 0, approved: 0 } }),
+          isAdmin ? api.get('/attendance/sessions/active') : Promise.resolve({ data: [] }),
+        ];
+
+        const [studentRes, trainingRes, sessionRes] = await Promise.all(requests);
+        
         setStats({
-          totalStudents: studentRes.data.length,
-          pendingScores: Array.isArray(scoreRes.data) ? scoreRes.data.length : 0,
-          approvedScores: 0,
+          totalStudents: Number(studentRes.data?.total || 0),
+          pendingScores: Number(trainingRes.data?.pending || 0),
+          approvedScores: Number(trainingRes.data?.approved || 0),
           activeSessions: Array.isArray(sessionRes.data) ? sessionRes.data.length : 0,
         });
       } catch (e) { /* silent */ }
     };
-    fetchStats();
-  }, []);
+    if (role) fetchStats();
+  }, [role]);
 
   return (
     <div className="space-y-8 mt-4">

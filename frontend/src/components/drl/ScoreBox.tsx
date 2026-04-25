@@ -12,6 +12,8 @@ interface ScoreBoxProps {
   hasError?: boolean;
   errorText?: string;
   placeholder?: string;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
 const ScoreBox: React.FC<ScoreBoxProps> = ({
@@ -25,6 +27,8 @@ const ScoreBox: React.FC<ScoreBoxProps> = ({
   hasError,
   errorText,
   placeholder = '',
+  onFocus,
+  onBlur,
 }) => {
   const hasValue = value !== undefined && value !== null;
 
@@ -48,6 +52,8 @@ const ScoreBox: React.FC<ScoreBoxProps> = ({
             min={0}
             max={max}
             placeholder={placeholder}
+            onFocus={onFocus}
+            onBlur={onBlur}
             onChange={(e) => onChange?.(e.target.value === '' ? undefined : Number(e.target.value))}
             className="w-10 md:w-12 bg-transparent text-center text-xl md:text-2xl font-black text-blue-600 transition-colors placeholder:text-slate-200 focus:outline-none"
           />

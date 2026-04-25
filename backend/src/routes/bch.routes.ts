@@ -14,7 +14,7 @@ const router = Router();
 
 // Only ADMIN can manage BCH accounts and assignments
 router.use(authMiddleware);
-router.use(roleMiddleware(['ADMIN']));
+router.use(roleMiddleware(['QTV']));
 
 router.post('/', createBchAccount);
 router.get('/', getBchAccounts);

@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import prisma from '../utils/prisma';
 import type { AuthRequest } from '../middleware/auth.middleware';
 import { clearAuthCookies, createCsrfToken, setAuthCookies, setCsrfCookie, getCookieValue, CSRF_COOKIE_NAME } from '../utils/security';
+import { decrypt } from '../utils/crypto';
 
 const getJwtSecret = () => process.env.JWT_SECRET || 'secret';
 
@@ -12,9 +13,20 @@ const toSafeUser = (user: any) => ({
   username: user.username,
   name: user.name,
   email: user.email,
+  phone: user.phone,
   role: String(user.role || '').toUpperCase(),
   studentId: user.studentId,
   class_id: user.class_id,
+  student: user.student ? {
+    id: user.student.id,
+    mssv: user.student.student_code,
+    birthday: decrypt(user.student.birthday),
+    gender: decrypt(user.student.gender),
+    id_card: decrypt(user.student.id_card),
+    hometown: decrypt(user.student.hometown),
+    address: decrypt(user.student.address),
+    class_id: user.student.class_id
+  } : null
 });
 
 export const login = async (req: Request, res: Response) => {
@@ -25,19 +37,27 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Username and password are required' });
     }
 
-    const users: any[] = await prisma.$queryRawUnsafe(
-      'SELECT * FROM "User" WHERE username = $1 LIMIT 1',
-      username
-    );
-    const user = users[0];
+    const user = await prisma.user.findUnique({
+      where: { username },
+      include: {
+        student: true
+      }
+    });
 
     if (!user) {
+      console.warn(`Login failed: User not found - ${username}`);
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+      console.warn(`Login failed: Password mismatch - ${username}`);
       return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    // Map student class_id if it's a student
+    if (user.student) {
+      (user as any).class_id = user.student.class_id;
     }
 
     const token = jwt.sign(
@@ -45,6 +65,7 @@ export const login = async (req: Request, res: Response) => {
         id: user.id, 
         username: user.username, 
         role: user.role, 
+        name: user.name,
         studentId: user.studentId,
         class_id: user.class_id 
       },
@@ -77,21 +98,22 @@ export const me = async (req: AuthRequest, res: Response) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: Number(req.user.id) },
-      select: {
-        id: true,
-        username: true,
-        name: true,
-        email: true,
-        role: true,
-        studentId: true,
-        class_id: true,
-      },
+      include: {
+        student: true
+      }
     });
 
     if (!user) {
       clearAuthCookies(req, res);
       return res.status(401).json({ message: 'Unauthorized' });
     }
+
+    // Map student class_id if it's a student
+    if (user.student) {
+      (user as any).class_id = user.student.class_id;
+    }
+
+    const safeUser = toSafeUser(user);
 
     let csrfToken = getCookieValue(req, CSRF_COOKIE_NAME);
     if (!csrfToken) {
@@ -100,7 +122,7 @@ export const me = async (req: AuthRequest, res: Response) => {
     }
 
     return res.json({
-      user: toSafeUser(user),
+      user: safeUser,
       csrfToken,
     });
   } catch (error) {

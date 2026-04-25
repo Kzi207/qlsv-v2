@@ -1,6 +1,8 @@
 import type { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import bcrypt from 'bcryptjs';
+import type { Prisma } from '@prisma/client';
+import { encrypt } from '../utils/crypto';
 
 const removeAccents = (str: string) => {
   return str
@@ -13,17 +15,113 @@ const removeAccents = (str: string) => {
     .toLowerCase();
 };
 
+const parsePagination = (rawPage: unknown, rawPageSize: unknown) => {
+  const page = Number(rawPage);
+  const pageSize = Number(rawPageSize);
+  const normalizedPage = Number.isFinite(page) && page > 0 ? Math.floor(page) : null;
+  const normalizedPageSize = Number.isFinite(pageSize) && pageSize > 0
+    ? Math.min(Math.floor(pageSize), 200)
+    : 20;
+
+  if (!normalizedPage) {
+    return {
+      enabled: false,
+      page: 1,
+      pageSize: normalizedPageSize,
+      skip: 0,
+      take: normalizedPageSize,
+    };
+  }
+
+  return {
+    enabled: true,
+    page: normalizedPage,
+    pageSize: normalizedPageSize,
+    skip: (normalizedPage - 1) * normalizedPageSize,
+    take: normalizedPageSize,
+  };
+};
+
 export const getStudents = async (req: Request, res: Response) => {
-  const { class_id } = req.query;
+  const { class_id, keyword, page, pageSize } = req.query;
+  const pagination = parsePagination(page, pageSize);
+  const normalizedClassId = String(class_id || '').trim().toUpperCase();
+  const normalizedKeyword = String(keyword || '').trim();
 
   try {
-    const students = await prisma.student.findMany({
-      where: class_id ? { class_id: String(class_id) } : {},
-      orderBy: { createdAt: 'desc' },
-    });
-    res.json(students);
+    let whereClause = 'WHERE 1=1';
+    const params: any[] = [];
+
+    if (normalizedClassId) {
+      params.push(normalizedClassId);
+      whereClause += ` AND s.class_id = $${params.length}`;
+    }
+
+    if (normalizedKeyword) {
+      params.push(`%${normalizedKeyword}%`);
+      const pIdx = params.length;
+      whereClause += ` AND (s.name ILIKE $${pIdx} OR s.student_code ILIKE $${pIdx} OR s.email ILIKE $${pIdx})`;
+    }
+
+    const totalRes: any[] = await prisma.$queryRawUnsafe(`SELECT COUNT(*)::int as count FROM "Student" s ${whereClause}`, ...params);
+    const total = totalRes[0]?.count || 0;
+
+    let query = `
+      SELECT s.*, u.role as role 
+      FROM "Student" s 
+      LEFT JOIN "User" u ON s.id = u."studentId" 
+      ${whereClause} 
+      ORDER BY s.class_id ASC, s.order_number ASC, s.name ASC
+    `;
+
+    if (pagination.enabled) {
+      query += ` LIMIT ${pagination.take} OFFSET ${pagination.skip}`;
+    }
+
+    const items = await prisma.$queryRawUnsafe(query, ...params);
+
+    if (pagination.enabled) {
+      const totalPages = Math.max(Math.ceil(total / pagination.pageSize), 1);
+      return res.json({
+        items,
+        pagination: {
+          page: pagination.page,
+          pageSize: pagination.pageSize,
+          total,
+          totalPages,
+          hasNext: pagination.page < totalPages,
+          hasPrev: pagination.page > 1,
+        },
+      });
+    }
+
+    return res.json(items);
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('getStudents error:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const getStudentCount = async (req: Request, res: Response) => {
+  const { class_id, keyword } = req.query;
+  const normalizedClassId = String(class_id || '').trim().toUpperCase();
+  const normalizedKeyword = String(keyword || '').trim();
+
+  try {
+    const where: Record<string, any> = {};
+    if (normalizedClassId) where.class_id = normalizedClassId;
+    if (normalizedKeyword) {
+      where.OR = [
+        { name: { contains: normalizedKeyword, mode: 'insensitive' } },
+        { student_code: { contains: normalizedKeyword, mode: 'insensitive' } },
+        { email: { contains: normalizedKeyword, mode: 'insensitive' } },
+      ];
+    }
+
+    const total = await prisma.student.count({ where });
+    return res.json({ total });
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -49,15 +147,10 @@ export const createStudent = async (req: Request, res: Response) => {
 
     // Tự động tạo tài khoản với mật khẩu mặc định '1234'
     const hashedPassword = await bcrypt.hash('1234', 10);
-    await prisma.user.create({
-      data: {
-        username: student_code,
-        password: hashedPassword,
-        name: name,
-        role: 'STUDENT',
-        studentId: student.id
-      }
-    });
+    await prisma.$executeRawUnsafe(
+      'INSERT INTO "User" (username, password, name, role, "studentId", "createdAt", "updatedAt") VALUES ($1, $2, $3, \'STUDENT\'::"Role", $4, NOW(), NOW())',
+      student_code, hashedPassword, name, student.id
+    );
 
     res.json(student);
   } catch (error: any) {
@@ -186,22 +279,22 @@ export const importStudentsExcel = async (req: Request, res: Response) => {
     let colMap: Record<string, number> = { stt: 1, last_name: 2, first_name: 3, student_code: 4, email: 5, class_id: 6 };
 
     // Tìm dòng tiêu đề và ánh xạ cột
-    for (let i = 1; i <= Math.min(worksheet.rowCount, 20); i++) {
+    for (let i = 1; i <= Math.min(worksheet.rowCount, 30); i++) {
       const row = worksheet.getRow(i);
-      let isHeader = false;
+      let isHeaderCandidate = false;
       row.eachCell((cell: any, colNumber: number) => {
-        const text = (cell.text || '').toString().toLowerCase();
-        if (text.includes('mssv') || text.includes('mã số')) {
-          isHeader = true;
+        const text = (cell.text || '').toString().toLowerCase().trim();
+        if (text.includes('mssv') || text.includes('mã số') || text.includes('mã sinh viên')) {
+          isHeaderCandidate = true;
           colMap.student_code = colNumber;
         }
-        if (text.includes('họ')) colMap.last_name = colNumber;
-        if (text.includes('tên')) colMap.first_name = colNumber;
+        if (text === 'họ' || text.includes('họ lót') || text.includes('họ đệm')) colMap.last_name = colNumber;
+        if (text === 'tên' || (text.includes('tên') && !text.includes('họ'))) colMap.first_name = colNumber;
         if (text.includes('lớp')) colMap.class_id = colNumber;
-        if (text.includes('stt')) colMap.stt = colNumber;
+        if (text.includes('stt') || text === 'số thứ tự') colMap.stt = colNumber;
         if (text.includes('email')) colMap.email = colNumber;
       });
-      if (isHeader) {
+      if (isHeaderCandidate) {
         headerRowNumber = i;
         break;
       }
@@ -212,10 +305,14 @@ export const importStudentsExcel = async (req: Request, res: Response) => {
     const students: any[] = [];
     const firstRowsData: any[] = []; // Để debug
 
+    const { classId: bodyClassId } = req.body;
+    console.log(`Bắt đầu bóc tách dữ liệu... Class override: ${bodyClassId || 'None'}`);
+
     worksheet.eachRow((row: any, rowNumber: number) => {
       if (rowNumber <= headerRowNumber) return;
 
-      const getVal = (col: number) => {
+      const getVal = (col: number | undefined) => {
+        if (col === undefined) return '';
         const cell = row.getCell(col);
         const val = cell.value;
         if (!val) return '';
@@ -225,23 +322,35 @@ export const importStudentsExcel = async (req: Request, res: Response) => {
         return val.toString().trim();
       };
 
-      const student_code = getVal(colMap.student_code!).replace(/\s/g, '').toUpperCase();
-      const first_name = getVal(colMap.first_name!);
-      const last_name = getVal(colMap.last_name!);
-      const stt = getVal(colMap.stt!);
-      const email_val = getVal(colMap.email!);
-      const class_id = getVal(colMap.class_id!);
+      const student_code = getVal(colMap.student_code).replace(/\s/g, '').toUpperCase();
+      let first_name = getVal(colMap.first_name);
+      let last_name = getVal(colMap.last_name);
+      const stt = getVal(colMap.stt);
+      const email_val = getVal(colMap.email);
+      const excelClassId = getVal(colMap.class_id);
 
-      const name = `${last_name} ${first_name}`.trim();
-
-      if (rowNumber <= headerRowNumber + 5) {
-        firstRowsData.push({ rowNumber, student_code, first_name, last_name });
+      // Handle case where "Họ tên" is one column
+      let name = '';
+      if (first_name && !last_name) {
+         name = first_name;
+         // Try to split name for email generation if needed
+         const parts = name.split(' ');
+         first_name = parts.pop() || '';
+         last_name = parts.join(' ');
+      } else {
+         name = `${last_name} ${first_name}`.trim();
       }
 
-      if (student_code && (first_name || last_name)) {
+      const finalClassId = (bodyClassId || excelClassId || 'Chưa xếp lớp').toString().trim().toUpperCase();
+
+      if (rowNumber <= headerRowNumber + 5) {
+        firstRowsData.push({ rowNumber, student_code, name });
+      }
+
+      if (student_code && name) {
         let email = email_val;
         if (!email || !email.includes('@')) {
-          const initials = removeAccents(last_name).split(/\s+/).map(w => w[0]).filter(Boolean).join('');
+          const initials = removeAccents(last_name || 'sv').split(/\s+/).map(w => w[0]).filter(Boolean).join('');
           const firstNameNorm = removeAccents(first_name || 'sv');
           const codeNorm = removeAccents(student_code);
           email = `${initials}${firstNameNorm}${codeNorm}@student.ctuet.edu.vn`.toLowerCase();
@@ -251,7 +360,7 @@ export const importStudentsExcel = async (req: Request, res: Response) => {
           name: name,
           student_code: student_code,
           email: email,
-          class_id: class_id || 'Chưa xếp lớp',
+          class_id: finalClassId,
           stt: stt ? Number(stt) : null
         });
       }
@@ -300,11 +409,10 @@ export const importStudentsExcel = async (req: Request, res: Response) => {
             // Đảm bảo lớp tồn tại trước khi thêm sinh viên (Tránh lỗi Foreign Key)
             if (student.class_id && student.class_id !== 'Chưa xếp lớp') {
               await (prisma as any).class.upsert({
-                where: { id: student.class_id },
+                where: { name: student.class_id },
                 update: {},
                 create: {
-                  id: student.class_id,
-                  name: `Lớp ${student.class_id}`
+                  name: student.class_id
                 }
               });
             }
@@ -601,5 +709,64 @@ export const getStudentStats = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Lỗi khi lấy thống kê sinh viên' });
+  }
+};
+export const updateStudentProfile = async (req: Request, res: Response) => {
+  const studentId = (req as any).user?.studentId;
+
+  if (!studentId) {
+    return res.status(403).json({ message: 'Chỉ sinh viên mới có thể cập nhật thông tin này' });
+  }
+
+  const { birthday, gender, id_card, hometown, address } = req.body;
+
+  try {
+    const updatedStudent = await prisma.student.update({
+      where: { id: Number(studentId) },
+      data: {
+        birthday: birthday ? encrypt(birthday) : undefined,
+        gender: gender ? encrypt(gender) : undefined,
+        id_card: id_card ? encrypt(id_card) : undefined,
+        hometown: hometown ? encrypt(hometown) : undefined,
+        address: address ? encrypt(address) : undefined,
+      },
+    });
+
+    res.json({
+      message: 'Cập nhật thông tin thành công',
+      student: updatedStudent
+    });
+  } catch (error) {
+    console.error('Update student profile error:', error);
+    res.status(500).json({ message: 'Lỗi server khi cập nhật thông tin' });
+  }
+};
+
+export const getStudentProfileDetails = async (req: Request, res: Response) => {
+  const studentId = (req as any).user?.studentId;
+
+  if (!studentId) {
+    return res.status(400).json({ message: 'Không tìm thấy thông tin sinh viên' });
+  }
+
+  try {
+    const trainingScores = await prisma.trainingScore.findMany({
+      where: { student_id: Number(studentId) },
+      include: { semester: true },
+      orderBy: { semester_id: 'desc' }
+    });
+
+    const awards = await (prisma as any).studentAward.findMany({
+      where: { studentId: Number(studentId) },
+      orderBy: { date: 'desc' }
+    });
+
+    res.json({
+      trainingScores,
+      awards
+    });
+  } catch (error) {
+    console.error('getStudentProfileDetails error:', error);
+    res.status(500).json({ message: 'Lỗi server khi lấy chi tiết hồ sơ' });
   }
 };

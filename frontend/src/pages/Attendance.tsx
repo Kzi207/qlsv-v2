@@ -32,8 +32,11 @@ const Attendance = () => {
 
   useEffect(() => {
     fetchData();
-    if (!isStudent) fetchClasses();
   }, [date, classFilter, isStudent]);
+
+  useEffect(() => {
+    if (!isStudent) fetchClasses();
+  }, [isStudent]);
 
   const fetchClasses = async () => {
     try {
@@ -58,7 +61,12 @@ const Attendance = () => {
       } else {
         const [studentRes, attendanceRes] = await Promise.all([
           api.get('/students', { params: { class_id: classFilter || undefined } }),
-          api.get(`/attendance?date=${date}`)
+          api.get('/attendance', {
+            params: {
+              date,
+              classId: classFilter || undefined,
+            },
+          }),
         ]);
         setStudents(studentRes.data);
         

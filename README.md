@@ -67,23 +67,38 @@ Hệ thống được xây dựng trên một nền tảng công nghệ đồng 
 
 ```text
 qlsv/
-├── backend/                # Server-side High Performance Core
-│   ├── prisma/             # Database Schemas & Migrations
-│   ├── src/                # Business Logic Implementation
-│   │   ├── controllers/    # API Request Handlers
-│   │   ├── middleware/     # Security & Auth Guards
-│   │   ├── routes/         # API Endpoint Definitions
-│   │   └── services/       # Core Business Logic
-│   └── uploads/            # Local Backup Storage
-├── frontend/               # Premium Client Application
-│   ├── src/
-│   │   ├── components/     # Reusable UI Components (Bento Grid, Glassmorphism)
-│   │   ├── layout/         # Application Shells & Navigation
-│   │   ├── pages/          # Feature Modules (Evaluation, Dashboard, Admin)
-│   │   └── store/          # Global State Store (Zustand)
-│   └── public/             # Static Assets & Icons
-├── skills/                 # Internal Tooling & Deployment Scripts
-└── README.md               # Professional Documentation
+├── backend/                  # Server-side High Performance Core
+│   ├── prisma/               # Database Architecture & ORM
+│   │   ├── schema.prisma     # Nơi định nghĩa cấu trúc DB (Tables & Relations)
+│   │   └── migrations/       # Lịch sử phiên bản cấu trúc Database
+│   ├── src/                  # Mã nguồn Backend (TypeScript)
+│   │   ├── controllers/      # Nơi xử lý Request/Response (auth, student, admin)
+│   │   ├── middleware/       # Lớp bảo vệ (JWT Auth, Error Handler, Phân quyền)
+│   │   ├── routes/           # Định nghĩa các đường dẫn API (Endpoints mapping)
+│   │   ├── services/         # Logic nghiệp vụ phức tạp (Xử lý file Excel, cronjob)
+│   │   ├── utils/            # Hàm tiện ích (Mã hóa bảo mật AES, format dữ liệu)
+│   │   └── server.ts         # Điểm khởi tạo & cấu hình Express Server
+│   ├── uploads/              # Thư mục lưu trữ cục bộ (Minh chứng, Avatar)
+│   └── package.json          # Quản lý thư viện Backend
+│
+├── frontend/                 # Premium Client Application
+│   ├── public/               # Static Assets (Logo, PWA Manifest, Icons)
+│   ├── src/                  # Mã nguồn Frontend (React + TypeScript)
+│   │   ├── api/              # Cấu hình Axios (Interceptors, gọi API)
+│   │   ├── components/       # Các UI Component dùng chung (Nút, Form, Modal)
+│   │   │   └── timetable/    # Các module chuyên biệt cho Thời khóa biểu
+│   │   ├── layout/           # Cấu trúc khung trang (Sidebar, Header chung)
+│   │   ├── pages/            # Các trang chức năng (Profile, Timetable, DRL)
+│   │   ├── store/            # Quản lý State toàn cục bằng Zustand (AuthStore)
+│   │   ├── utils/            # Helper functions xử lý UI logic
+│   │   ├── App.tsx           # Quản lý Routing toàn ứng dụng
+│   │   └── main.tsx          # Điểm gắn kết React vào DOM
+│   ├── tailwind.config.js    # Cấu hình Design System (Màu sắc, Font)
+│   └── package.json          # Quản lý thư viện Frontend
+│
+├── DEVELOPER_GUIDE.md        # Cẩm nang chi tiết dành cho lập trình viên mới
+├── PROJECT_DOCUMENTATION.md  # Tài liệu kỹ thuật tổng quan về chức năng dự án
+└── README.md                 # Giới thiệu & Hướng dẫn cài đặt nhanh
 ```
 
 ---

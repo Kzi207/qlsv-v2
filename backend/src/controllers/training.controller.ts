@@ -9,6 +9,57 @@ import {
   normalizeSemesterName,
 } from '../utils/semester';
 
+const parsePagination = (rawPage: unknown, rawPageSize: unknown) => {
+  const page = Number(rawPage);
+  const pageSize = Number(rawPageSize);
+  const normalizedPage = Number.isFinite(page) && page > 0 ? Math.floor(page) : null;
+  const normalizedPageSize = Number.isFinite(pageSize) && pageSize > 0
+    ? Math.min(Math.floor(pageSize), 200)
+    : 20;
+
+  if (!normalizedPage) {
+    return {
+      enabled: false,
+      page: 1,
+      pageSize: normalizedPageSize,
+      skip: 0,
+      take: normalizedPageSize,
+    };
+  }
+
+  return {
+    enabled: true,
+    page: normalizedPage,
+    pageSize: normalizedPageSize,
+    skip: (normalizedPage - 1) * normalizedPageSize,
+    take: normalizedPageSize,
+  };
+};
+
+const trainingListSelect = {
+  id: true,
+  status: true,
+  total: true,
+  admin_total: true,
+  semester_id: true,
+  createdAt: true,
+  updatedAt: true,
+  student: {
+    select: {
+      id: true,
+      name: true,
+      student_code: true,
+      class_id: true,
+      order_number: true,
+    },
+  },
+  semester: {
+    select: {
+      name: true,
+    },
+  },
+} as const;
+
 export const createOrUpdateTrainingScore = async (req: Request, res: Response) => {
   const { student_id, semester: semesterName, y_thuc, hoat_dong, ky_luat } = req.body;
   const total = y_thuc + hoat_dong + ky_luat;
@@ -245,7 +296,9 @@ export const getSubmissionStatus = async (req: Request, res: Response) => {
 };
 
 export const getTrainingScores = async (req: AuthRequest, res: Response) => {
-  const { status, class_id, semester, assigned_only } = req.query;
+  const { status, class_id, semester, assigned_only, keyword, page, pageSize } = req.query;
+  const pagination = parsePagination(page, pageSize);
+  const normalizedKeyword = String(keyword || '').trim();
 
   try {
     const where: Record<string, any> = {};
@@ -279,22 +332,106 @@ export const getTrainingScores = async (req: AuthRequest, res: Response) => {
       where.student = { class_id: String(class_id) };
     }
 
+    if (normalizedKeyword) {
+      where.AND = [
+        ...(Array.isArray(where.AND) ? where.AND : []),
+        {
+          OR: [
+            { semester_id: { contains: normalizedKeyword, mode: 'insensitive' } },
+            {
+              student: {
+                name: { contains: normalizedKeyword, mode: 'insensitive' },
+              },
+            },
+            {
+              student: {
+                student_code: { contains: normalizedKeyword, mode: 'insensitive' },
+              },
+            },
+            {
+              student: {
+                class_id: { contains: normalizedKeyword, mode: 'insensitive' },
+              },
+            },
+          ],
+        },
+      ];
+    }
+
+    const orderBy = {
+      student: {
+        order_number: 'asc',
+      },
+    } as const;
+
+    if (pagination.enabled) {
+      const [total, items] = await Promise.all([
+        (prisma.trainingScore as any).count({ where }),
+        (prisma.trainingScore as any).findMany({
+          where,
+          select: trainingListSelect,
+          orderBy,
+          skip: pagination.skip,
+          take: pagination.take,
+        }),
+      ]);
+
+      const totalPages = Math.max(Math.ceil(total / pagination.pageSize), 1);
+
+      return res.json({
+        items,
+        pagination: {
+          page: pagination.page,
+          pageSize: pagination.pageSize,
+          total,
+          totalPages,
+          hasNext: pagination.page < totalPages,
+          hasPrev: pagination.page > 1,
+        },
+      });
+    }
+
     const scores = await (prisma.trainingScore as any).findMany({
       where,
-      include: {
-        student: true,
-        semester: true,
-      },
-      orderBy: { 
-        student: {
-          order_number: 'asc'
-        }
-      },
+      select: trainingListSelect,
+      orderBy,
     });
     res.json(scores);
   } catch (error) {
     console.error('Error in getTrainingScores:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const getTrainingStats = async (req: AuthRequest, res: Response) => {
+  try {
+    const role = String(req.user?.role || '').toUpperCase();
+    const baseWhere: Record<string, any> = {};
+
+    if (role === 'BCH') {
+      const classId = String(req.user?.class_id || '').trim();
+      if (!classId) {
+        return res.status(403).json({ message: 'Tai khoan BCH chua duoc gan lop' });
+      }
+      baseWhere.student = { class_id: classId };
+    }
+
+    const [total, pending, approved, rejected] = await Promise.all([
+      (prisma.trainingScore as any).count({ where: baseWhere }),
+      (prisma.trainingScore as any).count({ where: { ...baseWhere, status: 'PENDING' } }),
+      (prisma.trainingScore as any).count({ where: { ...baseWhere, status: 'APPROVED' } }),
+      (prisma.trainingScore as any).count({ where: { ...baseWhere, status: 'REJECTED' } }),
+    ]);
+
+    return res.json({
+      total,
+      pending,
+      approved,
+      rejected,
+    });
+  } catch (error) {
+    console.error('Error in getTrainingStats:', error);
+    return res.status(500).json({ message: 'Server error' });
   }
 };
 

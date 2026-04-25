@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useDeferredValue, useEffect, useState } from 'react';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
 import { Search, Shield, Key, Loader2, UserCheck, UserX, FileDown } from 'lucide-react';
@@ -7,22 +7,73 @@ const AccountManagement = () => {
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const deferredSearch = useDeferredValue(search);
   const [classFilter, setClassFilter] = useState('');
   const [classOptions, setClassOptions] = useState<any[]>([]);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const[selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(30);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    pageSize: 30,
+    total: 0,
+    totalPages: 1,
+    hasNext: false,
+    hasPrev: false,
+  });
+
+  useEffect(() => {
+    fetchClasses();
+  }, []);
+
+  useEffect(() => {
+    setPage(1);
+  }, [classFilter, deferredSearch]);
 
   useEffect(() => {
     fetchData();
-    fetchClasses();
-  }, [classFilter]);
+  }, [classFilter, deferredSearch, page, pageSize]);
+
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      if (prev.length === 0) return prev;
+      const currentIds = new Set(students.map((s) => s.id));
+      return prev.filter((id) => currentIds.has(id));
+    });
+  }, [students]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
       const res = await api.get('/students', {
-        params: { class_id: classFilter || undefined }
+        params: {
+          class_id: classFilter || undefined,
+          keyword: deferredSearch || undefined,
+          page,
+          pageSize,
+        }
       });
-      setStudents(res.data);
+      if (Array.isArray(res.data)) {
+        setStudents(res.data);
+        setPagination({
+          page,
+          pageSize,
+          total: res.data.length,
+          totalPages: 1,
+          hasNext: false,
+          hasPrev: false,
+        });
+      } else {
+        setStudents(Array.isArray(res.data?.items) ? res.data.items : []);
+        setPagination({
+          page: Number(res.data?.pagination?.page || page),
+          pageSize: Number(res.data?.pagination?.pageSize || pageSize),
+          total: Number(res.data?.pagination?.total || 0),
+          totalPages: Number(res.data?.pagination?.totalPages || 1),
+          hasNext: Boolean(res.data?.pagination?.hasNext),
+          hasPrev: Boolean(res.data?.pagination?.hasPrev),
+        });
+      }
     } catch (error) {
       toast.error('Không thể tải dữ liệu');
     } finally {
@@ -120,10 +171,7 @@ const AccountManagement = () => {
     }
   };
 
-  const filtered = students.filter(s => 
-    s.name.toLowerCase().includes(search.toLowerCase()) || 
-    s.student_code.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = students;
 
   return (
     <div className="max-w-6xl space-y-4 md:space-y-8 animate-fade-in pb-10">
@@ -298,6 +346,29 @@ const AccountManagement = () => {
                  </div>
               </div>
            ))}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3">
+        <p className="text-xs font-semibold text-slate-500">
+          Tong: <span className="font-black text-slate-800">{pagination.total}</span> sinh vien
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+            disabled={!pagination.hasPrev || loading}
+            className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 disabled:opacity-50"
+          >
+            Truoc
+          </button>
+          <span className="text-xs font-bold text-slate-600">{pagination.page}/{pagination.totalPages}</span>
+          <button
+            onClick={() => setPage((prev) => prev + 1)}
+            disabled={!pagination.hasNext || loading}
+            className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 disabled:opacity-50"
+          >
+            Sau
+          </button>
         </div>
       </div>
 

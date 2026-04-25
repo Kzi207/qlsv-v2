@@ -6,6 +6,10 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        k2d: ['K2D', 'sans-serif'],
+      },
       colors: {
         primary: {
           50: '#f0f9ff',

@@ -29,6 +29,7 @@ export default function StudentEvaluation() {
   const [savedAdminDetails, setSavedAdminDetails] = useState<Record<string, number> | null>(null);
   const [submissionWindow, setSubmissionWindow] = useState<{ isOpen: boolean; deadline: string | null } | null>(null);
   const [checkingWindow, setCheckingWindow] = useState(false);
+  const [scannedRecords, setScannedRecords] = useState<any[]>([]);
 
   const loadSavedEvaluation = async (semesterName: string) => {
     if (!user?.studentId || !semesterName) {
@@ -50,6 +51,15 @@ export default function StudentEvaluation() {
     } catch (_error) {
       setSavedDetails(null);
       setSavedAdminDetails(null);
+    }
+  };
+
+  const loadScannedRecords = async () => {
+    try {
+      const res = await api.get('/activities/my-records');
+      setScannedRecords(res.data);
+    } catch (error) {
+      console.error('Lỗi tải minh chứng hoạt động');
     }
   };
 
@@ -83,6 +93,7 @@ export default function StudentEvaluation() {
 
   useEffect(() => {
     fetchSemesters();
+    loadScannedRecords();
   }, []);
 
   useEffect(() => {
@@ -157,7 +168,7 @@ export default function StudentEvaluation() {
             <Award size={10} />
             Hệ thống nộp phiếu ĐRL
           </div>
-          <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Kê khai điểm rèn luyện</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Phiếu đánh giá điểm rèn luyện</h1>
           <p className="text-slate-400 font-bold text-xs">Điền đầy đủ thông tin và minh chứng để được xét duyệt</p>
         </div>
 
@@ -189,6 +200,7 @@ export default function StudentEvaluation() {
         semester={semester}
         studentDetails={savedDetails || undefined}
         adminData={savedAdminDetails || undefined}
+        scannedRecords={scannedRecords}
         onSubmit={handleSubmit}
         loading={submitting || checkingWindow || Boolean(submissionWindow && !submissionWindow.isOpen)}
       />

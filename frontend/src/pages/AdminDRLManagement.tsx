@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useDeferredValue, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ClipboardList,
@@ -35,6 +35,16 @@ const AdminDRLManagement = () => {
   const [scores, setScores] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    pageSize: 20,
+    total: 0,
+    totalPages: 1,
+    hasNext: false,
+    hasPrev: false,
+  });
   const [classOptions, setClassOptions] = useState<any[]>([]);
   const [semesterOptions, setSemesterOptions] = useState<any[]>([]);
   const [filter, setFilter] = useState(() => {
@@ -44,6 +54,7 @@ const AdminDRLManagement = () => {
     if (isBch && !base.class_id) base.class_id = user?.class_id || '';
     return base;
   });
+  const deferredKeyword = useDeferredValue(filter.keyword);
 
   useEffect(() => {
     localStorage.setItem('drl_filters', JSON.stringify(filter));
@@ -68,6 +79,10 @@ const AdminDRLManagement = () => {
   }, []);
 
   useEffect(() => {
+    setPage(1);
+  }, [filter.status, filter.class_id, filter.semester, filter.assigned_only, deferredKeyword]);
+
+  useEffect(() => {
     const fetchScores = async () => {
       setLoading(true);
       try {
@@ -77,9 +92,32 @@ const AdminDRLManagement = () => {
             class_id: filter.class_id || undefined,
             semester: filter.semester || undefined,
             assigned_only: filter.assigned_only || undefined,
+            keyword: deferredKeyword || undefined,
+            page,
+            pageSize,
           },
         });
-        setScores(Array.isArray(res.data) ? res.data : []);
+        if (Array.isArray(res.data)) {
+          setScores(res.data);
+          setPagination({
+            page,
+            pageSize,
+            total: res.data.length,
+            totalPages: 1,
+            hasNext: false,
+            hasPrev: false,
+          });
+        } else {
+          setScores(Array.isArray(res.data?.items) ? res.data.items : []);
+          setPagination({
+            page: Number(res.data?.pagination?.page || page),
+            pageSize: Number(res.data?.pagination?.pageSize || pageSize),
+            total: Number(res.data?.pagination?.total || 0),
+            totalPages: Number(res.data?.pagination?.totalPages || 1),
+            hasNext: Boolean(res.data?.pagination?.hasNext),
+            hasPrev: Boolean(res.data?.pagination?.hasPrev),
+          });
+        }
       } catch (error) {
         toast.error('Khong the tai danh sach phieu');
       } finally {
@@ -88,7 +126,7 @@ const AdminDRLManagement = () => {
     };
 
     fetchScores();
-  }, [filter.status, filter.class_id, filter.semester, filter.assigned_only]);
+  }, [filter.status, filter.class_id, filter.semester, filter.assigned_only, deferredKeyword, page, pageSize]);
 
   const handleExport = async () => {
     setExporting(true);
@@ -115,19 +153,7 @@ const AdminDRLManagement = () => {
     }
   };
 
-  const filteredScores = scores.filter((score) => {
-    const keyword = filter.keyword.trim().toLowerCase();
-    if (!keyword) return true;
-
-    return [
-      score.student?.name,
-      score.student?.student_code,
-      score.student?.class_id,
-      typeof score.semester === 'object' ? score.semester?.name : score.semester,
-    ]
-      .filter(Boolean)
-      .some((value) => String(value).toLowerCase().includes(keyword));
-  });
+  const filteredScores = scores;
 
   return (
     <div className="space-y-6">
@@ -296,6 +322,31 @@ const AdminDRLManagement = () => {
             </div>
           </>
         )}
+      </div>
+
+      <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3">
+        <p className="text-xs font-semibold text-slate-500">
+          Tong: <span className="font-black text-slate-800">{pagination.total}</span> phieu
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+            disabled={!pagination.hasPrev || loading}
+            className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 disabled:opacity-50"
+          >
+            Truoc
+          </button>
+          <span className="text-xs font-bold text-slate-600">
+            {pagination.page}/{pagination.totalPages}
+          </span>
+          <button
+            onClick={() => setPage((prev) => prev + 1)}
+            disabled={!pagination.hasNext || loading}
+            className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 disabled:opacity-50"
+          >
+            Sau
+          </button>
+        </div>
       </div>
     </div>
   );

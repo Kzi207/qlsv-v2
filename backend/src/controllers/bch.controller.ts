@@ -3,23 +3,22 @@ import prisma from '../utils/prisma';
 import bcrypt from 'bcryptjs';
 
 export const createBchAccount = async (req: Request, res: Response) => {
-  const { username, password, name, email, phone, class_id } = req.body;
+  const { username, password, name, email, phone, class_id, role } = req.body;
 
   try {
     const hashedPassword = await bcrypt.hash(password || '1234', 10);
-    const user = await (prisma as any).user.create({
-      data: {
-        username,
-        password: hashedPassword,
-        name,
-        email,
-        phone,
-        class_id,
-        role: 'BCH'
-      }
-    });
-    res.json(user);
+    await prisma.$executeRawUnsafe(
+      'INSERT INTO "User" ("username", "password", "name", "email", "phone", "class_id", "role", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6, CAST($7 AS "Role"), NOW(), NOW())',
+      username, hashedPassword, name, email || null, phone || null, class_id || null, role || 'BCH'
+    );
+    
+    const users: any[] = await prisma.$queryRawUnsafe(
+      'SELECT * FROM "User" WHERE "username" = $1 LIMIT 1',
+      username
+    );
+    res.json(users[0]);
   } catch (error: any) {
+    console.error('createBchAccount detailed error:', error);
     if (error.code === 'P2002') {
       return res.status(400).json({ message: 'Username already exists' });
     }
@@ -28,40 +27,56 @@ export const createBchAccount = async (req: Request, res: Response) => {
 };
 
 export const getBchAccounts = async (req: Request, res: Response) => {
-  const { class_id } = req.query;
+  const { class_id, role } = req.query;
 
   try {
-    const users = await (prisma as any).user.findMany({
-      where: {
-        role: 'BCH',
-        class_id: class_id ? String(class_id) : undefined
-      },
-      include: {
-        assignments: true
-      },
-      orderBy: { createdAt: 'desc' }
-    });
+    let query = 'SELECT * FROM "User" WHERE role::text IN (\'QTV\', \'LECTURER\', \'BCH\')';
+    const params: any[] = [];
+
+    if (role) {
+      query = 'SELECT * FROM "User" WHERE role::text = $1';
+      params.push(role);
+    }
+
+    if (class_id) {
+      query += params.length > 0 ? ' AND class_id = $2' : ' AND class_id = $1';
+      params.push(class_id);
+    }
+
+    const users = await prisma.$queryRawUnsafe(query, ...params);
     res.json(users);
   } catch (error) {
+    console.error('getBchAccounts error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
 
 export const updateBchAccount = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { name, email, phone, class_id, password } = req.body;
+  const { name, email, phone, class_id, password, role } = req.body;
 
   try {
-    const data: any = { name, email, phone, class_id };
-    if (password) {
-      data.password = await bcrypt.hash(password, 10);
+    let query = 'UPDATE "User" SET "name" = $1, "email" = $2, "phone" = $3, "class_id" = $4, "updatedAt" = NOW()';
+    const params: any[] = [name, email || null, phone || null, class_id || null];
+
+    if (role) {
+      params.push(role);
+      query += `, "role" = CAST($${params.length} AS "Role")`;
     }
 
-    const user = await (prisma as any).user.update({
-      where: { id: Number(id) },
-      data
-    });
-    res.json(user);
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      params.push(hashedPassword);
+      query += `, "password" = $${params.length}`;
+    }
+
+    params.push(Number(id));
+    query += ` WHERE "id" = $${params.length}`;
+
+    await prisma.$queryRawUnsafe(query, ...params);
+    
+    const users: any[] = await prisma.$queryRawUnsafe('SELECT * FROM "User" WHERE "id" = $1 LIMIT 1', Number(id));
+    res.json(users[0]);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }

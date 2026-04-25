@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import compression from 'compression';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -11,6 +12,18 @@ import semesterRoutes from './routes/semester.routes';
 import trainingRoutes from './routes/training.routes';
 import attendanceRoutes from './routes/attendance.routes';
 import bchRoutes from './routes/bch.routes';
+import activityRoutes from './routes/activity.routes';
+import evidenceRoutes from './routes/evidence.routes';
+import timetableRoutes from './routes/timetable.routes';
+import roomRoutes from './routes/room.routes';
+import settingRoutes from './routes/setting.routes';
+import elearningRoutes from './routes/elearning.routes';
+import borrowingRoutes from './routes/borrowing.routes';
+import gradeRoutes from './routes/grade.routes';
+import academicRoutes from './routes/academic.routes';
+import financeRoutes from './routes/finance.routes';
+import paymentRoutes from './routes/payment.routes';
+import curriculumRoutes from './routes/curriculum.routes';
 import { getAllowedOrigins } from './utils/security';
 import { securityHeadersMiddleware } from './middleware/security-headers.middleware';
 import { csrfMiddleware } from './middleware/csrf.middleware';
@@ -34,10 +47,12 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'x-csrf-token'],
 }));
 app.use(securityHeadersMiddleware);
+app.use(compression());
 app.use(express.json());
 app.use(cookieParser());
 app.use(csrfMiddleware);
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+app.use('/api/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -47,6 +62,18 @@ app.use('/api/training', trainingRoutes);
 app.use('/api/semesters', semesterRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/bch', bchRoutes);
+app.use('/api/activities', activityRoutes);
+app.use('/api/evidence', evidenceRoutes);
+app.use('/api/timetable', timetableRoutes);
+app.use('/api/rooms', roomRoutes);
+app.use('/api/settings', settingRoutes);
+app.use('/api/elearning', elearningRoutes);
+app.use('/api/borrowings', borrowingRoutes);
+app.use('/api/grades', gradeRoutes);
+app.use('/api/academic', academicRoutes);
+app.use('/api/finance', financeRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/curriculum', curriculumRoutes);
 
 // Health check
 app.get('/', (req, res) => {

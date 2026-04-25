@@ -4,7 +4,7 @@ import { useAuthStore } from '../store/useAuthStore';
 
 interface RoleRouteProps {
   children: React.ReactNode;
-  allowedRoles: ('ADMIN' | 'BCH' | 'STUDENT')[];
+  allowedRoles: ('QTV' | 'LECTURER' | 'BCH' | 'STUDENT')[];
 }
 
 const RoleRoute = ({ children, allowedRoles }: RoleRouteProps) => {

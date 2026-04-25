@@ -20,6 +20,7 @@ interface Props {
   isAdminMode?: boolean;
   onExport?: () => void;
   onClose?: () => void;
+  scannedRecords?: any[];
 }
 
 const DetailedEvaluationForm: React.FC<Props> = ({
@@ -33,74 +34,102 @@ const DetailedEvaluationForm: React.FC<Props> = ({
   isAdminMode,
   onExport,
   onClose,
+  scannedRecords = []
 }) => {
-  const [scores, setScores] = useState<Record<string, number | undefined>>({});
+  // Manual scores entered by student
+  const [manualScores, setManualScores] = useState<Record<string, number | undefined>>({});
   const [adminScores, setAdminScores] = useState<Record<string, number | undefined>>({});
   const [evidence, setEvidence] = useState<Record<string, any[]>>({});
   const [expandedSections, setExpandedSections] = useState<string[]>(['sec-1']);
   const [previewData, setPreviewData] = useState<{ files: any[]; initialIndex: number; criterionId: string } | null>(null);
 
   useEffect(() => {
-    const studentScoreMap: Record<string, number | undefined> = {};
+    const manualScoreMap: Record<string, number | undefined> = {};
     const adminScoreMap: Record<string, number | undefined> = {};
     const evidenceMap: Record<string, any[]> = {};
 
     EVALUATION_DATA.forEach((section) => {
       section.criteria.forEach((criterion) => {
+        // Load existing data
         if (studentDetails?.[criterion.id]) {
-          studentScoreMap[criterion.id] = Number(studentDetails[criterion.id].score || 0);
+          // If we have saved data, we try to extract the "manual" part
+          // TotalSaved = Manual + Scanned
+          const totalSaved = Number(studentDetails[criterion.id].score || 0);
+          const scanned = scannedRecords
+            .filter(r => r.session.criterionId === criterion.id)
+            .reduce((sum, r) => sum + r.points, 0);
+          
+          manualScoreMap[criterion.id] = Math.max(0, totalSaved - scanned);
           evidenceMap[criterion.id] = normalizeEvidenceList(studentDetails[criterion.id].files || []);
         } else if (initialData?.scores?.[criterion.id] !== undefined) {
-          studentScoreMap[criterion.id] = Number(initialData.scores[criterion.id] || 0);
+          const totalInitial = Number(initialData.scores[criterion.id] || 0);
+          const scanned = scannedRecords
+            .filter(r => r.session.criterionId === criterion.id)
+            .reduce((sum, r) => sum + r.points, 0);
+          manualScoreMap[criterion.id] = Math.max(0, totalInitial - scanned);
           evidenceMap[criterion.id] = normalizeEvidenceList(initialData.evidence?.[criterion.id] || []);
         } else {
-          studentScoreMap[criterion.id] = undefined;
+          manualScoreMap[criterion.id] = 0;
           evidenceMap[criterion.id] = [];
         }
 
         if (adminData?.[criterion.id] !== undefined) {
           adminScoreMap[criterion.id] = Number(adminData[criterion.id]);
         } else if (isAdminMode) {
-          adminScoreMap[criterion.id] = studentScoreMap[criterion.id];
+          // For admin, we show the total student score
+          const scanned = scannedRecords
+            .filter(r => r.session.criterionId === criterion.id)
+            .reduce((sum, r) => sum + r.points, 0);
+          adminScoreMap[criterion.id] = (manualScoreMap[criterion.id] || 0) + scanned;
         } else {
           adminScoreMap[criterion.id] = undefined;
         }
       });
     });
 
-    setScores(studentScoreMap);
+    setManualScores(manualScoreMap);
     setAdminScores(adminScoreMap);
     setEvidence(evidenceMap);
-  }, [studentDetails, adminData, initialData, isAdminMode]);
+  }, [studentDetails, adminData, initialData, isAdminMode, scannedRecords]);
 
   const toggleSection = (id: string) => {
     setExpandedSections((prev) => (prev.includes(id) ? prev.filter((sectionId) => sectionId !== id) : [...prev, id]));
   };
 
-  const calculateSectionTotal = (section: Section, scoreSet: Record<string, number | undefined>) => {
+  // Helper to get total score for a criterion (Manual + Scanned)
+  const getCriterionTotal = (criterionId: string, isForAdmin = false) => {
+    if (isForAdmin && adminScores[criterionId] !== undefined) return adminScores[criterionId]!;
+    
+    const manual = manualScores[criterionId] || 0;
+    const scanned = scannedRecords
+      .filter(r => r.session.criterionId === criterionId)
+      .reduce((sum, r) => sum + r.points, 0);
+    
+    // Find max points for this criterion
+    let max = 100;
+    EVALUATION_DATA.some(s => {
+       const c = s.criteria.find(cr => cr.id === criterionId);
+       if (c) { max = c.maxPoints; return true; }
+       return false;
+    });
+
+    return Math.min(manual + scanned, max);
+  };
+
+  const calculateSectionTotal = (section: Section, isAdmin = false) => {
     let total = 0;
     section.criteria.forEach((criterion) => {
-      total += Number(scoreSet[criterion.id] || 0);
+      total += getCriterionTotal(criterion.id, isAdmin);
     });
     return Math.min(total, section.maxPoints);
   };
 
-  const grandTotal = EVALUATION_DATA.reduce((acc, section) => acc + calculateSectionTotal(section, scores), 0);
-  const adminGrandTotal = EVALUATION_DATA.reduce((acc, section) => acc + calculateSectionTotal(section, adminScores), 0);
+  const grandTotal = EVALUATION_DATA.reduce((acc, section) => acc + calculateSectionTotal(section, false), 0);
+  const adminGrandTotal = EVALUATION_DATA.reduce((acc, section) => acc + calculateSectionTotal(section, true), 0);
 
   const handleFileUpload = async (criterionId: string, event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (!files) return;
-    if (!studentId) {
-      toast.error('Khong tim thay thong tin sinh vien de upload minh chung');
-      event.target.value = '';
-      return;
-    }
-    if (!semester) {
-      toast.error('Vui long chon hoc ky truoc khi upload minh chung');
-      event.target.value = '';
-      return;
-    }
+    if (!files || !studentId || !semester) return;
 
     const formData = new FormData();
     Array.from(files).forEach((file) => formData.append('files', file));
@@ -112,16 +141,13 @@ const DetailedEvaluationForm: React.FC<Props> = ({
       const res = await api.post('/training/upload-evidence', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-
       setEvidence((prev) => ({
         ...prev,
         [criterionId]: [...(prev[criterionId] || []), ...normalizeEvidenceList(res.data.files)],
       }));
-      const savedCount = res.data.files?.length || files.length;
-      const storageLabel = res.data.storage === 'r2' ? 'Cloudflare R2' : 'local server';
-      toast.success(`Da upload ${savedCount} minh chung (${storageLabel})`);
+      toast.success(`Đã upload minh chứng`);
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Upload minh chung that bai');
+      toast.error('Upload thất bại');
     } finally {
       event.target.value = '';
     }
@@ -130,60 +156,49 @@ const DetailedEvaluationForm: React.FC<Props> = ({
   const handleRemoveEvidence = (criterionId: string, path: string) => {
     setEvidence((prev) => ({
       ...prev,
-      [criterionId]: normalizeEvidenceList(prev[criterionId] || []).filter((file) => file.path !== path),
+      [criterionId]: (prev[criterionId] || []).filter((file) => file.path !== path),
     }));
   };
 
   const handleRemoveFromPreview = (index: number) => {
     if (!previewData) return;
     const fileToRemove = previewData.files[index];
-    if (!fileToRemove) return;
-    
     handleRemoveEvidence(previewData.criterionId, fileToRemove.path);
-    
-    // Update local preview state to remove the file
-    const newFiles = [...previewData.files];
-    newFiles.splice(index, 1);
-    
-    if (newFiles.length === 0) {
-      setPreviewData(null);
-    } else {
-      setPreviewData({
-        ...previewData,
-        files: newFiles,
-        initialIndex: Math.min(index, newFiles.length - 1)
-      });
-    }
+    const newFiles = [...previewData.files].filter((_, i) => i !== index);
+    if (newFiles.length === 0) setPreviewData(null);
+    else setPreviewData({ ...previewData, files: newFiles, initialIndex: Math.min(index, newFiles.length - 1) });
   };
 
   const handleSubmit = () => {
+    const scores: Record<string, number> = {};
+    const details: Record<string, any> = {};
+
+    EVALUATION_DATA.forEach(section => {
+      section.criteria.forEach(criterion => {
+        const total = getCriterionTotal(criterion.id, false);
+        scores[criterion.id] = total;
+        details[criterion.id] = { score: total, files: evidence[criterion.id] || [] };
+      });
+    });
+
     if (isAdminMode) {
       onSubmit({
         admin_details: adminScores,
         admin_total: adminGrandTotal,
-        admin_y_thuc: calculateSectionTotal(EVALUATION_DATA[0], adminScores),
-        admin_hoat_dong: calculateSectionTotal(EVALUATION_DATA[1], adminScores) + calculateSectionTotal(EVALUATION_DATA[2], adminScores),
-        admin_ky_luat: calculateSectionTotal(EVALUATION_DATA[3], adminScores) + calculateSectionTotal(EVALUATION_DATA[4], adminScores),
+        admin_y_thuc: calculateSectionTotal(EVALUATION_DATA[0], true),
+        admin_hoat_dong: calculateSectionTotal(EVALUATION_DATA[1], true) + calculateSectionTotal(EVALUATION_DATA[2], true),
+        admin_ky_luat: calculateSectionTotal(EVALUATION_DATA[3], true) + calculateSectionTotal(EVALUATION_DATA[4], true),
       });
       return;
     }
 
-    const normalizedScores = Object.fromEntries(
-      Object.keys(scores).map((id) => [id, Number(scores[id] || 0)]),
-    );
-
-    const details: Record<string, any> = {};
-    Object.keys(normalizedScores).forEach((id) => {
-      details[id] = { score: normalizedScores[id], files: evidence[id] || [] };
-    });
-
     onSubmit({
-      scores: normalizedScores,
+      scores,
       total: grandTotal,
       details,
-      y_thuc: calculateSectionTotal(EVALUATION_DATA[0], scores),
-      hoat_dong: calculateSectionTotal(EVALUATION_DATA[1], scores) + calculateSectionTotal(EVALUATION_DATA[2], scores),
-      ky_luat: calculateSectionTotal(EVALUATION_DATA[3], scores) + calculateSectionTotal(EVALUATION_DATA[4], scores),
+      y_thuc: calculateSectionTotal(EVALUATION_DATA[0], false),
+      hoat_dong: calculateSectionTotal(EVALUATION_DATA[1], false) + calculateSectionTotal(EVALUATION_DATA[2], false),
+      ky_luat: calculateSectionTotal(EVALUATION_DATA[3], false) + calculateSectionTotal(EVALUATION_DATA[4], false),
     });
   };
 
@@ -194,34 +209,35 @@ const DetailedEvaluationForm: React.FC<Props> = ({
           <SectionCard
             key={section.id}
             section={section}
-            studentSecTotal={calculateSectionTotal(section, scores)}
-            adminSecTotal={calculateSectionTotal(section, adminScores)}
+            studentSecTotal={calculateSectionTotal(section, false)}
+            adminSecTotal={calculateSectionTotal(section, true)}
             isExpanded={expandedSections.includes(section.id)}
             isAdminMode={isAdminMode}
             onToggle={() => toggleSection(section.id)}
           >
-            {section.criteria.map((criterion) => (
-              <CriteriaRow
-                key={criterion.id}
-                criterion={criterion}
-                studentScore={scores[criterion.id]}
-                adminScore={adminScores[criterion.id]}
-                evidence={evidence[criterion.id] || []}
-                isAdminMode={isAdminMode}
-                onStudentScoreChange={(value) => setScores((prev) => ({ ...prev, [criterion.id]: value }))}
-                onAdminScoreChange={(value) => setAdminScores((prev) => ({ ...prev, [criterion.id]: value }))}
-                onUpload={(event) => handleFileUpload(criterion.id, event)}
-                onViewEvidence={(path) => {
-                   const files = evidence[criterion.id] || [];
-                   const index = files.findIndex(f => f.path === path);
-                   setPreviewData({ 
-                     files, 
-                     initialIndex: index >= 0 ? index : 0, 
-                     criterionId: criterion.id 
-                   });
-                 }}
-              />
-            ))}
+            {section.criteria.map((criterion) => {
+              const criterionScannedRecords = scannedRecords.filter(r => r.session.criterionId === criterion.id);
+              return (
+                <CriteriaRow
+                  key={criterion.id}
+                  criterion={criterion}
+                  studentScore={getCriterionTotal(criterion.id, false)}
+                  manualScore={manualScores[criterion.id]}
+                  adminScore={adminScores[criterion.id]}
+                  evidence={evidence[criterion.id] || []}
+                  isAdminMode={isAdminMode}
+                  scannedRecords={criterionScannedRecords}
+                  onManualScoreChange={(value) => setManualScores((prev) => ({ ...prev, [criterion.id]: value }))}
+                  onAdminScoreChange={(value) => setAdminScores((prev) => ({ ...prev, [criterion.id]: value }))}
+                  onUpload={(event) => handleFileUpload(criterion.id, event)}
+                  onViewEvidence={(path) => {
+                    const files = evidence[criterion.id] || [];
+                    const index = files.findIndex(f => f.path === path);
+                    setPreviewData({ files, initialIndex: index >= 0 ? index : 0, criterionId: criterion.id });
+                  }}
+                />
+              );
+            })}
           </SectionCard>
         ))}
 
