@@ -114,7 +114,7 @@ const TimetableMonthView: React.FC<Props> = ({ events, selectedDate, onEventClic
 
         <div className="space-y-8">
           {monthDaysWithEvents.length > 0 ? (
-            monthDaysWithEvents.map((item, dIdx) => (
+            monthDaysWithEvents.map((item) => (
               <div key={item.date.toISOString()} className="space-y-3">
                 <div className="flex items-center gap-3 px-2">
                   <div className={`h-1.5 w-1.5 rounded-full ${selectedDate.toDateString() === item.date.toDateString() ? 'bg-blue-600 animate-pulse' : 'bg-slate-300'}`} />

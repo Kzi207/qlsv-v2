@@ -1,6 +1,6 @@
 import React from 'react';
-import { X, Clock, MapPin, User, Tag, BookOpen, Monitor } from 'lucide-react';
-import { ScheduleEvent } from './types';
+import { X, Clock, MapPin, User, BookOpen, Monitor } from 'lucide-react';
+import type { ScheduleEvent } from './types';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Props {

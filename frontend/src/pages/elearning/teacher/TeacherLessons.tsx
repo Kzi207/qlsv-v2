@@ -1,5 +1,5 @@
 import React from 'react';
-import { Video, Plus, Sparkles, Monitor } from 'lucide-react';
+import { Video, Plus } from 'lucide-react';
 import ELearningRightPanel from '../../../components/elearning/ELearningRightPanel';
 
 const TeacherLessons: React.FC = () => {

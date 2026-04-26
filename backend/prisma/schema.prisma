@@ -23,6 +23,25 @@ model User {
   student     Student? @relation(fields: [studentId], references: [id])
   assignments BchAssignment[]
   courses     Course[] @relation("TeacherCourses")
+  auditLogs   AuditLog[]
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int?
+  action      String   // LOGIN, LOGOUT, EDIT_DRL, APPROVE_DRL, EDIT_GRADE, etc.
+  targetType  String?  // e.g., "TrainingScore", "Grade", "User"
+  targetId    String?
+  details     Json?    // Detailed info (old/new values)
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  user        User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
 }
 
 model Class {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScheduleEvent } from './types';
+import type { ScheduleEvent } from './types';
 import ScheduleEventCard from './ScheduleEventCard';
 
 interface Props {
@@ -37,10 +37,6 @@ const WeekView: React.FC<Props> = ({ currentDate, events, onEventClick }) => {
     const height = duration * 80;
     
     return { top: `${top}px`, height: `${height}px` };
-  };
-
-  const hasEventsOnDay = (dayIdx: number) => {
-    return events.some(e => Number(e.day) === dayIdx + 2);
   };
 
   return (

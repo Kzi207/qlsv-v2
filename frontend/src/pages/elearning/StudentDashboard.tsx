@@ -8,6 +8,7 @@ import {
   GraduationCap,
   Search,
   Video,
+  Clock
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../../api/axios';
@@ -87,68 +88,76 @@ const StudentDashboard: React.FC = () => {
   }, [courses, filter, query]);
 
   const stats = [
-    { label: 'Môn đang học', value: courses.length, icon: BookOpen, color: 'bg-blue-600' },
-    { label: 'Bài tập cần nộp', value: summary.pendingAssignments, icon: ClipboardList, color: 'bg-rose-500' },
-    { label: 'Bài giảng khả dụng', value: summary.totalLessons, icon: Video, color: 'bg-emerald-500' },
-    { label: 'Bài thi sắp tới', value: summary.upcomingExams, icon: GraduationCap, color: 'bg-amber-500' },
+    { label: 'Môn học', value: courses.length, icon: BookOpen, color: 'bg-blue-600', sub: 'Đang theo học' },
+    { label: 'Bài tập', value: summary.pendingAssignments, icon: ClipboardList, color: 'bg-rose-500', sub: 'Chưa nộp' },
+    { label: 'Bài giảng', value: summary.totalLessons, icon: Video, color: 'bg-emerald-500', sub: 'Đã phát hành' },
+    { label: 'Lịch thi', value: summary.upcomingExams, icon: GraduationCap, color: 'bg-amber-500', sub: 'Sắp diễn ra' },
   ];
 
   return (
-    <div className="mx-auto max-w-[1600px] pb-20 animate-fade-up">
-      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1fr_360px]">
-        <main className="space-y-8">
-          <section className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-blue-600">
-                <Award size={12} /> Không gian học tập
+    <div className="mx-auto max-w-[1600px] pb-24 animate-fade-up">
+      <div className="grid grid-cols-1 gap-8 lg:gap-10 xl:grid-cols-[1fr_360px]">
+        <main className="space-y-8 md:space-y-12">
+          {/* Header Section */}
+          <section className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between px-2">
+            <div className="space-y-3 md:space-y-4">
+              <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-1.5 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-blue-600 shadow-sm">
+                <Award size={12} className="animate-pulse" /> MyCTUTs E-Learning System
               </div>
-              <h1 className="text-3xl font-black tracking-tight text-slate-900 md:text-4xl">E-Learning</h1>
-              <p className="max-w-2xl text-sm font-medium leading-relaxed text-slate-500">
-                Chào <span className="font-black text-blue-600">{user?.name || 'sinh viên'}</span>, bạn đang có
-                {' '}<span className="font-black text-slate-900">{summary.pendingAssignments}</span> bài tập cần xử lý và tiến độ trung bình
-                {' '}<span className="font-black text-slate-900">{summary.avgProgress}%</span>.
+              <h1 className="text-3xl font-black tracking-tighter text-slate-900 md:text-6xl lg:text-7xl leading-none">Học trực tuyến</h1>
+              <p className="max-w-2xl text-xs md:text-lg font-bold leading-relaxed text-slate-500">
+                Chào mừng <span className="text-blue-600 font-black">{user?.name || 'sinh viên'}</span>! 
+                Tiến độ trung bình của bạn: <span className="text-slate-900 font-black px-2 py-0.5 bg-slate-100 rounded-lg">{summary.avgProgress}%</span>
               </p>
             </div>
 
-            <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
-              <div className="relative min-w-0 flex-1 md:w-80">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <div className="flex w-full flex-col gap-4 sm:flex-row md:w-auto">
+              <div className="relative min-w-0 flex-1 md:w-80 group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={18} />
                 <input
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  type="text"
-                  placeholder="Tìm môn học, giảng viên..."
-                  className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm font-bold outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                   value={query}
+                   onChange={(event) => setQuery(event.target.value)}
+                   type="text"
+                   placeholder="Tìm tên môn học..."
+                   className="w-full rounded-2xl border border-slate-200 bg-white py-4 pl-12 pr-4 text-xs md:text-sm font-black outline-none transition-all shadow-sm focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5"
                 />
               </div>
             </div>
           </section>
 
-          <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {/* Stats Bento Grid */}
+          <section className="grid grid-cols-2 gap-3 md:gap-6 px-2">
             {stats.map((stat) => (
               <motion.div
                 key={stat.label}
-                whileHover={{ y: -3 }}
-                className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm"
+                whileHover={{ y: -5 }}
+                className="relative overflow-hidden rounded-[1.5rem] md:rounded-[2.5rem] border border-slate-100 bg-white p-4 md:p-8 shadow-xl shadow-slate-200/20 group"
               >
-                <div className={`mb-4 flex h-11 w-11 items-center justify-center rounded-xl text-white ${stat.color}`}>
-                  <stat.icon size={20} />
+                <div className={`mb-4 md:mb-6 flex h-10 w-10 md:h-16 md:w-16 items-center justify-center rounded-xl md:rounded-2xl text-white shadow-lg ${stat.color} transition-transform group-hover:scale-110`}>
+                  <stat.icon size={20} className="md:size-8" />
                 </div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{stat.label}</p>
-                <p className="mt-1 text-2xl font-black text-slate-900">{stat.value}</p>
+                <div className="space-y-1">
+                   <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-400">{stat.label}</p>
+                   <p className="text-xl md:text-4xl font-black text-slate-900 tracking-tight leading-none">{stat.value}</p>
+                   <p className="text-[8px] md:text-[10px] font-bold text-slate-400 opacity-60 italic">{stat.sub}</p>
+                </div>
+                <div className={`absolute -right-4 -bottom-4 h-20 w-20 rounded-full opacity-[0.03] ${stat.color}`} />
               </motion.div>
             ))}
           </section>
 
-          <section className="space-y-5">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="flex items-center gap-3 text-xl font-black tracking-tight text-slate-900">
-                Môn học của tôi
-                <span className="rounded-lg bg-blue-50 px-2 py-1 text-[10px] font-black text-blue-600">
-                  {filteredCourses.length}/{courses.length}
-                </span>
-              </h2>
-              <div className="flex rounded-xl border border-slate-100 bg-white p-1 shadow-sm">
+          {/* Course List Section */}
+          <section className="space-y-6">
+            <div className="flex flex-col gap-4 md:gap-6 md:flex-row md:items-center md:justify-between px-2">
+              <div className="flex items-center gap-3">
+                 <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
+                 <h2 className="text-xl md:text-2xl font-black tracking-tight text-slate-900 uppercase">Học phần của tôi</h2>
+                 <span className="rounded-xl bg-slate-900 px-3 py-1 text-[10px] font-black text-white">
+                   {filteredCourses.length}
+                 </span>
+              </div>
+              
+              <div className="flex rounded-2xl border border-slate-100 bg-white p-1.5 shadow-sm overflow-x-auto no-scrollbar scroll-smooth">
                 {[
                   { key: 'all', label: 'Tất cả' },
                   { key: 'active', label: 'Đang học' },
@@ -157,8 +166,10 @@ const StudentDashboard: React.FC = () => {
                   <button
                     key={item.key}
                     onClick={() => setFilter(item.key as FilterKey)}
-                    className={`rounded-lg px-4 py-2 text-[10px] font-black uppercase tracking-widest transition ${
-                      filter === item.key ? 'bg-slate-900 text-white' : 'text-slate-400 hover:text-slate-700'
+                    className={`rounded-xl px-5 md:px-7 py-3 text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                      filter === item.key 
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' 
+                        : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50'
                     }`}
                   >
                     {item.label}
@@ -168,13 +179,13 @@ const StudentDashboard: React.FC = () => {
             </div>
 
             {loading ? (
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-2 px-2">
                 {[1, 2, 3, 4].map((item) => (
-                  <div key={item} className="h-80 animate-pulse rounded-2xl bg-slate-100" />
+                  <div key={item} className="h-64 md:h-80 animate-pulse rounded-[2rem] bg-slate-100" />
                 ))}
               </div>
             ) : filteredCourses.length > 0 ? (
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-2 px-2">
                 {filteredCourses.map((course) => (
                   <CourseCard
                     key={course.id}
@@ -184,16 +195,40 @@ const StudentDashboard: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-12 text-center">
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
-                  {query || filter !== 'all' ? <Filter size={26} /> : <BookOpen size={26} />}
+              <div className="mx-2 rounded-[2.5rem] border-2 border-dashed border-slate-100 bg-white p-16 text-center">
+                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-slate-50 text-slate-200">
+                  {query || filter !== 'all' ? <Filter size={32} /> : <BookOpen size={32} />}
                 </div>
-                <p className="text-sm font-black uppercase tracking-widest text-slate-500">
-                  {query || filter !== 'all' ? 'Không tìm thấy môn học phù hợp' : 'Bạn chưa có môn học trực tuyến'}
-                </p>
+                <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-2">
+                  {query || filter !== 'all' ? 'Không tìm thấy kết quả' : 'Chưa có môn học trực tuyến'}
+                </h3>
+                <p className="text-xs font-bold text-slate-400">Vui lòng kiểm tra lại bộ lọc hoặc liên hệ phòng đào tạo.</p>
               </div>
             )}
           </section>
+
+          {/* Mobile Right Panel Section */}
+          <div className="xl:hidden px-2 mt-8">
+             <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl">
+                <div className="flex items-center gap-4 mb-6">
+                   <div className="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-xl border border-white/10">
+                      <Clock className="text-blue-400" size={24} />
+                   </div>
+                   <div>
+                      <h3 className="text-lg font-black uppercase tracking-tight">Việc cần làm</h3>
+                      <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Thời hạn sắp tới</p>
+                   </div>
+                </div>
+                <div className="space-y-1">
+                   <p className="text-xs font-bold text-slate-300">
+                      Bạn có <span className="text-white font-black">{summary.pendingAssignments} bài tập</span> chưa nộp và <span className="text-white font-black">{summary.upcomingExams} kỳ thi</span> sắp tới.
+                   </p>
+                </div>
+                <div className="absolute top-0 right-0 p-8 opacity-5 -mr-10 -mt-10 rotate-12">
+                   <Video size={140} />
+                </div>
+             </div>
+          </div>
         </main>
 
         <aside className="hidden xl:block">

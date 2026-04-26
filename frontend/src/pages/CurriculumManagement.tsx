@@ -8,7 +8,6 @@ import {
   Menu,
   X,
   Edit3,
-  Trash2,
   Search,
   Save
 } from 'lucide-react';

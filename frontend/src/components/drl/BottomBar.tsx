@@ -5,6 +5,7 @@ interface BottomBarProps {
   grandTotal: number;
   adminGrandTotal: number;
   onSave: () => void;
+  onSaveDraft?: () => void;
   onExport?: () => void;
   onClose?: () => void;
   loading?: boolean;
@@ -15,6 +16,7 @@ const BottomBar: React.FC<BottomBarProps> = ({
   grandTotal,
   adminGrandTotal,
   onSave,
+  onSaveDraft,
   onExport,
   onClose,
   loading,
@@ -68,6 +70,17 @@ const BottomBar: React.FC<BottomBarProps> = ({
             </button>
           )}
 
+          {!isAdminMode && onSaveDraft && (
+            <button
+              onClick={onSaveDraft}
+              disabled={loading}
+              className="hidden md:flex h-11 items-center justify-center gap-2 rounded-2xl border border-blue-100 bg-blue-50/50 px-5 text-xs font-bold text-blue-600 transition-all hover:bg-blue-100 active:scale-95 disabled:opacity-50"
+            >
+              <Save size={16} />
+              <span>Lưu bản nháp</span>
+            </button>
+          )}
+
           <button
             onClick={onSave}
             disabled={loading}
@@ -78,7 +91,7 @@ const BottomBar: React.FC<BottomBarProps> = ({
               <Loader2 size={18} className="animate-spin" />
             ) : (
               <>
-                <Save size={18} className="transition-transform group-hover:scale-110" />
+                {isAdminMode ? <Save size={18} /> : <Save size={18} className="transition-transform group-hover:scale-110" />}
                 <span className="uppercase tracking-[0.1em]">{isAdminMode ? 'Xác nhận duyệt' : 'Nộp phiếu ngay'}</span>
               </>
             )}

@@ -126,6 +126,27 @@ export default function StudentEvaluation() {
     }
   };
 
+  const handleSaveDraft = async (payload: any) => {
+    if (!semester) return toast.error('Vui lòng chọn học kỳ');
+    if (!user?.studentId) return toast.error('Không tìm thấy thông tin sinh viên');
+    
+    setSubmitting(true);
+    try {
+      const res = await api.post('/training', {
+        student_id: user.studentId,
+        semester,
+        ...payload,
+        status: 'DRAFT',
+      });
+      setSavedDetails(parseDetails(res.data?.details || payload.details));
+      toast.success('Đã lưu bản nháp thành công');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Lỗi khi lưu bản nháp');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleBackToForm = () => {
     setSubmitted(null);
     loadSavedEvaluation(semester);
@@ -202,7 +223,8 @@ export default function StudentEvaluation() {
         adminData={savedAdminDetails || undefined}
         scannedRecords={scannedRecords}
         onSubmit={handleSubmit}
-        loading={submitting || checkingWindow || Boolean(submissionWindow && !submissionWindow.isOpen)}
+        onSaveDraft={handleSaveDraft}
+        loading={submitting || checkingWindow}
       />
     </div>
   );

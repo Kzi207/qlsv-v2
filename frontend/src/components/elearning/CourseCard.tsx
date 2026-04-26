@@ -29,7 +29,8 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onEnter, role = 'STUDEN
   return (
     <motion.article
       whileHover={{ y: -4 }}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-shadow hover:shadow-xl hover:shadow-slate-200/40"
+      onClick={onEnter}
+      className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-shadow hover:shadow-xl hover:shadow-slate-200/40 active:scale-[0.98]"
     >
       <div className="relative h-44 overflow-hidden">
         <img
@@ -94,13 +95,12 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onEnter, role = 'STUDEN
           )}
         </div>
 
-        <button
-          onClick={onEnter}
-          className={`mt-auto flex w-full items-center justify-center gap-3 rounded-xl border border-slate-100 bg-slate-50 py-3.5 text-[10px] font-black uppercase tracking-widest text-slate-900 transition-all ${buttonClass} active:scale-95`}
+        <div
+          className={`mt-auto flex w-full items-center justify-center gap-3 rounded-xl border border-slate-100 bg-slate-50 py-3.5 text-[10px] font-black uppercase tracking-widest text-slate-900 transition-all ${buttonClass}`}
         >
           {role === 'STUDENT' ? 'Vào học' : 'Quản lý lớp'}
           {role === 'STUDENT' ? <PlayCircle size={16} /> : <ArrowRight size={16} />}
-        </button>
+        </div>
       </div>
     </motion.article>
   );

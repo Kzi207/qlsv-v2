@@ -135,6 +135,18 @@ exports.Prisma.UserScalarFieldEnum = {
   studentId: 'studentId'
 };
 
+exports.Prisma.AuditLogScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  action: 'action',
+  targetType: 'targetType',
+  targetId: 'targetId',
+  details: 'details',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.ClassScalarFieldEnum = {
   name: 'name',
   active_semester_id: 'active_semester_id',
@@ -629,6 +641,7 @@ exports.Role = exports.$Enums.Role = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  AuditLog: 'AuditLog',
   Class: 'Class',
   Student: 'Student',
   BchAssignment: 'BchAssignment',

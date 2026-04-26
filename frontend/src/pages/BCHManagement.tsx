@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
-import { Plus, Search, Edit2, Trash2, X, Loader2, UserCheck, Phone, Mail, FileDown, Shield, UserCircle } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, X, Loader2, UserCheck, FileDown, Shield, UserCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Assignment {
@@ -160,9 +160,9 @@ const BCHManagement = () => {
     setCurrentBch(bch);
     if (bch.assignments && bch.assignments.length > 0) {
       setAssignments(bch.assignments.map((a: any) => ({
-        classId: a.classId,
-        fromOrder: a.fromOrder,
-        toOrder: a.toOrder
+        classId: a.classId || '',
+        fromOrder: Number(a.fromOrder) || 0,
+        toOrder: Number(a.toOrder) || 0
       })));
     } else {
       setAssignments([{ classId: bch.class_id || '', fromOrder: 1, toOrder: 10 }]);
@@ -524,10 +524,11 @@ const BCHManagement = () => {
                             <input
                               type="number"
                               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none"
-                              value={assign.fromOrder}
+                              value={assign.fromOrder === 0 ? '' : assign.fromOrder}
                               onChange={(e) => {
+                                const val = e.target.value === '' ? 0 : parseInt(e.target.value);
                                 const newAssigns = [...assignments];
-                                newAssigns[index].fromOrder = parseInt(e.target.value);
+                                newAssigns[index].fromOrder = isNaN(val) ? 0 : val;
                                 setAssignments(newAssigns);
                               }}
                             />
@@ -537,10 +538,11 @@ const BCHManagement = () => {
                             <input
                               type="number"
                               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none"
-                              value={assign.toOrder}
+                              value={assign.toOrder === 0 ? '' : assign.toOrder}
                               onChange={(e) => {
+                                const val = e.target.value === '' ? 0 : parseInt(e.target.value);
                                 const newAssigns = [...assignments];
-                                newAssigns[index].toOrder = parseInt(e.target.value);
+                                newAssigns[index].toOrder = isNaN(val) ? 0 : val;
                                 setAssignments(newAssigns);
                               }}
                             />

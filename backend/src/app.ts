@@ -24,6 +24,8 @@ import academicRoutes from './routes/academic.routes';
 import financeRoutes from './routes/finance.routes';
 import paymentRoutes from './routes/payment.routes';
 import curriculumRoutes from './routes/curriculum.routes';
+import notificationRoutes from './routes/notification.routes';
+import auditRoutes from './routes/audit.routes';
 import { getAllowedOrigins } from './utils/security';
 import { securityHeadersMiddleware } from './middleware/security-headers.middleware';
 import { csrfMiddleware } from './middleware/csrf.middleware';
@@ -74,6 +76,8 @@ app.use('/api/academic', academicRoutes);
 app.use('/api/finance', financeRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/curriculum', curriculumRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/audit', auditRoutes);
 
 // Health check
 app.get('/', (req, res) => {

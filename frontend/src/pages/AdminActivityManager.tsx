@@ -22,10 +22,11 @@ import { QRCodeSVG } from 'qrcode.react';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EVALUATION_DATA } from '../constants/evaluationData';
+import ConfirmModal from '../components/ConfirmModal';
 
 const AdminActivityManager = () => {
   const [sessions, setSessions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedSession, setSelectedSession] = useState<any>(null);
   const [stats, setStats] = useState<any[]>([]);
@@ -41,6 +42,19 @@ const AdminActivityManager = () => {
   
   const [classes, setClasses] = useState<any[]>([]);
   const [semesters, setSemesters] = useState<any[]>([]);
+  
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    type?: 'danger' | 'warning' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   // Form State
   const [formData, setFormData] = useState({
@@ -139,12 +153,19 @@ const AdminActivityManager = () => {
   };
 
   const handleDeleteSession = async (sessionId: number) => {
-    if (!window.confirm('Xóa hoạt động này?')) return;
-    try {
-      await axios.delete(`/activities/session/${sessionId}`);
-      toast.success('Đã xóa');
-      fetchSessions();
-    } catch (error) { toast.error('Lỗi xóa'); }
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Xóa hoạt động?',
+      message: 'Hành động này sẽ xóa vĩnh viễn mã QR và danh sách điểm danh liên quan. Bạn có chắc chắn?',
+      onConfirm: async () => {
+        try {
+          await axios.delete(`/activities/session/${sessionId}`);
+          toast.success('Đã xóa');
+          fetchSessions();
+        } catch (error) { toast.error('Lỗi xóa'); }
+      },
+      type: 'danger'
+    });
   };
 
   const fetchStats = async (sessionId: number, silent = false) => {
@@ -162,12 +183,19 @@ const AdminActivityManager = () => {
   };
 
   const handleDeleteRecord = async (recordId: number) => {
-    if (!window.confirm('Xóa sinh viên này khỏi danh sách?')) return;
-    try {
-      await axios.delete(`/activities/record/${recordId}`);
-      if (selectedSession) fetchStats(selectedSession.id);
-      toast.success('Đã xóa');
-    } catch (error) { toast.error('Lỗi xóa bản ghi'); }
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Gỡ sinh viên?',
+      message: 'Bạn có muốn gỡ sinh viên này khỏi danh sách điểm danh? Điểm sẽ không được cộng vào DRL.',
+      onConfirm: async () => {
+        try {
+          await axios.delete(`/activities/record/${recordId}`);
+          if (selectedSession) fetchStats(selectedSession.id);
+          toast.success('Đã xóa');
+        } catch (error) { toast.error('Lỗi xóa bản ghi'); }
+      },
+      type: 'warning'
+    });
   };
 
   const toggleStatus = async (session: any) => {
@@ -205,12 +233,19 @@ const AdminActivityManager = () => {
   };
 
   const handleRejectEvidence = async (id: number) => {
-    if (!window.confirm('Từ chối minh chứng này?')) return;
-    try {
-      await axios.patch(`/activities/evidence/review/${id}`, { status: 'REJECTED' });
-      toast.success('Đã từ chối');
-      fetchPendingEvidence();
-    } catch (error) { toast.error('Lỗi thao tác'); }
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Từ chối minh chứng?',
+      message: 'Minh chứng này sẽ bị hủy bỏ và sinh viên sẽ không được cộng điểm.',
+      onConfirm: async () => {
+        try {
+          await axios.patch(`/activities/evidence/review/${id}`, { status: 'REJECTED' });
+          toast.success('Đã từ chối');
+          fetchPendingEvidence();
+        } catch (error) { toast.error('Lỗi thao tác'); }
+      },
+      type: 'danger'
+    });
   };
 
   const selectedSection = EVALUATION_DATA.find(s => s.id === formData.sectionId);
@@ -556,6 +591,15 @@ const AdminActivityManager = () => {
           </div>
         )}
       </AnimatePresence>
+      
+      <ConfirmModal
+        isOpen={confirmConfig.isOpen}
+        onClose={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
+        onConfirm={confirmConfig.onConfirm}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        type={confirmConfig.type}
+      />
     </>
   );
 };

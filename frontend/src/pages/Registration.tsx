@@ -1,4 +1,3 @@
-import React from 'react';
 import ComingSoon from '../components/ComingSoon';
 
 const Registration = () => <ComingSoon title="Đăng ký môn học" />;

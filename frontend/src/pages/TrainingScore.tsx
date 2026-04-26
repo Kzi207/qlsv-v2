@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
-import { Award, Search, Save, ChevronRight, Calculator, Loader2, History } from 'lucide-react';
+import { Award, Search, Save, ChevronRight, Calculator, Loader2, History as HistoryIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { useAuthStore } from '../store/useAuthStore';
@@ -113,7 +113,7 @@ const TrainingScore = () => {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 text-center md:text-left">
           <div className="space-y-1">
             <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[9px] font-black uppercase tracking-wider mb-1">
-              <History size={10} />
+              <HistoryIcon size={10} />
               History Records
             </div>
             <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">Kết quả rèn luyện</h2>

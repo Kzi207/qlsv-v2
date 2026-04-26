@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import toast from 'react-hot-toast';
-import { AnimatePresence, motion } from 'framer-motion';
-import { Plus, Calendar, List, Zap, Save, Search, Filter } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
+import { Plus, Calendar, Save, Search } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 
 // Sub-components
-import Header from '../components/bulk-timetable/Header';
-import SidebarFilter from '../components/bulk-timetable/SidebarFilter';
 import ScheduleGrid from '../components/bulk-timetable/ScheduleGrid';
 import ScheduleDayList from '../components/bulk-timetable/ScheduleDayList';
 import CreateSchedulePanel from '../components/bulk-timetable/CreateSchedulePanel';
@@ -65,7 +63,7 @@ const AdminTimetableManagement = () => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
-  const [currentWeekDate, setCurrentWeekDate] = useState(new Date());
+  const [currentWeekDate] = useState(new Date());
 
   useEffect(() => {
     fetchInitialData();

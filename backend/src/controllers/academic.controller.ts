@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 import prisma from '../utils/prisma';
 import type { AuthRequest } from '../middleware/auth.middleware';
+import { logAudit } from '../utils/logger';
 
 // --- SUBJECTS ---
 export const getSubjects = async (req: AuthRequest, res: Response) => {
@@ -26,6 +27,15 @@ export const createSubject = async (req: AuthRequest, res: Response) => {
         subjectType: subjectType || 'LECTURE'
       }
     });
+    await logAudit({
+      userId: Number(req.user?.id),
+      action: 'CREATE_SUBJECT',
+      targetType: 'Subject',
+      targetId: String(subject.id),
+      details: { code, name },
+      req
+    });
+
     res.status(201).json(subject);
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
@@ -48,6 +58,16 @@ export const updateSubject = async (req: AuthRequest, res: Response) => {
         subjectType
       }
     });
+
+    await logAudit({
+      userId: Number(req.user?.id),
+      action: 'UPDATE_SUBJECT',
+      targetType: 'Subject',
+      targetId: String(id),
+      details: { code, name },
+      req
+    });
+
     res.json(subject);
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
@@ -69,7 +89,18 @@ export const bulkUpdateSubjectPrice = async (req: AuthRequest, res: Response) =>
 export const deleteSubject = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   try {
+    const subject = await prisma.subject.findUnique({ where: { id: Number(id) } });
     await prisma.subject.delete({ where: { id: Number(id) } });
+
+    await logAudit({
+      userId: Number(req.user?.id),
+      action: 'DELETE_SUBJECT',
+      targetType: 'Subject',
+      targetId: String(id),
+      details: { code: subject?.code, name: subject?.name },
+      req
+    });
+
     res.json({ message: 'Deleted' });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });

@@ -5,9 +5,7 @@ import {
   Trash2, 
   Search,
   CheckCircle2,
-  Users,
   Layout,
-  ArrowRight,
   Filter
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';

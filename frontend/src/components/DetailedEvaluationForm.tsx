@@ -16,6 +16,7 @@ interface Props {
   studentId?: number;
   semester?: string;
   onSubmit: (data: any) => void;
+  onSaveDraft?: (data: any) => void;
   loading?: boolean;
   isAdminMode?: boolean;
   onExport?: () => void;
@@ -30,6 +31,7 @@ const DetailedEvaluationForm: React.FC<Props> = ({
   studentId,
   semester,
   onSubmit,
+  onSaveDraft,
   loading,
   isAdminMode,
   onExport,
@@ -169,7 +171,7 @@ const DetailedEvaluationForm: React.FC<Props> = ({
     else setPreviewData({ ...previewData, files: newFiles, initialIndex: Math.min(index, newFiles.length - 1) });
   };
 
-  const handleSubmit = () => {
+  const preparePayload = () => {
     const scores: Record<string, number> = {};
     const details: Record<string, any> = {};
 
@@ -182,24 +184,33 @@ const DetailedEvaluationForm: React.FC<Props> = ({
     });
 
     if (isAdminMode) {
-      onSubmit({
+      return {
         admin_details: adminScores,
         admin_total: adminGrandTotal,
         admin_y_thuc: calculateSectionTotal(EVALUATION_DATA[0], true),
         admin_hoat_dong: calculateSectionTotal(EVALUATION_DATA[1], true) + calculateSectionTotal(EVALUATION_DATA[2], true),
         admin_ky_luat: calculateSectionTotal(EVALUATION_DATA[3], true) + calculateSectionTotal(EVALUATION_DATA[4], true),
-      });
-      return;
+      };
     }
 
-    onSubmit({
+    return {
       scores,
       total: grandTotal,
       details,
       y_thuc: calculateSectionTotal(EVALUATION_DATA[0], false),
       hoat_dong: calculateSectionTotal(EVALUATION_DATA[1], false) + calculateSectionTotal(EVALUATION_DATA[2], false),
       ky_luat: calculateSectionTotal(EVALUATION_DATA[3], false) + calculateSectionTotal(EVALUATION_DATA[4], false),
-    });
+    };
+  };
+
+  const handleSubmit = () => {
+    onSubmit(preparePayload());
+  };
+
+  const handleSaveDraft = () => {
+    if (onSaveDraft) {
+      onSaveDraft(preparePayload());
+    }
   };
 
   return (
@@ -245,6 +256,7 @@ const DetailedEvaluationForm: React.FC<Props> = ({
           grandTotal={grandTotal}
           adminGrandTotal={adminGrandTotal}
           onSave={handleSubmit}
+          onSaveDraft={handleSaveDraft}
           onExport={onExport}
           onClose={onClose}
           loading={loading}

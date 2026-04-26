@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
   CreditCard, 
-  History, 
+  History as HistoryIcon, 
   AlertCircle, 
   ArrowRight,
   ShieldCheck,
@@ -110,7 +110,7 @@ const TuitionPayment = () => {
                               <p className="text-[10px] font-bold text-slate-400 uppercase leading-tight">Thanh toán qua mã QR hoặc ứng dụng ngân hàng</p>
                            </button>
                            <button className="p-6 border-2 border-slate-100 rounded-[2rem] text-left space-y-3 grayscale opacity-50 cursor-not-allowed">
-                              <div className="h-10 w-10 bg-slate-200 rounded-xl flex items-center justify-center text-slate-400"><History size={20} /></div>
+                              <div className="h-10 w-10 bg-slate-200 rounded-xl flex items-center justify-center text-slate-400"><HistoryIcon size={20} /></div>
                               <p className="text-sm font-black text-slate-400">Tiền mặt</p>
                               <p className="text-[10px] font-bold text-slate-300 uppercase leading-tight">Nộp trực tiếp tại phòng tài chính kế hoạch</p>
                            </button>
@@ -139,7 +139,7 @@ const TuitionPayment = () => {
          <div className="space-y-6">
             <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 shadow-xl shadow-slate-200/20 space-y-6">
                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                  <History size={16} className="text-blue-500" /> Lịch sử thanh toán
+                  <HistoryIcon size={16} className="text-blue-500" /> Lịch sử thanh toán
                </h3>
                
                <div className="space-y-4">

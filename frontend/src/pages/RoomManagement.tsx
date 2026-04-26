@@ -4,7 +4,6 @@ import {
   Plus, 
   Trash2, 
   Users, 
-  Monitor, 
   Search,
   CheckCircle2,
   XCircle,
@@ -12,9 +11,6 @@ import {
   ClipboardList,
   CalendarDays,
   User,
-  Clock,
-  Check,
-  X,
   Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';

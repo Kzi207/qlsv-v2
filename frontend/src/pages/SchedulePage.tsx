@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ScheduleEvent } from '../components/schedule/types';
+import { useState } from 'react';
+import type { ScheduleEvent } from '../components/schedule/types';
 import ScheduleHeader from '../components/schedule/ScheduleHeader';
 import ScheduleLegend from '../components/schedule/ScheduleLegend';
 import DayView from '../components/schedule/DayView';

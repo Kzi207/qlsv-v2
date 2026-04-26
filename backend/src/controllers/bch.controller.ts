@@ -30,20 +30,30 @@ export const getBchAccounts = async (req: Request, res: Response) => {
   const { class_id, role } = req.query;
 
   try {
-    let query = 'SELECT * FROM "User" WHERE role::text IN (\'QTV\', \'LECTURER\', \'BCH\')';
-    const params: any[] = [];
+    const where: any = {
+      role: {
+        in: ['QTV', 'LECTURER', 'BCH']
+      }
+    };
 
     if (role) {
-      query = 'SELECT * FROM "User" WHERE role::text = $1';
-      params.push(role);
+      where.role = role;
     }
 
     if (class_id) {
-      query += params.length > 0 ? ' AND class_id = $2' : ' AND class_id = $1';
-      params.push(class_id);
+      where.class_id = String(class_id);
     }
 
-    const users = await prisma.$queryRawUnsafe(query, ...params);
+    const users = await prisma.user.findMany({
+      where,
+      include: {
+        assignments: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
     res.json(users);
   } catch (error) {
     console.error('getBchAccounts error:', error);
@@ -99,24 +109,38 @@ export const deleteBchAccount = async (req: Request, res: Response) => {
 export const assignStudents = async (req: Request, res: Response) => {
   const { bchUserId, assignments } = req.body; 
 
+  if (!bchUserId) {
+    return res.status(400).json({ message: 'Thiếu ID tài khoản BCH' });
+  }
+
   try {
-    await (prisma as any).bchAssignment.deleteMany({
-      where: { bchUserId: Number(bchUserId) }
+    const targetUserId = Number(bchUserId);
+    
+    await prisma.$transaction(async (tx) => {
+      // 1. Delete all existing assignments for this user
+      await (tx as any).bchAssignment.deleteMany({
+        where: { bchUserId: targetUserId }
+      });
+
+      // 2. Create new assignments one by one if provided
+      if (assignments && assignments.length > 0) {
+        for (const a of assignments) {
+          await (tx as any).bchAssignment.create({
+            data: {
+              bchUserId: targetUserId,
+              classId: String(a.classId),
+              fromOrder: parseInt(String(a.fromOrder)) || 0,
+              toOrder: parseInt(String(a.toOrder)) || 0
+            }
+          });
+        }
+      }
     });
 
-    const created = await (prisma as any).bchAssignment.createMany({
-      data: assignments.map((a: any) => ({
-        bchUserId: Number(bchUserId),
-        classId: a.classId,
-        fromOrder: Number(a.fromOrder),
-        toOrder: Number(a.toOrder)
-      }))
-    });
-
-    res.json({ message: 'Assignments updated', count: created.count });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.json({ message: 'Cập nhật phân công thành công' });
+  } catch (error: any) {
+    console.error('Lỗi khi phân công:', error);
+    res.status(500).json({ message: 'Lỗi máy chủ: ' + error.message });
   }
 };
 

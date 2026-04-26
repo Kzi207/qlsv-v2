@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import type { AuthRequest } from '../middleware/auth.middleware';
+import { logAudit } from '../utils/logger';
 
 export const getGradesByClass = async (req: AuthRequest, res: Response) => {
   const { classId, subject, semesterId } = req.query;
@@ -79,6 +80,19 @@ export const upsertGrades = async (req: AuthRequest, res: Response) => {
     });
 
     await Promise.all(operations);
+
+    await logAudit({
+      userId: Number(req.user?.id),
+      action: 'UPDATE_GRADES',
+      targetType: 'Grade',
+      details: {
+        subject,
+        semesterId,
+        count: grades.length
+      },
+      req
+    });
+
     res.json({ message: 'Cập nhật điểm thành công' });
   } catch (error) {
     console.error('Upsert grades error:', error);

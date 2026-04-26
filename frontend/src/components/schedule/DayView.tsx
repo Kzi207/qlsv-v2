@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScheduleEvent } from './types';
+import type { ScheduleEvent } from './types';
 import ScheduleEventCard from './ScheduleEventCard';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -10,7 +10,7 @@ interface Props {
   onEventClick: (event: ScheduleEvent) => void;
 }
 
-const DayView: React.FC<Props> = ({ currentDate, events, onEventClick }) => {
+const DayView: React.FC<Props> = ({ events, onEventClick }) => {
   if (events.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-32 bg-white rounded-[24px] border border-slate-100 shadow-sm text-center px-4">

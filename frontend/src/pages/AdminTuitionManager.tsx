@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { 
-  CreditCard, 
   Search, 
-  CheckCircle2, 
   AlertCircle, 
   User,
   Filter,

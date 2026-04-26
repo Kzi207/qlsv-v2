@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { 
   Video, 
   Search, 
-  Filter, 
-  MoreVertical, 
   Eye, 
   EyeOff, 
   Trash2, 

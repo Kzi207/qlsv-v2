@@ -5,6 +5,7 @@ import prisma from '../utils/prisma';
 import type { AuthRequest } from '../middleware/auth.middleware';
 import { clearAuthCookies, createCsrfToken, setAuthCookies, setCsrfCookie, getCookieValue, CSRF_COOKIE_NAME } from '../utils/security';
 import { decrypt } from '../utils/crypto';
+import { logAudit } from '../utils/logger';
 
 const getJwtSecret = () => process.env.JWT_SECRET || 'secret';
 
@@ -76,6 +77,12 @@ export const login = async (req: Request, res: Response) => {
     const csrfToken = createCsrfToken();
     setAuthCookies(req, res, token, csrfToken);
 
+    await logAudit({
+      userId: user.id,
+      action: 'LOGIN',
+      req
+    });
+
     res.json({
       user: toSafeUser(user),
       csrfToken,
@@ -131,7 +138,14 @@ export const me = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const logout = (req: Request, res: Response) => {
+export const logout = async (req: AuthRequest, res: Response) => {
+  if (req.user?.id) {
+    await logAudit({
+      userId: Number(req.user.id),
+      action: 'LOGOUT',
+      req
+    });
+  }
   clearAuthCookies(req, res);
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.json({ message: 'Logged out' });

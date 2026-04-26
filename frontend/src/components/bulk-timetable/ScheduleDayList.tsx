@@ -1,4 +1,4 @@
-import { Calendar, Clock, AlertTriangle, CheckCircle2, X, Trash2 } from 'lucide-react';
+import { Calendar, Clock, AlertTriangle, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const DAYS = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'];

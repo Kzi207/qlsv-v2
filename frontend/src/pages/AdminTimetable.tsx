@@ -5,7 +5,6 @@ import {
   AlertCircle, 
   TrendingUp, 
   Users, 
-  DoorOpen, 
   Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';

@@ -9,11 +9,27 @@ interface Props {
 }
 
 const HeaderBar: React.FC<Props> = ({ selectedDate, onDateChange, viewMode, onViewModeChange }) => {
+  const getWeekRange = (date: Date) => {
+    const current = new Date(date);
+    const day = current.getDay();
+    const diff = current.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(current.setDate(diff));
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    return { monday, sunday };
+  };
+
   const formatHeaderDate = (date: Date) => {
     if (viewMode === 'day') {
       return date.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
     }
-    return date.toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' });
+    if (viewMode === 'week') {
+      const { monday, sunday } = getWeekRange(date);
+      const rangeStart = monday.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+      const rangeEnd = sunday.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      return `Tuần ${rangeStart} - ${rangeEnd}`;
+    }
+    return `Tháng ${date.toLocaleDateString('vi-VN', { month: '2-digit', year: 'numeric' })}`;
   };
 
   const handlePrev = () => {
@@ -39,53 +55,72 @@ const HeaderBar: React.FC<Props> = ({ selectedDate, onDateChange, viewMode, onVi
   ] as const;
 
   return (
-    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white/95 backdrop-blur p-3 md:p-4 rounded-3xl border border-slate-100 shadow-sm sticky top-0 z-30">
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          onClick={() => onDateChange(new Date())}
-          className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-2xl text-xs font-black text-white border border-blue-600 transition-all active:scale-95"
-        >
-          Hôm nay
-        </button>
+    <div className="relative z-10 rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm md:p-5">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              onClick={() => onDateChange(new Date())}
+              className="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-black text-white transition-all hover:bg-blue-700 active:scale-95"
+            >
+              Hôm nay
+            </button>
 
-        <div className="flex items-center gap-1 bg-slate-50 rounded-2xl border border-slate-100 p-1">
-          <button aria-label="Lùi lịch" onClick={handlePrev} className="h-9 w-9 flex items-center justify-center hover:bg-white rounded-xl transition-colors">
-            <ChevronLeft size={20} />
-          </button>
-          <button aria-label="Tới lịch" onClick={handleNext} className="h-9 w-9 flex items-center justify-center hover:bg-white rounded-xl transition-colors">
-            <ChevronRight size={20} />
-          </button>
+            <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
+              <button
+                aria-label="Lùi lịch"
+                onClick={handlePrev}
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-white hover:text-slate-900"
+              >
+                <ChevronLeft size={19} />
+              </button>
+              <button
+                aria-label="Tới lịch"
+                onClick={handleNext}
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-white hover:text-slate-900"
+              >
+                <ChevronRight size={19} />
+              </button>
+            </div>
+          </div>
+
+          <label className="group relative flex w-fit min-w-0 cursor-pointer items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 transition-colors hover:bg-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+              <CalendarIcon size={17} className="shrink-0" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                {viewMode === 'day' ? 'Lịch ngày' : viewMode === 'week' ? 'Lịch tuần' : 'Lịch tháng'}
+              </p>
+              <p className="truncate text-base font-black capitalize text-slate-900 md:text-lg">
+                {formatHeaderDate(selectedDate)}
+              </p>
+            </div>
+            <input
+              type="date"
+              className="absolute inset-0 cursor-pointer opacity-0"
+              onChange={(e) => {
+                if (e.target.value) onDateChange(new Date(e.target.value));
+              }}
+            />
+          </label>
         </div>
 
-        <label className="relative group flex items-center gap-3 px-3 py-2 min-w-0 cursor-pointer">
-          <CalendarIcon size={18} className="text-blue-600 shrink-0" />
-          <span className="text-base md:text-xl font-black text-slate-900 tracking-tight capitalize truncate">
-            {formatHeaderDate(selectedDate)}
-          </span>
-          <input
-            type="date"
-            className="absolute inset-0 opacity-0 cursor-pointer"
-            onChange={(e) => {
-              if (e.target.value) onDateChange(new Date(e.target.value));
-            }}
-          />
-        </label>
-      </div>
-
-      <div className="grid grid-cols-3 bg-slate-100/70 p-1 rounded-2xl border border-slate-100 w-full sm:w-auto">
-        {modes.map((mode) => (
-          <button
-            key={mode.id}
-            onClick={() => onViewModeChange(mode.id)}
-            className={`px-4 md:px-6 py-2.5 rounded-xl text-xs font-black transition-all duration-200 ${
-              viewMode === mode.id
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            {mode.label}
-          </button>
-        ))}
+        <div className="grid w-full grid-cols-3 rounded-2xl border border-slate-200 bg-slate-100/80 p-1 sm:w-auto">
+          {modes.map((mode) => (
+            <button
+              key={mode.id}
+              onClick={() => onViewModeChange(mode.id)}
+              className={`rounded-xl px-4 py-2.5 text-xs font-black transition-all duration-200 md:px-6 ${
+                viewMode === mode.id
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {mode.label}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

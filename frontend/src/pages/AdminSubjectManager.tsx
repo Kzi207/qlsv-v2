@@ -9,8 +9,7 @@ import {
   Save,
   Layers,
   CheckCircle2,
-  Filter,
-  Layout
+  Filter
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from '../api/axios';
@@ -21,7 +20,7 @@ const AdminSubjectManager = () => {
   
   // Catalog State
   const [subjects, setSubjects] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSubject, setEditingSubject] = useState<any>(null);

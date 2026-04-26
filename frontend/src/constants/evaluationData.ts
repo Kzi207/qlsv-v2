@@ -21,7 +21,7 @@ export const EVALUATION_DATA: Section[] = [
       {
         id: '1.1',
         content: '1. Sinh viên có điểm trung bình học tập tích lũy với thang điểm 4',
-        maxPoints: 20,
+        maxPoints: 5,
         guide: 'Căn cứ vào điểm trung bình học kỳ (thang 4): \n- Loại Trung bình: 2.0 - 2.49 (2đ)\n- Loại Khá: 2.5 - 3.19 (3đ)\n- Loại Giỏi: 3.2 - 3.59 (4đ)\n- Loại Xuất sắc: 3.6 - 4.0 (5đ)',
         type: 'number',
         unit: 'điểm'
@@ -29,7 +29,7 @@ export const EVALUATION_DATA: Section[] = [
       {
         id: '1.2',
         content: '2. Có giấy chứng nhận tham gia học các lớp chuyên đề kỹ năng học tập trong và ngoài Trường',
-        maxPoints: 20,
+        maxPoints: 3,
         guide: 'Có minh chứng (giấy xác nhận, giấy chứng nhận, giấy khen, bằng khen...). Cộng 3đ/học kỳ.',
         type: 'boolean'
       },
@@ -100,7 +100,7 @@ export const EVALUATION_DATA: Section[] = [
       {
         id: '1.11',
         content: '11. Thành viên các câu lạc bộ học thuật cấp Khoa, Trường',
-        maxPoints: 20,
+        maxPoints: 2,
         guide: 'Có minh chứng. Cộng 2đ/học kỳ.',
         type: 'boolean'
       },
@@ -209,7 +209,7 @@ export const EVALUATION_DATA: Section[] = [
       {
         id: '3.3',
         content: '3. Báo cáo chuyên đề do Trường tổ chức trực tiếp hoặc trực tuyến',
-        maxPoints: 20,
+        maxPoints: 4,
         guide: 'Có minh chứng. Cộng 4đ/lần.',
         type: 'boolean'
       },
@@ -232,14 +232,14 @@ export const EVALUATION_DATA: Section[] = [
       {
         id: '3.6',
         content: '6. Được kết nạp Đoàn',
-        maxPoints: 20,
+        maxPoints: 5,
         guide: 'Chỉ được cộng một lần vào học kỳ kết nạp. Cộng 5đ.',
         type: 'boolean'
       },
       {
         id: '3.7',
         content: '7. Được kết nạp Đảng',
-        maxPoints: 20,
+        maxPoints: 8,
         guide: 'Chỉ được cộng một lần vào học kỳ kết nạp. Cộng 8đ.',
         type: 'boolean'
       },
@@ -254,28 +254,28 @@ export const EVALUATION_DATA: Section[] = [
       {
         id: '3.9',
         content: '9. Thành viên các Câu lạc bộ, đội, nhóm thuộc Đoàn Thanh niên, Hội Sinh viên',
-        maxPoints: 20,
+        maxPoints: 2,
         guide: 'Có minh chứng. Cộng 2đ/học kỳ.',
         type: 'boolean'
       },
       {
         id: '3.10',
         content: '10. Hoạt động "Học tập các bài lý luận chính trị"',
-        maxPoints: 20,
+        maxPoints: 4,
         guide: 'Có minh chứng. Cộng 4đ/lần.',
         type: 'boolean'
       },
       {
         id: '3.11',
         content: '11. Hoạt động đền ơn đáp nghĩa, Thắp nến tri ân',
-        maxPoints: 20,
+        maxPoints: 3,
         guide: 'Có minh chứng. Cộng 3đ/lần.',
         type: 'boolean'
       },
       {
         id: '3.12',
         content: '12. Hoạt động lao động tình nguyện tại Trường',
-        maxPoints: 20,
+        maxPoints: 3,
         guide: 'Có minh chứng. Cộng 3đ/lần.',
         type: 'boolean'
       },
@@ -290,7 +290,7 @@ export const EVALUATION_DATA: Section[] = [
       {
         id: '3.14',
         content: '14. Tập thể được khen thưởng trong các hoạt động phong trào',
-        maxPoints: 20,
+        maxPoints: 1,
         guide: 'Mỗi SV trong tập thể được 1 điểm khi có giấy khen tập thể. Cộng 1đ/lần.',
         type: 'boolean'
       },
@@ -320,14 +320,14 @@ export const EVALUATION_DATA: Section[] = [
       {
         id: '4.2',
         content: '2. Sinh viên có hành vi tốt, có tinh thần sẻ chia, giúp đỡ người yếu thế được ghi nhận bằng văn bản',
-        maxPoints: 25,
+        maxPoints: 5,
         guide: 'Có minh chứng (giấy khen, giấy chứng nhận...). Cộng 5đ/lần.',
         type: 'boolean'
       },
       {
         id: '4.3',
         content: '3. Sinh viên được biểu dương, khen thưởng về tham gia các hoạt động xã hội và cộng đồng ngoài trường',
-        maxPoints: 25,
+        maxPoints: 5,
         guide: 'Có minh chứng bằng văn bản. Cộng 5đ/lần.',
         type: 'boolean'
       },
@@ -342,42 +342,42 @@ export const EVALUATION_DATA: Section[] = [
       {
         id: '4.5',
         content: '5. Chương trình "Tư vấn tuyển sinh"',
-        maxPoints: 25,
+        maxPoints: 5,
         guide: 'Có minh chứng. Cộng 5đ/lần.',
         type: 'boolean'
       },
       {
         id: '4.6',
         content: '6. Công tác nhập học',
-        maxPoints: 25,
+        maxPoints: 5,
         guide: 'Có minh chứng. Cộng 5đ/lần.',
         type: 'boolean'
       },
       {
         id: '4.7',
         content: '7. Công tác khám sức khỏe sinh viên đầu khóa',
-        maxPoints: 25,
+        maxPoints: 5,
         guide: 'Có minh chứng. Cộng 5đ/lần.',
         type: 'boolean'
       },
       {
         id: '4.8',
         content: '8. Công tác Ngày hội việc làm',
-        maxPoints: 25,
+        maxPoints: 5,
         guide: 'Có minh chứng. Cộng 5đ/lần.',
         type: 'boolean'
       },
       {
         id: '4.9',
         content: '9. Công tác tổ chức Lễ Tốt nghiệp',
-        maxPoints: 25,
+        maxPoints: 5,
         guide: 'Có minh chứng. Cộng 5đ/lần.',
         type: 'boolean'
       },
       {
         id: '4.10',
         content: '10. Công tác kiểm tra hồ sơ sinh viên',
-        maxPoints: 25,
+        maxPoints: 5,
         guide: 'Có minh chứng. Cộng 5đ/lần.',
         type: 'boolean'
       },
@@ -455,7 +455,7 @@ export const EVALUATION_DATA: Section[] = [
       {
         id: '5.1',
         content: '1. Tham gia tích cực vào phong trào của Lớp, Đoàn, Hội sinh viên và các công tác đoàn thể xã hội khác',
-        maxPoints: 10,
+        maxPoints: 3,
         guide: 'Cộng 1đ/hoạt động. Được 3đ (điểm tối đa). Có xác nhận của Đoàn, Hội cấp trên hoặc xác nhận của CVHT.',
         type: 'number',
         unit: 'điểm'
@@ -463,7 +463,7 @@ export const EVALUATION_DATA: Section[] = [
       {
         id: '5.2',
         content: '2. Phát huy vai trò và hoàn thành tốt nhiệm vụ người cán bộ Chi đoàn, Lớp, Câu lạc bộ, đội, nhóm',
-        maxPoints: 10,
+        maxPoints: 5,
         guide: 'Có xác nhận của Đoàn, Hội cấp trên hoặc xác nhận của CVHT. \n- UVBCH Đoàn Trường; UVBCH Hội SV; Chủ nhiệm CLB; lớp trưởng: 5đ/học kỳ\n- Phó chủ nhiệm CLB; Đội trưởng; Đội phó các Đội, Nhóm thuộc Nhà trường: 4đ/học kỳ\n- UVBCH chi đoàn, UV Chi hội sinh viên cấp khoa hoặc là thành viên Đội tự quản, CLB: 3đ/học kỳ',
         type: 'number',
         unit: 'điểm'
@@ -479,14 +479,14 @@ export const EVALUATION_DATA: Section[] = [
       {
         id: '5.4',
         content: '4. Sinh viên được tặng Bằng khen của UBND Tỉnh, Thành phố (hoặc tương đương) về các hoạt động chính trị, văn hóa - xã hội...',
-        maxPoints: 10,
+        maxPoints: 5,
         guide: 'Có văn bản xác nhận. Cộng 5đ/lần.',
         type: 'boolean'
       },
       {
         id: '5.5',
         content: '5. Sinh viên đạt danh hiệu sinh viên 5 tốt cấp Trường, Đoàn viên tiêu biểu, Thanh niên tiên tiến làm theo lời Bác...',
-        maxPoints: 10,
+        maxPoints: 6,
         guide: 'Có minh chứng. Cộng 6đ/lần.',
         type: 'boolean'
       },
@@ -500,14 +500,14 @@ export const EVALUATION_DATA: Section[] = [
       {
         id: '5.7',
         content: '7. Đạt danh hiệu Đoàn viên ưu tú',
-        maxPoints: 10,
+        maxPoints: 6,
         guide: 'Cộng 6đ/lần.',
         type: 'boolean'
       },
       {
         id: '5.8',
         content: '8. Giấy khen tập thể của Đoàn được trao cho những tập thể có thành tích xuất sắc',
-        maxPoints: 10,
+        maxPoints: 2,
         guide: 'Mỗi SV trong tập thể được 2 điểm. Cộng 2đ/SV.',
         type: 'boolean'
       }

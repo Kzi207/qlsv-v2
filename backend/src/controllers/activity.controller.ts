@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../utils/prisma';
 import crypto from 'crypto';
+import { logAudit } from '../utils/logger';
+import type { AuthRequest } from '../middleware/auth.middleware';
 
-const prisma = new PrismaClient();
-
-export const createSession = async (req: Request, res: Response) => {
+export const createSession = async (req: AuthRequest, res: Response) => {
   try {
     const { title, category, points, sectionId, criterionId, semesterId, classId } = req.body;
     const qrToken = crypto.randomBytes(16).toString('hex');
@@ -21,6 +21,15 @@ export const createSession = async (req: Request, res: Response) => {
       SELECT * FROM "ActivityAttendanceSession" WHERE "qrToken" = ${qrToken} LIMIT 1
     `;
 
+    await logAudit({
+      userId: Number(req.user?.id),
+      action: 'CREATE_QR_SESSION',
+      targetType: 'ActivitySession',
+      targetId: String(sessions[0].id),
+      details: { title, points },
+      req
+    });
+
     res.json(sessions[0]);
   } catch (error: any) {
     console.error('Error in createSession:', error);
@@ -28,7 +37,7 @@ export const createSession = async (req: Request, res: Response) => {
   }
 };
 
-export const scanQR = async (req: Request, res: Response) => {
+export const scanQR = async (req: AuthRequest, res: Response) => {
   try {
     const { qrToken } = req.body;
     const user = (req as any).user;
@@ -76,6 +85,15 @@ export const scanQR = async (req: Request, res: Response) => {
       VALUES (${session.id}, ${student.id}, ${session.points}, NOW())
     `;
 
+    await logAudit({
+      userId: Number(user.id),
+      action: 'SCAN_QR',
+      targetType: 'ActivityRecord',
+      targetId: String(session.id),
+      details: { title: session.title, points: session.points },
+      req
+    });
+
     res.json({ message: 'Điểm danh thành công' });
   } catch (error: any) {
     console.error('Error in scanQR:', error);
@@ -83,7 +101,7 @@ export const scanQR = async (req: Request, res: Response) => {
   }
 };
 
-export const getMyRecords = async (req: Request, res: Response) => {
+export const getMyRecords = async (req: AuthRequest, res: Response) => {
   try {
     const user = (req as any).user;
     if (!user || !user.studentId) return res.status(403).json({ error: 'Forbidden' });
@@ -130,7 +148,7 @@ export const getMyRecords = async (req: Request, res: Response) => {
   }
 };
 
-export const getSessionStats = async (req: Request, res: Response) => {
+export const getSessionStats = async (req: AuthRequest, res: Response) => {
   try {
     const { sessionId } = req.params;
     const stats: any[] = await prisma.$queryRaw`
@@ -146,7 +164,7 @@ export const getSessionStats = async (req: Request, res: Response) => {
   }
 };
 
-export const updateRecord = async (req: Request, res: Response) => {
+export const updateRecord = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { points } = req.body;
@@ -160,7 +178,7 @@ export const updateRecord = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteRecord = async (req: Request, res: Response) => {
+export const deleteRecord = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     await prisma.$executeRaw`
@@ -173,7 +191,7 @@ export const deleteRecord = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteSession = async (req: Request, res: Response) => {
+export const deleteSession = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const sessionId = parseInt(String(id), 10);
@@ -188,7 +206,7 @@ export const deleteSession = async (req: Request, res: Response) => {
   }
 };
 
-export const toggleSessionStatus = async (req: Request, res: Response) => {
+export const toggleSessionStatus = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { isActive } = req.body;
@@ -202,11 +220,27 @@ export const toggleSessionStatus = async (req: Request, res: Response) => {
   }
 };
 
-export const getAllSessions = async (req: Request, res: Response) => {
+export const getAllSessions = async (req: AuthRequest, res: Response) => {
   try {
-    const sessions = await prisma.$queryRaw`
-      SELECT * FROM "ActivityAttendanceSession" ORDER BY "createdAt" DESC
-    `;
+    const user = (req as any).user;
+    const isQtv = user?.role === 'QTV';
+    const userClassId = user?.class_id;
+
+    let query: any;
+    if (isQtv) {
+      query = prisma.$queryRaw`
+        SELECT * FROM "ActivityAttendanceSession" ORDER BY "createdAt" DESC
+      `;
+    } else {
+      // BCH only see sessions for their class OR global sessions (where classId is null)
+      query = prisma.$queryRaw`
+        SELECT * FROM "ActivityAttendanceSession" 
+        WHERE "classId" = ${userClassId} OR "classId" IS NULL
+        ORDER BY "createdAt" DESC
+      `;
+    }
+
+    const sessions = await query;
     res.json(sessions);
   } catch (error: any) {
     console.error('Error in getAllSessions:', error);
@@ -216,7 +250,7 @@ export const getAllSessions = async (req: Request, res: Response) => {
 
 // --- MANUAL EVIDENCE METHODS ---
 
-export const uploadEvidence = async (req: Request, res: Response) => {
+export const uploadEvidence = async (req: AuthRequest, res: Response) => {
   try {
     const { title } = req.body;
     const user = (req as any).user;
@@ -232,6 +266,15 @@ export const uploadEvidence = async (req: Request, res: Response) => {
       VALUES (${title}, ${imageUrl}, ${studentIdInt}, 'PENDING', NOW(), NOW())
     `;
 
+    await logAudit({
+      userId: Number(user.id),
+      action: 'UPLOAD_ACTIVITY_EVIDENCE',
+      targetType: 'ActivityEvidence',
+      targetId: title, // Use title as targetId since we don't have the new ID easily with $executeRaw
+      details: { title, imageUrl },
+      req
+    });
+
     res.json({ message: 'Tải minh chứng thành công, vui lòng chờ duyệt' });
   } catch (error: any) {
     console.error('Error in uploadEvidence:', error);
@@ -239,7 +282,7 @@ export const uploadEvidence = async (req: Request, res: Response) => {
   }
 };
 
-export const getMyEvidenceRequests = async (req: Request, res: Response) => {
+export const getMyEvidenceRequests = async (req: AuthRequest, res: Response) => {
   try {
     const user = (req as any).user;
     if (!user || !user.studentId) return res.status(403).json({ error: 'Forbidden' });
@@ -258,15 +301,61 @@ export const getMyEvidenceRequests = async (req: Request, res: Response) => {
   }
 };
 
-export const getAllPendingEvidence = async (req: Request, res: Response) => {
+export const getAllPendingEvidence = async (req: AuthRequest, res: Response) => {
   try {
-    const evidence = await prisma.$queryRaw`
-      SELECT e.*, row_to_json(s) as student
-      FROM "ActivityEvidence" e
-      JOIN "Student" s ON e."studentId" = s.id
-      WHERE e.status = 'PENDING'
-      ORDER BY e."createdAt" ASC
-    `;
+    const user = (req as any).user;
+    const userId = Number(user?.id);
+    const isQtv = user?.role === 'QTV';
+    const userClassId = user?.class_id;
+
+    if (isQtv) {
+      const evidence = await (prisma as any).activityEvidence.findMany({
+        where: { status: 'PENDING' },
+        include: { student: true },
+        orderBy: { createdAt: 'asc' }
+      });
+      return res.json(evidence);
+    }
+
+    // For BCH, we check both their profile class and their specific assignments
+    const assignments: any[] = await (prisma as any).bchAssignment.findMany({
+      where: { bchUserId: userId }
+    });
+
+    let where: any = { status: 'PENDING' };
+
+    if (assignments.length > 0) {
+      // Build filters for each assignment
+      const assignmentFilters = assignments.map(a => ({
+        student: {
+          class_id: a.classId,
+          order_number: {
+            gte: a.fromOrder,
+            lte: a.toOrder
+          }
+        }
+      }));
+
+      // Combine with OR, plus fallback to their own class if they have one
+      const orFilters: any[] = [...assignmentFilters];
+      if (userClassId) {
+        orFilters.push({ student: { class_id: userClassId } });
+      }
+
+      where.OR = orFilters;
+    } else if (userClassId) {
+      where.student = { class_id: userClassId };
+    } else {
+      // No class and no assignments? Return empty
+      return res.json([]);
+    }
+
+    const evidence = await (prisma as any).activityEvidence.findMany({
+      where,
+      include: { student: true },
+      orderBy: { createdAt: 'asc' }
+    });
+
     res.json(evidence);
   } catch (error: any) {
     console.error('Error in getAllPendingEvidence:', error);
@@ -274,7 +363,7 @@ export const getAllPendingEvidence = async (req: Request, res: Response) => {
   }
 };
 
-export const reviewEvidence = async (req: Request, res: Response) => {
+export const reviewEvidence = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { status, adminTitle, points, sectionId, criterionId, semesterId } = req.body;
@@ -291,9 +380,57 @@ export const reviewEvidence = async (req: Request, res: Response) => {
       WHERE id = ${parseInt(String(id))}
     `;
 
+    await logAudit({
+      userId: Number((req as any).user?.id),
+      action: 'REVIEW_ACTIVITY_EVIDENCE',
+      targetType: 'ActivityEvidence',
+      targetId: String(id),
+      details: { status, points, adminTitle },
+      req
+    });
+
     res.json({ message: 'Đã cập nhật trạng thái minh chứng' });
   } catch (error: any) {
     console.error('Error in reviewEvidence:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const deleteEvidence = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const user = (req as any).user;
+    if (!user || !user.studentId) return res.status(403).json({ error: 'Forbidden' });
+
+    const studentIdInt = parseInt(String(user.studentId));
+    const evidenceId = parseInt(String(id));
+
+    // Check ownership
+    const evidence: any[] = await prisma.$queryRaw`
+      SELECT id FROM "ActivityEvidence" 
+      WHERE id = ${evidenceId} AND "studentId" = ${studentIdInt}
+      LIMIT 1
+    `;
+
+    if (evidence.length === 0) {
+      return res.status(404).json({ error: 'Không tìm thấy minh chứng hoặc bạn không có quyền xóa' });
+    }
+
+    await prisma.$executeRaw`
+      DELETE FROM "ActivityEvidence" WHERE id = ${evidenceId}
+    `;
+
+    await logAudit({
+      userId: Number(user.id),
+      action: 'DELETE_ACTIVITY_EVIDENCE',
+      targetType: 'ActivityEvidence',
+      targetId: String(id),
+      req
+    });
+
+    res.json({ message: 'Xóa minh chứng thành công' });
+  } catch (error: any) {
+    console.error('Error in deleteEvidence:', error);
     res.status(500).json({ error: error.message });
   }
 };

@@ -1,21 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Search, 
-  Filter, 
   Plus, 
-  Download, 
   Book,
-  ShieldAlert,
-  MoreVertical,
   Edit2,
   Trash2,
   Eye,
   X,
-  Sparkles,
   UserCheck,
   Users,
-  UserPlus,
-  ArrowRight
+  UserPlus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../api/axios';

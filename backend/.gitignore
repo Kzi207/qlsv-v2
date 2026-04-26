@@ -3,3 +3,18 @@ node_modules
 .env
 
 /generated/prisma
+src/generated/client/query_engine-windows.dll.node.tmp*
+
+# Local one-off maintenance scripts
+check-*.ts
+fix_*.ts
+fix_*.js
+debug_*.ts
+scratch_check_*.ts
+test-*.ts
+test_*.ts
+test_*.js
+list-users.ts
+scratch/check_*.ts
+scratch/fix_*.ts
+scratch/debug_*.ts

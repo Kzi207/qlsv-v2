@@ -1,5 +1,3 @@
-import React from 'react';
-
 const ScheduleLegend = () => {
   const items = [
     { label: 'Lịch học', color: 'bg-blue-500' },

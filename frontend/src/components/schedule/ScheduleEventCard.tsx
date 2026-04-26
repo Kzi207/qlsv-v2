@@ -1,6 +1,6 @@
 import React from 'react';
 import { MapPin, User, Clock, Monitor, BookOpen } from 'lucide-react';
-import { ScheduleEvent } from './types';
+import type { ScheduleEvent } from './types';
 
 interface Props {
   event: ScheduleEvent;

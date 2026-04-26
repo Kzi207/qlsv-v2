@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import { 
-  BookOpen, 
   CheckCircle2, 
   AlertCircle,
   TrendingUp,
@@ -211,7 +210,7 @@ const StudentCurriculum = () => {
                     <div className="flex items-center justify-between">
                        <span className="text-xs font-bold text-slate-400 uppercase">Tín chỉ tích lũy</span>
                        <span className="text-xl font-black text-emerald-400">
-                         {grades.filter((g: any) => g.totalScore >= 5).length > 0 ? grades.filter((g: any) => g.totalScore >= 5).reduce((acc: number, g: any) => {
+                         {grades.filter((g: any) => g.totalScore >= 5).length > 0 ? grades.filter((g: any) => g.totalScore >= 5).reduce((acc: number) => {
                             // Find subject credit from major curriculum if possible
                             return acc + 3; // Placeholder if credit not in grade
                          }, 0) : 0} TC

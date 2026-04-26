@@ -8,6 +8,7 @@ import {
   getSemesterWithScope,
   normalizeSemesterName,
 } from '../utils/semester';
+import { logAudit } from '../utils/logger';
 
 const parsePagination = (rawPage: unknown, rawPageSize: unknown) => {
   const page = Number(rawPage);
@@ -158,7 +159,7 @@ export const createTrainingScore = async (req: AuthRequest, res: Response) => {
       classId,
     });
 
-    if (!submissionStatus.isOpen) {
+    if (!submissionStatus.isOpen && status !== 'DRAFT') {
       return res.status(400).json({
         message: getSemesterClosedMessage(submissionStatus),
         submission: submissionStatus,
@@ -237,30 +238,43 @@ export const createTrainingScore = async (req: AuthRequest, res: Response) => {
         });
     }
 
-    let submissionEmail = { sent: false, message: 'Sinh viên chưa có email.' };
-    
-    if (score.student?.email) {
-      try {
-        submissionEmail = await sendSubmissionReceivedEmail({
-          studentEmail: score.student.email,
-          studentName: score.student.name,
-          studentId: score.student.student_code,
-          semester: typeof score.semester === 'object' ? score.semester?.name : score.semester_id,
-          classId: score.student.class_id,
-        });
-        console.log(`[Email] Submission email result for ${score.student.email}:`, submissionEmail.sent ? 'SUCCESS' : 'FAILED');
-      } catch (emailError: any) {
-        console.error('[Email] Submission email crash:', emailError);
-        submissionEmail = { sent: false, message: emailError?.message || 'Lỗi gửi mail hệ thống' };
-      }
+    if (score.student?.email && status !== 'DRAFT') {
+      // Send email in background to prevent hanging the response
+      (async () => {
+        try {
+          await sendSubmissionReceivedEmail({
+            studentEmail: score.student.email,
+            studentName: score.student.name,
+            studentId: score.student.student_code,
+            semester: typeof score.semester === 'object' ? score.semester?.name : score.semester_id,
+            classId: score.student.class_id,
+          });
+          console.log(`[Email] Background submission email sent to ${score.student.email}`);
+        } catch (emailError: any) {
+          console.error('[Email] Background submission email failed:', emailError);
+        }
+      })();
     }
 
     res.status(201).json({
       ...score,
       submission: submissionStatus,
       notification: {
-        submissionEmail,
+        submissionEmail: { sent: true, queued: true, message: 'Email đang được gửi ngầm...' },
       },
+    });
+
+    await logAudit({
+      userId: Number(req.user?.id),
+      action: existingScore ? 'EDIT_DRL' : 'SUBMIT_DRL',
+      targetType: 'TrainingScore',
+      targetId: String(score.id),
+      details: {
+        semester: semesterName,
+        total: cappedTotal,
+        status: score.status
+      },
+      req
     });
   } catch (error) {
     console.error('Error in createTrainingScore:', error);
@@ -308,7 +322,9 @@ export const getTrainingScores = async (req: AuthRequest, res: Response) => {
     // Nếu là BCH, tự động lọc theo lớp của họ
     if (req.user?.role === 'BCH') {
       const userClass = req.user.class_id;
-      where.student = { class_id: userClass };
+      if (userClass) {
+        where.student = { class_id: String(userClass) };
+      }
       
       // Nếu yêu cầu chỉ xem phần được phân công
       if (assigned_only === 'true') {
@@ -318,7 +334,7 @@ export const getTrainingScores = async (req: AuthRequest, res: Response) => {
         
         if (assignments.length > 0) {
           where.student = {
-            ...where.student,
+            ...(where.student || {}),
             OR: assignments.map((a: any) => ({
               order_number: {
                 gte: a.fromOrder,
@@ -524,7 +540,6 @@ export const approveTrainingScore = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Respond immediately to the frontend so the user can navigate away
     res.json({
       ...updated,
       notification: {
@@ -532,7 +547,19 @@ export const approveTrainingScore = async (req: AuthRequest, res: Response) => {
       },
     });
 
-    // Fire-and-forget email sending in the background
+    await logAudit({
+      userId: Number(req.user?.id),
+      action: 'APPROVE_DRL',
+      targetType: 'TrainingScore',
+      targetId: String(id),
+      details: {
+        status,
+        adminTotal,
+        notes: admin_notes
+      },
+      req
+    });
+
     if (updated.student?.email) {
       (async () => {
         try {

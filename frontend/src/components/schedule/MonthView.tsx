@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScheduleEvent } from './types';
+import type { ScheduleEvent } from './types';
 import ScheduleEventCard from './ScheduleEventCard';
 
 interface Props {

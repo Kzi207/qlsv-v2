@@ -52,26 +52,26 @@ const CriteriaRow: React.FC<CriteriaRowProps> = ({
              {canShowGuide && <p className="text-[10px] font-bold text-slate-400 italic line-clamp-1">{criterion.guide}</p>}
              
              {scannedPoints > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                    {scannedRecords.map(r => (
-                       <div key={r.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-600 text-white rounded-lg text-[9px] font-black uppercase tracking-tight shadow-md shadow-blue-200">
-                          <QrCode size={10} /> {r.session.title} (+{r.points})
-                       </div>
-                    ))}
-                </div>
-             )}
-          </div>
+                 <div className="flex flex-wrap gap-1.5 mt-2">
+                     {scannedRecords.map(r => (
+                        <div key={r.id} className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md text-[9px] font-bold border border-blue-100/50">
+                           <QrCode size={8} /> {r.session.title}
+                        </div>
+                     ))}
+                 </div>
+              )}
+           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3 bg-slate-50/50 p-2 rounded-xl border border-slate-100">
+        <div className="flex items-center justify-between gap-3 bg-slate-50/30 p-2 rounded-xl border border-slate-100">
            <div className="flex-1">
               <FileUpload files={evidence} onUpload={onUpload!} onView={onViewEvidence!} disabled={isAdminMode} className="!p-0 !border-none !bg-transparent scale-90 origin-left" />
            </div>
            
            <div className="flex items-center gap-1 bg-white p-1 rounded-lg shadow-sm border border-slate-100">
-              <div className="flex flex-col items-center">
+              <div className="flex flex-col items-center min-w-[40px]">
                  <ScoreBox
-                   label="Tự"
+                   label={isAdminMode ? "Lớp" : (isFocused ? "THÊM" : "TỰ")}
                    value={isAdminMode ? studentScore : displayValue}
                    onChange={onManualScoreChange}
                    onFocus={() => setIsFocused(true)}
@@ -79,9 +79,14 @@ const CriteriaRow: React.FC<CriteriaRowProps> = ({
                    max={criterion.maxPoints}
                    unit=""
                    readOnly={isAdminMode}
-                   className={`!w-9 !p-0 border-none shadow-none text-center text-xs ${!isAdminMode && scannedPoints > 0 ? 'bg-blue-50 text-blue-600' : ''}`}
+                   className={`!w-10 !p-1 border-none shadow-none text-center text-xs ${!isAdminMode && scannedPoints > 0 ? 'bg-blue-50/50 text-blue-600' : ''}`}
                  />
-                 {scannedPoints > 0 && !isAdminMode && <span className="text-[7px] font-black text-blue-500 mt-[-2px]">+{scannedPoints}Q</span>}
+                 {scannedPoints > 0 && !isAdminMode && (
+                    <div className="flex items-center gap-0.5 mt-[-2px]">
+                       <span className="text-[7px] font-black text-blue-500">+{scannedPoints}Q</span>
+                       {scannedPoints >= criterion.maxPoints && <span className="text-[6px] font-black bg-emerald-500 text-white px-0.5 rounded-[1px]">MAX</span>}
+                    </div>
+                 )}
               </div>
               <div className="w-px h-5 bg-slate-100" />
               <ScoreBox
@@ -121,8 +126,10 @@ const CriteriaRow: React.FC<CriteriaRowProps> = ({
             {scannedPoints > 0 && (
                <div className="flex flex-wrap gap-2 mt-3">
                   {scannedRecords.map(r => (
-                     <div key={r.id} className="inline-flex items-center gap-2.5 px-3.5 py-1.5 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:scale-[1.02] transition-transform">
-                        <QrCode size={14} /> {r.session.title} (+{r.points}đ)
+                     <div key={r.id} className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-[10px] font-bold border border-blue-100/50 shadow-sm transition-all hover:bg-blue-100">
+                        <QrCode size={12} className="text-blue-500" /> 
+                        <span className="truncate max-w-[120px]">{r.session.title}</span>
+                        <span className="bg-blue-600 text-white px-1.5 py-0.5 rounded text-[9px] font-black">+{r.points}đ</span>
                      </div>
                   ))}
                </div>
@@ -132,10 +139,10 @@ const CriteriaRow: React.FC<CriteriaRowProps> = ({
         </div>
 
         <div className="flex items-start justify-end gap-3 pt-0.5">
-           <div className={`flex items-center gap-1 p-1 rounded-2xl border shadow-sm transition-all ${scannedPoints > 0 ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-200/60'}`}>
-              <div className="flex flex-col items-center px-1">
+           <div className={`flex items-center gap-1 p-1 rounded-2xl border shadow-sm transition-all ${scannedPoints > 0 ? 'bg-blue-50/30 border-blue-100' : 'bg-slate-50/50 border-slate-200/60'}`}>
+              <div className="flex flex-col items-center px-1 min-w-[70px]">
                  <ScoreBox
-                   label={isAdminMode ? "Sinh viên" : "Tự nhập"}
+                   label={isAdminMode ? "Sinh viên" : (isFocused ? "NHẬP THÊM" : "TỰ CHẤM")}
                    value={isAdminMode ? studentScore : displayValue}
                    onChange={onManualScoreChange}
                    onFocus={() => setIsFocused(true)}
@@ -143,13 +150,18 @@ const CriteriaRow: React.FC<CriteriaRowProps> = ({
                    max={criterion.maxPoints}
                    unit="đ"
                    readOnly={isAdminMode}
-                   className={`bg-white !p-2 !rounded-xl border-none shadow-none text-xs ${!isAdminMode && scannedPoints > 0 ? 'ring-1 ring-blue-500/30' : ''}`}
+                   className={`bg-white !p-2 !rounded-xl border-none shadow-sm text-xs ${!isAdminMode && scannedPoints > 0 ? 'ring-1 ring-blue-500/20' : ''}`}
                  />
                  {scannedPoints > 0 && !isAdminMode && (
-                    <div className="flex flex-col items-center mt-[-4px] pb-1">
-                       <span className="text-[10px] font-black text-blue-600">+ {scannedPoints}đ (QR)</span>
-                       <div className="h-px w-10 bg-blue-200 my-1" />
-                       <span className="text-[11px] font-black text-slate-900">Tổng: {studentScore}đ</span>
+                    <div className="flex flex-col items-center mt-1 pb-1 space-y-0.5">
+                       <div className="flex items-center gap-1">
+                          <span className="text-[9px] font-bold text-blue-500">{scannedPoints}đ QR</span>
+                          {scannedPoints >= criterion.maxPoints && (
+                             <span className="text-[8px] font-black bg-emerald-500 text-white px-1 rounded-sm tracking-tighter">MAX</span>
+                          )}
+                       </div>
+                       <div className="h-px w-8 bg-blue-100" />
+                       <span className="text-[10px] font-black text-slate-800">Tổng: {studentScore}đ</span>
                     </div>
                  )}
               </div>

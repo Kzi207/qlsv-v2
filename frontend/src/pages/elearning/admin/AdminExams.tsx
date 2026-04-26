@@ -2,19 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { 
   Award, 
   Search, 
-  Eye, 
   Trash2, 
   BookOpen, 
   User, 
-  Calendar, 
   AlertCircle, 
   Plus, 
   X, 
   FileText, 
   Clock,
   Shuffle,
-  Activity,
-  CheckCircle2
+  Activity
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../api/axios';

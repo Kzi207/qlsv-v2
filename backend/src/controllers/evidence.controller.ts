@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../utils/prisma';
+import { logAudit } from '../utils/logger';
 
 export const saveDraft = async (req: Request, res: Response) => {
   try {
@@ -27,6 +26,15 @@ export const saveDraft = async (req: Request, res: Response) => {
         manualData,
         status: 'DRAFT'
       }
+    });
+
+    await logAudit({
+      userId: Number(user.id),
+      action: 'SAVE_EVIDENCE_DRAFT',
+      targetType: 'EvidenceSlip',
+      targetId: String(slip.id),
+      details: { semesterId },
+      req
     });
 
     res.json(slip);
@@ -60,6 +68,15 @@ export const submitSlip = async (req: Request, res: Response) => {
         manualData,
         status: 'SUBMITTED'
       }
+    });
+
+    await logAudit({
+      userId: Number(user.id),
+      action: 'SUBMIT_EVIDENCE',
+      targetType: 'EvidenceSlip',
+      targetId: String(slip.id),
+      details: { semesterId },
+      req
     });
 
     res.json({ message: 'Nộp phiếu thành công', slip });
@@ -121,6 +138,16 @@ export const reviewSlip = async (req: Request, res: Response) => {
       where: { id: parseInt(String(id), 10) },
       data: { status }
     });
+
+    await logAudit({
+      userId: Number((req as any).user?.id),
+      action: 'REVIEW_EVIDENCE',
+      targetType: 'EvidenceSlip',
+      targetId: String(id),
+      details: { status },
+      req
+    });
+
     res.json(slip);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

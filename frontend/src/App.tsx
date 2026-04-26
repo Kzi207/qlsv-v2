@@ -60,8 +60,10 @@ import AdminAssignments from './pages/elearning/admin/AdminAssignments';
 import AdminExams from './pages/elearning/admin/AdminExams';
 import CourseDetail from './pages/elearning/CourseDetail';
 import TakeExam from './pages/elearning/TakeExam';
+import NotFound from './pages/NotFound';
 import StudentAwards from './pages/StudentAwards';
 import StudentTrainingResults from './pages/StudentTrainingResults';
+import SystemAudit from './pages/SystemAudit';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, authInitialized } = useAuthStore();
@@ -111,7 +113,7 @@ function App() {
           <Route path="accounts" element={<RoleRoute allowedRoles={['QTV']}><AccountManagement /></RoleRoute>} />
           <Route path="attendance/manage" element={<RoleRoute allowedRoles={['QTV', 'LECTURER', 'BCH']}><QRAttendanceManager /></RoleRoute>} />
           <Route path="training/approval" element={<RoleRoute allowedRoles={['QTV', 'BCH']}><TrainingScoreApproval /></RoleRoute>} />
-          <Route path="activities/manage" element={<RoleRoute allowedRoles={['QTV']}><AdminActivityManager /></RoleRoute>} />
+          <Route path="activities/manage" element={<RoleRoute allowedRoles={['QTV', 'BCH']}><AdminActivityManager /></RoleRoute>} />
           <Route path="timetable/manage" element={<RoleRoute allowedRoles={['QTV']}><AdminTimetableManagement /></RoleRoute>} />
           <Route path="timetable/bulk" element={<Navigate to="/timetable/manage" replace />} />
           <Route path="timetable/rooms" element={<RoleRoute allowedRoles={['QTV']}><RoomManagement /></RoleRoute>} />
@@ -128,6 +130,7 @@ function App() {
 
           {/* QTV ONLY ROUTES */}
           <Route path="bch" element={<RoleRoute allowedRoles={['QTV']}><BCHManagement /></RoleRoute>} />
+          <Route path="system/audit" element={<RoleRoute allowedRoles={['QTV', 'BCH', 'LECTURER', 'STUDENT']}><SystemAudit /></RoleRoute>} />
 
           {/* STUDENT ONLY ROUTES */}
           <Route path="training/evaluation/self" element={<RoleRoute allowedRoles={['STUDENT']}><StudentEvaluation /></RoleRoute>} />
@@ -154,6 +157,7 @@ function App() {
           <Route path="elearning/exam/:id" element={<RoleRoute allowedRoles={['STUDENT']}><TakeExam /></RoleRoute>} />
           <Route path="training/evidence" element={<RoleRoute allowedRoles={['STUDENT']}><TrainingEvidence /></RoleRoute>} />
           <Route path="training/awards" element={<RoleRoute allowedRoles={['STUDENT']}><StudentAwards /></RoleRoute>} />
+          <Route path="profile/achievements" element={<RoleRoute allowedRoles={['STUDENT']}><StudentAwards /></RoleRoute>} />
           <Route path="training/results" element={<RoleRoute allowedRoles={['STUDENT']}><StudentTrainingResults /></RoleRoute>} />
           <Route path="tuition/history" element={<RoleRoute allowedRoles={['STUDENT']}><TuitionHistory /></RoleRoute>} />
           <Route path="services/requests" element={<RoleRoute allowedRoles={['STUDENT']}><ServiceRequests /></RoleRoute>} />
@@ -163,6 +167,7 @@ function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="attendance" element={<Attendance />} />
           <Route path="attendance/scan" element={<QRScannerCheckIn />} />
+          <Route path="qr-scan" element={<QRScannerCheckIn />} />
           <Route path="training" element={<TrainingScore />} />
           <Route path="schedule" element={<Schedule />} />
           <Route path="grades" element={<Grades />} />
@@ -173,6 +178,10 @@ function App() {
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="finance" element={<Tuition />} />
           <Route path="services" element={<ServicesPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          
+          {/* 404 Catch-all */}
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
     </Router>

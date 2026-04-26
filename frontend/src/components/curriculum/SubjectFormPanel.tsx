@@ -13,7 +13,7 @@ interface SubjectFormPanelProps {
   onSuccess: () => void;
 }
 
-const SubjectFormPanel = ({ onClose, initialData, majorId, semesters, onSuccess }: Omit<SubjectFormPanelProps, 'isOpen'>) => {
+const SubjectFormPanel = ({ onClose, initialData, majorId, semesters, onSuccess }: SubjectFormPanelProps) => {
   const [subjects, setSubjects] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     semesterId: initialData?.semesterId || '',

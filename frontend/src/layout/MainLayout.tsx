@@ -1,40 +1,63 @@
 import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { Menu } from 'lucide-react';
-import { useAuthStore } from '../store/useAuthStore';
+import BottomNav from '../components/BottomNav';
+import { Menu, Bell } from 'lucide-react';
+
 
 const MainLayout = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const { user } = useAuthStore();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const getPageTitle = () => {
+    const path = location.pathname;
+    if (path === '/') return 'Trang chủ';
+    if (path.includes('elearning')) return 'E-Learning';
+    if (path.includes('schedule')) return 'Lịch học';
+    if (path.includes('grades')) return 'Bảng điểm';
+    if (path.includes('profile')) return 'Cá nhân';
+    if (path.includes('notifications')) return 'Thông báo';
+    if (path.includes('tuition')) return 'Học phí';
+    if (path.includes('training')) return 'Điểm rèn luyện';
+    return 'Hệ thống';
+  };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc]">
+    <div className="min-h-screen bg-slate-50">
       <Sidebar isOpen={isSidebarOpen} toggle={() => setSidebarOpen(!isSidebarOpen)} />
       
-      <div className="lg:ml-80 min-h-screen flex flex-col transition-all duration-500">
-        {/* Mobile Header - Ultra Clean */}
-        <header className="lg:hidden bg-blue-600 border-b border-blue-500 p-4 sticky top-0 z-30 flex items-center justify-between shadow-sm">
-          <div className="flex items-center gap-3">
+      <div className="lg:ml-[240px] min-h-screen flex flex-col transition-all duration-500">
+        {/* Blue Mobile Header */}
+        <header className="lg:hidden bg-[#0046a8] px-5 py-5 sticky top-0 z-30 flex items-center justify-between shadow-lg shadow-blue-900/10">
+          <div className="flex items-center gap-4">
             <button 
               onClick={() => setSidebarOpen(true)}
-              className="h-11 w-11 flex items-center justify-center bg-white/10 text-white rounded-xl active:scale-90 transition-all border border-white/20 shadow-sm"
+              className="text-white active:scale-90 transition-all p-1"
             >
-              <Menu size={24} />
+              <Menu size={24} strokeWidth={2.5} />
             </button>
-            <div className="flex items-center">
-               <h2 className="text-white font-black text-sm uppercase tracking-widest">Lịch học/ lịch thi</h2>
-            </div>
+            <h1 className="text-lg font-bold text-white tracking-tight leading-none">
+              {getPageTitle()}
+            </h1>
           </div>
           
-          <div className="h-11 w-11 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center font-black text-white text-sm shadow-sm">
-            {user?.name?.[0]?.toUpperCase() || 'A'}
-          </div>
+          <button 
+            onClick={() => navigate('/notifications')}
+            className="text-white relative active:scale-90 transition-all p-1"
+          >
+             <Bell size={24} />
+             <div className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-rose-500 rounded-full border-2 border-[#0046a8] flex items-center justify-center">
+               <span className="text-[8px] font-black">1</span>
+             </div>
+          </button>
         </header>
 
-        <main className="flex-1 p-3 md:p-8 lg:pb-8">
+        <main className="flex-1 p-4 md:p-8 pb-32 lg:pb-8">
           <Outlet />
         </main>
+
+        {!isSidebarOpen && <BottomNav />}
       </div>
     </div>
   );

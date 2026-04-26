@@ -48,14 +48,14 @@ const ScoreBox: React.FC<ScoreBoxProps> = ({
         ) : (
           <input
             type="number"
-            value={hasValue ? value : ''}
+            value={value || ''}
             min={0}
             max={max}
-            placeholder={placeholder}
+            placeholder={placeholder || '0'}
             onFocus={onFocus}
             onBlur={onBlur}
             onChange={(e) => onChange?.(e.target.value === '' ? undefined : Number(e.target.value))}
-            className="w-10 md:w-12 bg-transparent text-center text-xl md:text-2xl font-black text-blue-600 transition-colors placeholder:text-slate-200 focus:outline-none"
+            className="w-10 md:w-12 bg-transparent text-center text-xl md:text-2xl font-black text-blue-600 transition-colors placeholder:text-slate-300 focus:outline-none"
           />
         )}
         {unit && <span className="mb-0.5 self-end text-[10px] md:text-xs font-bold text-slate-400">{unit}</span>}

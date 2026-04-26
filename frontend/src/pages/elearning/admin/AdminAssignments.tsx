@@ -2,17 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { 
   PenTool, 
   Search, 
-  Eye, 
   Trash2, 
   BookOpen, 
   User, 
-  Calendar, 
   AlertCircle, 
   Plus, 
   X, 
   FileText, 
   Clock,
-  CheckCircle2,
+  ExternalLink,
   Users
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';

@@ -10,7 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor/android": "^8.3.1",
+    "@capacitor/cli": "^8.3.1",
+    "@capacitor/core": "^8.3.1",
     "axios": "^1.15.1",
+    "date-fns": "^4.1.0",
     "framer-motion": "^12.38.0",
     "html5-qrcode": "^2.3.8",
     "lucide-react": "^1.8.0",

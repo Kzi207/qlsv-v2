@@ -17,17 +17,17 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.get('/sessions', roleMiddleware(['QTV', 'BCH']), getAttendanceSessions);
+router.get('/sessions', roleMiddleware(['QTV', 'BCH', 'LECTURER']), getAttendanceSessions);
 router.get('/sessions/active', getActiveSessions);
 router.post('/qr-check-in', qrCheckIn);
 
-// Admin & BCH routes
-router.post('/session', roleMiddleware(['QTV', 'BCH']), createAttendanceSession);
-router.patch('/sessions/:sessionId/end', roleMiddleware(['QTV', 'BCH']), endAttendanceSession);
-router.get('/sessions/:sessionId/attendees', roleMiddleware(['QTV', 'BCH']), getSessionAttendees);
-router.get('/sessions/:sessionId/summary', roleMiddleware(['QTV', 'BCH']), getSessionSummary);
-router.post('/', roleMiddleware(['QTV', 'BCH']), checkAttendance);
-router.get('/', roleMiddleware(['QTV', 'BCH']), getAttendanceByDate);
+// Admin, BCH & Lecturer routes
+router.post('/session', roleMiddleware(['QTV', 'BCH', 'LECTURER']), createAttendanceSession);
+router.patch('/sessions/:sessionId/end', roleMiddleware(['QTV', 'BCH', 'LECTURER']), endAttendanceSession);
+router.get('/sessions/:sessionId/attendees', roleMiddleware(['QTV', 'BCH', 'LECTURER']), getSessionAttendees);
+router.get('/sessions/:sessionId/summary', roleMiddleware(['QTV', 'BCH', 'LECTURER']), getSessionSummary);
+router.post('/', roleMiddleware(['QTV', 'BCH', 'LECTURER']), checkAttendance);
+router.get('/', roleMiddleware(['QTV', 'BCH', 'LECTURER']), getAttendanceByDate);
 router.get('/student/:studentId', getAttendanceByStudent);
 
 export default router;

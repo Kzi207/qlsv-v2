@@ -23,6 +23,25 @@ model User {
   student     Student?        @relation(fields: [studentId], references: [id])
   assignments BchAssignment[]
   courses     Course[]        @relation("TeacherCourses")
+  auditLogs   AuditLog[]
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  userId     Int?
+  action     String // LOGIN, LOGOUT, EDIT_DRL, APPROVE_DRL, EDIT_GRADE, etc.
+  targetType String? // e.g., "TrainingScore", "Grade", "User"
+  targetId   String?
+  details    Json? // Detailed info (old/new values)
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
 }
 
 model Class {
@@ -63,6 +82,7 @@ model Student {
   examResults           ExamResult[]
   user                  User?
   studentAwards         StudentAward[]
+  activityEvidence      ActivityEvidence[]
 
   // Encrypted Sensitive Info
   birthday String?
@@ -638,4 +658,23 @@ model StudentAward {
   student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([studentId])
+}
+
+model ActivityEvidence {
+  id          Int      @id @default(autoincrement())
+  studentId   Int
+  title       String
+  imageUrl    String
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  adminTitle  String?
+  points      Int?
+  sectionId   String?
+  criterionId String?
+  semesterId  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([status])
 }

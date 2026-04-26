@@ -1,4 +1,4 @@
-import { ChevronRight, ChevronDown, BookOpen, Layers, Plus, Edit3, Trash2, Settings2 } from 'lucide-react';
+import { ChevronRight, ChevronDown, BookOpen, Layers, Plus, Edit3, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface FacultyMajorSidebarProps {

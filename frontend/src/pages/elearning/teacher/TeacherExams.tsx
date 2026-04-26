@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, Plus, Monitor } from 'lucide-react';
+import { Award, Plus } from 'lucide-react';
 import ELearningRightPanel from '../../../components/elearning/ELearningRightPanel';
 
 const TeacherExams: React.FC = () => {

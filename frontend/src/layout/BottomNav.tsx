@@ -3,7 +3,7 @@ import {
   LayoutDashboard, 
   QrCode, 
   ClipboardCheck, 
-  History
+  History as HistoryIcon
 } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 
@@ -18,7 +18,7 @@ const BottomNav = () => {
     { name: 'Trang chủ', path: '/', icon: LayoutDashboard },
     { name: 'Quét mã', path: '/attendance/scan', icon: QrCode, highlight: true },
     { name: 'Kết quả', path: '/training', icon: ClipboardCheck },
-    { name: 'Lịch sử', path: '/attendance', icon: History },
+    { name: 'Lịch sử', path: '/attendance', icon: HistoryIcon },
   ];
 
   return (

@@ -12,7 +12,8 @@ import {
   uploadEvidence,
   getMyEvidenceRequests,
   getAllPendingEvidence,
-  reviewEvidence
+  reviewEvidence,
+  deleteEvidence
 } from '../controllers/activity.controller';
 import { protect, admin } from '../middleware/auth.middleware';
 import { uploadEvidenceMiddleware } from '../middleware/upload.middleware';
@@ -24,6 +25,7 @@ router.post('/scan', protect, scanQR);
 router.get('/my-records', protect, getMyRecords);
 router.post('/evidence/upload', protect, uploadEvidenceMiddleware.single('image'), uploadEvidence);
 router.get('/evidence/my', protect, getMyEvidenceRequests);
+router.delete('/evidence/:id', protect, deleteEvidence);
 
 // Admin routes
 router.post('/generate', protect, admin, createSession);

@@ -1,4 +1,6 @@
 import axios, { AxiosHeaders } from 'axios';
+import { Capacitor } from '@capacitor/core';
+import toast from 'react-hot-toast';
 
 const CSRF_STORAGE_KEY = 'csrf_token_fallback';
 let csrfTokenCache = '';
@@ -52,8 +54,11 @@ const getEffectiveCsrfToken = () => {
 };
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: Capacitor.getPlatform() !== 'web'
+    ? 'https://test.kzii.site/api' 
+    : (import.meta.env.VITE_API_URL || '/api'),
   withCredentials: true,
+  timeout: 10000, // Thêm timeout 10s
 });
 
 api.interceptors.request.use((config) => {
@@ -109,7 +114,9 @@ api.interceptors.response.use(
       }
     }
 
-    if (error.response?.status === 401) {
+    if (!error.response) {
+      toast.error('Không thể kết nối tới máy chủ. Vui lòng kiểm tra mạng!');
+    } else if (error.response?.status === 401) {
       writeStoredCsrfToken('');
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';

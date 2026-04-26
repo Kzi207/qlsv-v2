@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
-  Award, 
   Clock, 
   CheckCircle,
   AlertCircle,
@@ -10,7 +9,7 @@ import {
   ChevronRight,
   Send
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import api from '../../api/axios';
 import { toast } from 'react-hot-toast';
 

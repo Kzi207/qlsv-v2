@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import prisma from '../utils/prisma';
 import ExcelJS from 'exceljs';
-
-const prisma = new PrismaClient();
 
 const checkConflicts = async (data: {
   room: string;
