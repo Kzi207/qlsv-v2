@@ -3,6 +3,7 @@ import crypto from 'crypto';
 const ALGORITHM = 'aes-256-cbc';
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'your-fallback-secret-key-32-chars-!!'; // Must be 32 chars
 const IV_LENGTH = 16; // For AES, this is always 16
+const ENCRYPTED_VALUE_PATTERN = /^[0-9a-f]{32}:[0-9a-f]+$/i;
 
 export function encrypt(text: string): string {
   if (!text) return text;
@@ -18,8 +19,12 @@ export function encrypt(text: string): string {
   }
 }
 
-export function decrypt(text: string): string {
-  if (!text || !text.includes(':')) return text;
+export function decrypt(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+
+  const text = typeof value === 'string' ? value : String(value);
+  if (!text || !ENCRYPTED_VALUE_PATTERN.test(text)) return text;
+
   try {
     const textParts = text.split(':');
     const iv = Buffer.from(textParts.shift()!, 'hex');

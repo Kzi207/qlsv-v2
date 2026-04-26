@@ -36,7 +36,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-3 sm:p-4">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -48,38 +48,40 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="relative bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden z-10"
+            className="relative z-10 w-full max-w-sm overflow-hidden rounded-[1.6rem] bg-white shadow-2xl sm:max-w-md sm:rounded-[2.5rem]"
           >
-            <div className="p-8 space-y-6">
+            <div className="space-y-4 p-5 sm:space-y-6 sm:p-8">
               <div className="flex items-center justify-between">
-                <div className={`h-14 w-14 rounded-2xl ${colors.bg} flex items-center justify-center ${colors.icon}`}>
-                  <AlertTriangle size={28} />
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${colors.bg} ${colors.icon} sm:h-14 sm:w-14 sm:rounded-2xl`}>
+                  <AlertTriangle size={20} className="sm:hidden" />
+                  <AlertTriangle size={28} className="hidden sm:block" />
                 </div>
-                <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
-                  <X size={24} />
+                <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 transition-colors hover:text-slate-600 sm:p-2">
+                  <X size={18} className="sm:hidden" />
+                  <X size={24} className="hidden sm:block" />
                 </button>
               </div>
 
-              <div className="space-y-2">
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight">{title}</h2>
-                <p className="text-slate-500 font-medium leading-relaxed">{message}</p>
+              <div className="space-y-1.5 sm:space-y-2">
+                <h2 className="text-lg font-black tracking-tight text-slate-900 sm:text-2xl">{title}</h2>
+                <p className="text-sm font-medium leading-relaxed text-slate-500 sm:text-base">{message}</p>
               </div>
 
-              <div className="flex flex-col gap-3 pt-2">
+              <div className="grid grid-cols-2 gap-2.5 pt-1 sm:gap-3 sm:pt-2">
+                <button
+                  onClick={onClose}
+                  className="w-full rounded-xl bg-slate-100 py-2.5 text-[11px] font-black uppercase tracking-[0.12em] text-slate-600 transition-all active:scale-95 hover:bg-slate-200 sm:rounded-2xl sm:py-4 sm:text-xs sm:tracking-widest"
+                >
+                  {cancelText}
+                </button>
                 <button
                   onClick={() => {
                     onConfirm();
                     onClose();
                   }}
-                  className={`w-full py-4 ${colors.btn} text-white rounded-2xl font-black uppercase tracking-widest shadow-xl ${colors.shadow} transition-all active:scale-95`}
+                  className={`w-full rounded-xl py-2.5 text-[11px] font-black uppercase tracking-[0.12em] text-white shadow-lg transition-all active:scale-95 sm:rounded-2xl sm:py-4 sm:text-xs sm:tracking-widest sm:shadow-xl ${colors.btn} ${colors.shadow}`}
                 >
                   {confirmText}
-                </button>
-                <button
-                  onClick={onClose}
-                  className="w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95"
-                >
-                  {cancelText}
                 </button>
               </div>
             </div>

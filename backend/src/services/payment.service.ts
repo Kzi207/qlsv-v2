@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/client';
 import { VNPayService } from './vnpay.service';
 
 const prisma = new PrismaClient();
@@ -105,7 +105,7 @@ export class PaymentService {
 
     // 5. Bắt đầu Transaction cập nhật dữ liệu
     try {
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (tx: any) => {
         // Lưu log VNPay
         await (tx as any).paymentLog.create({
           data: {

@@ -1,6 +1,6 @@
-// @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
+import { AuthRequest } from '../middleware/auth.middleware';
 
 export const getFaculties = async (req: Request, res: Response) => {
   try {
@@ -190,15 +190,18 @@ export const deleteCurriculumSubject = async (req: Request, res: Response) => {
   }
 };
 
-export const getMyCurriculum = async (req: Request, res: Response) => {
+export const getMyCurriculum = async (req: AuthRequest, res: Response) => {
   try {
     const studentId = req.user?.studentId;
     console.log('Fetching curriculum for studentId:', studentId);
     
-    if (!studentId) return res.status(404).json({ error: 'Không tìm thấy thông tin sinh viên' });
+    if (!studentId) {
+      console.warn('getMyCurriculum: No studentId in req.user', req.user);
+      return res.status(404).json({ error: 'Người dùng hiện tại không phải là sinh viên hoặc thiếu thông tin sinh viên.' });
+    }
 
     const student = await prisma.student.findUnique({
-      where: { id: studentId },
+      where: { id: Number(studentId) },
       include: {
         class: {
           include: {
@@ -227,8 +230,12 @@ export const getMyCurriculum = async (req: Request, res: Response) => {
 
     console.log('Student found:', student?.name, 'Class:', student?.class_id, 'Major:', student?.class?.major?.name);
 
-    if (!student?.class?.major) {
-      return res.status(404).json({ error: 'Lớp học của bạn chưa được gán chương trình đào tạo.' });
+    if (!student) {
+      return res.status(404).json({ error: `Không tìm thấy thông tin sinh viên với ID ${studentId}` });
+    }
+
+    if (!student.class?.major) {
+      return res.status(404).json({ error: `Sinh viên ${student.name} (Lớp ${student.class_id}) chưa được gán chương trình đào tạo.` });
     }
 
     res.json({
@@ -255,7 +262,8 @@ export const addCurriculumSemester = async (req: AuthRequest, res: Response) => 
       data: {
         majorId: Number(majorId),
         semesterNumber: nextNumber,
-        name: `Học kỳ ${nextNumber}`
+        name: `Học kỳ ${nextNumber}`,
+        expectedCredits: 0
       }
     });
 

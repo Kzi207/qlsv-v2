@@ -1,5 +1,5 @@
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from './generated/client';
 
 const prisma = new PrismaClient();
 
@@ -11,7 +11,7 @@ async function main() {
     select: { class_id: true }
   });
   
-  const uniqueClasses = Array.from(new Set(students.map(s => s.class_id)));
+  const uniqueClasses = Array.from(new Set(students.map((s: any) => s.class_id)));
   
   console.log(`Found ${uniqueClasses.length} unique classes: ${uniqueClasses.join(', ')}`);
   

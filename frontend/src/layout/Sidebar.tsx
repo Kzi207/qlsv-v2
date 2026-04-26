@@ -143,17 +143,16 @@ const Sidebar = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) =>
           {/* Logo Section */}
           <div className="p-6 pb-5 shrink-0 flex items-center justify-between sm:p-7 sm:pb-5">
             <div className="flex min-w-0 items-center gap-3.5">
-              <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/25 bg-white/95 p-1.5 shadow-[0_14px_28px_-14px_rgba(15,23,42,0.85)]">
-                <span className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-white/90 to-blue-50/80" />
+              <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full border border-white/35 bg-white/10 shadow-[0_14px_28px_-14px_rgba(15,23,42,0.85)]">
                 <img
-                  src="/logoctut.png"
+                  src="/logoctut.png?v=2"
                   alt="CTUT Logo"
-                  className="relative h-full w-full object-contain drop-shadow-[0_4px_10px_rgba(37,99,235,0.25)]"
+                  className="h-full w-full object-cover scale-[1.02]"
                 />
               </div>
               <div className="min-w-0">
                 <h1 className="text-xl font-black tracking-tighter text-white leading-none uppercase">MY <span className="text-blue-200">CTUT</span></h1>
-                <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-100/80">Cá»•ng sinh viÃªn</p>
+                <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-100/80">Cổng sinh viên</p>
               </div>
             </div>
             <button onClick={toggle} className="lg:hidden h-10 w-10 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-90 transition-transform">

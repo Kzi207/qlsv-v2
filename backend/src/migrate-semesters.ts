@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from './generated/client';
 
 const prisma = new PrismaClient();
 
@@ -10,7 +10,7 @@ async function main() {
     select: { semester: true }
   });
 
-  const uniqueSemesters = Array.from(new Set(scores.map(s => {
+  const uniqueSemesters = Array.from(new Set(scores.map((s: any) => {
     if (typeof s.semester === 'string') return s.semester;
     if (s.semester && typeof s.semester === 'object') return (s.semester as any).name;
     return null;

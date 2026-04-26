@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { 
   CreditCard, 
   History as HistoryIcon, 
@@ -11,9 +12,11 @@ import axios from '../api/axios';
 import toast from 'react-hot-toast';
 
 const TuitionPayment = () => {
+  const location = useLocation();
   const [tuitions, setTuitions] = useState<any[]>([]);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     fetchTuition();
   }, []);
 
@@ -45,7 +48,10 @@ const TuitionPayment = () => {
     }
   };
 
-  const currentTuition = tuitions[0]; // Assuming newest first
+  const preferredSemesterId = location.state?.semesterId;
+  const currentTuition = preferredSemesterId 
+    ? (tuitions.find(t => t.semesterId === preferredSemesterId) || tuitions[0])
+    : tuitions[0];
 
   return (
     <div className="max-w-[1200px] mx-auto space-y-8 animate-fade-up pb-20">

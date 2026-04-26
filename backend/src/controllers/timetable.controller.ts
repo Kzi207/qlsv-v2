@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/client';
 import prisma from '../utils/prisma';
 import ExcelJS from 'exceljs';
 
@@ -27,7 +27,7 @@ const checkConflicts = async (data: {
       OR ("startPeriod" <= ${parseInt(endPeriod as any)} AND "endPeriod" >= ${parseInt(endPeriod as any)})
       OR (${parseInt(startPeriod as any)} <= "startPeriod" AND ${parseInt(endPeriod as any)} >= "startPeriod")
     )
-    ${excludeId ? Prisma.sql`AND id != ${excludeId}` : Prisma.empty}
+    ${excludeId ? (Prisma as any).sql`AND id != ${excludeId}` : (Prisma as any).empty}
   `;
 
   for (const conflict of conflicts) {

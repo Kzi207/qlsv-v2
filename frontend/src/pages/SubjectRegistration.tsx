@@ -292,7 +292,7 @@ const SubjectRegistration = () => {
                      </span>
                   </div>
                   <button 
-                    onClick={() => navigate('/tuition')}
+                    onClick={() => navigate('/tuition', { state: { semesterId: selectedSemester } })}
                     className="w-full py-4 bg-blue-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/30 flex items-center justify-center gap-2"
                   >
                      <CreditCard size={14} /> Đi tới thanh toán

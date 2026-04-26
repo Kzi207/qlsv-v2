@@ -106,17 +106,16 @@ const Login = () => {
         transition={{ duration: 0.45, ease: 'easeOut' }}
         className="relative z-10 mx-auto grid w-full max-w-6xl overflow-hidden rounded-[2rem] border border-slate-200/70 bg-white/85 shadow-[0_35px_80px_-35px_rgba(15,23,42,0.55)] backdrop-blur lg:grid-cols-[1.05fr,1fr]"
       >
-        <aside className="relative overflow-hidden bg-gradient-to-br from-[#003f91] via-[#0056c7] to-[#1a73d8] px-6 py-8 text-white sm:px-10 sm:py-10 lg:px-12 lg:py-12">
+        <aside className="order-2 relative overflow-hidden bg-gradient-to-br from-[#003f91] via-[#0056c7] to-[#1a73d8] px-6 py-8 text-white sm:px-10 sm:py-10 lg:order-1 lg:px-12 lg:py-12">
           <div className="pointer-events-none absolute -right-16 top-8 h-44 w-44 rounded-full border border-white/20" />
           <div className="pointer-events-none absolute -left-24 bottom-0 h-60 w-60 rounded-full bg-white/10 blur-2xl" />
 
           <div className="relative flex items-center gap-4">
-            <div className="relative flex h-16 w-16 items-center justify-center rounded-[1.25rem] border border-white/40 bg-white/95 p-2 shadow-[0_18px_40px_-18px_rgba(15,23,42,0.95)]">
-              <span className="pointer-events-none absolute inset-0 rounded-[1.25rem] bg-gradient-to-br from-white to-blue-100/80" />
+            <div className="relative h-16 w-16 overflow-hidden rounded-full border border-white/45 bg-white/10 shadow-[0_18px_40px_-18px_rgba(15,23,42,0.95)]">
               <img
-                src="/logoctut.png"
+                src="/logoctut.png?v=2"
                 alt="CTUT Logo"
-                className="relative h-full w-full object-contain drop-shadow-[0_6px_12px_rgba(37,99,235,0.28)]"
+                className="h-full w-full object-cover scale-[1.02]"
               />
             </div>
             <div>
@@ -151,7 +150,7 @@ const Login = () => {
           </div>
         </aside>
 
-        <div className="px-6 py-8 sm:px-10 sm:py-10 lg:px-12 lg:py-12">
+        <div className="order-1 px-6 py-8 sm:px-10 sm:py-10 lg:order-2 lg:px-12 lg:py-12">
           <div className="mx-auto w-full max-w-md">
             <div className="space-y-3">
               <p className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-700/80">Đăng nhập hệ thống</p>
