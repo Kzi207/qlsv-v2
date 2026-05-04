@@ -556,7 +556,7 @@ const AdminActivityManager = () => {
                            </select>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                            <div className="space-y-1.5">
                               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mục Lớn DRL</label>
                               <select required value={formData.sectionId} onChange={e => setFormData({...formData, sectionId: e.target.value, criterionId: ''})} className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-2xl outline-none font-bold text-xs">
@@ -605,3 +605,4 @@ const AdminActivityManager = () => {
 };
 
 export default AdminActivityManager;
+

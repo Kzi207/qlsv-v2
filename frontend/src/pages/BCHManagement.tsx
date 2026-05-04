@@ -389,7 +389,7 @@ const BCHManagement = () => {
                    </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Tên đăng nhập</label>
                     <input
@@ -422,7 +422,7 @@ const BCHManagement = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Lớp (Nếu là BCH)</label>
                     <select
@@ -518,7 +518,7 @@ const BCHManagement = () => {
                             ))}
                           </select>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <label className="text-[10px] font-black text-slate-600 uppercase ml-1">Từ STT</label>
                             <input
@@ -574,3 +574,4 @@ const BCHManagement = () => {
 };
 
 export default BCHManagement;
+

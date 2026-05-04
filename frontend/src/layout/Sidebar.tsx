@@ -37,6 +37,19 @@ const Sidebar = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) =>
 
   const role = user?.role?.toUpperCase();
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        toggle();
+      }
+    };
+
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, toggle]);
+
   const menuGroups = [
     {
       label: 'Chính',
@@ -132,16 +145,16 @@ const Sidebar = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) =>
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-40 lg:hidden"
+            className="fixed inset-0 z-40 bg-slate-900/65 backdrop-blur-sm lg:hidden"
             onClick={toggle}
           />
         )}
       </AnimatePresence>
 
-      <aside className={`fixed top-0 left-0 z-50 h-screen w-[240px] transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 bg-[#0046a8] text-white shadow-2xl lg:shadow-none`}>
-        <div className="flex flex-col h-full">
+      <aside className={`fixed top-0 left-0 z-50 h-screen w-[86vw] max-w-[320px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isOpen ? 'translate-x-0' : '-translate-x-full'} bg-[#0046a8] text-white shadow-2xl lg:w-[260px] lg:max-w-none lg:translate-x-0 lg:shadow-none`}>
+        <div className="flex h-full flex-col pb-[max(env(safe-area-inset-bottom),0px)]">
           {/* Logo Section */}
-          <div className="p-6 pb-5 shrink-0 flex items-center justify-between sm:p-7 sm:pb-5">
+          <div className="shrink-0 flex items-center justify-between px-5 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))] sm:px-6 sm:pb-4 sm:pt-[max(1.5rem,env(safe-area-inset-top))]">
             <div className="flex min-w-0 items-center gap-3.5">
               <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full border border-white/35 bg-white/10 shadow-[0_14px_28px_-14px_rgba(15,23,42,0.85)]">
                 <img
@@ -161,7 +174,7 @@ const Sidebar = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) =>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 space-y-8 overflow-y-auto custom-scrollbar py-6">
+          <nav className="custom-scrollbar flex-1 space-y-7 overflow-y-auto px-3 py-5 sm:px-4 overscroll-contain">
             {menuGroups.map((group, idx) => {
               const visibleItems = group.items.filter(item => {
                 const userRole = (role || '').toUpperCase();
@@ -171,7 +184,7 @@ const Sidebar = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) =>
 
               return (
                 <div key={idx} className="space-y-3">
-                  <p className="px-4 text-[10px] font-black text-blue-200/50 uppercase tracking-widest">{group.label}</p>
+                  <p className="px-3.5 text-[10px] font-black uppercase tracking-widest text-blue-200/55">{group.label}</p>
                   <div className="space-y-1">
                     {visibleItems.map((item) => {
                       const active = location.pathname === item.path;
@@ -180,13 +193,13 @@ const Sidebar = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) =>
                           key={item.path}
                           to={item.path}
                           onClick={() => window.innerWidth < 1024 && toggle()}
-                          className={`group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 ${active
-                              ? 'bg-blue-600/40 text-white font-bold'
+                          className={`group flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm transition-all duration-200 ${active
+                              ? 'bg-blue-600/40 text-white font-bold shadow-[0_10px_24px_-16px_rgba(30,64,175,0.9)]'
                               : 'text-blue-100 hover:bg-white/10'
                             }`}
                         >
                           <item.icon size={20} className={active ? 'text-white' : 'text-blue-200/60 group-hover:text-white'} />
-                          <span className="text-sm font-medium tracking-tight">{item.name}</span>
+                          <span className="text-[13px] font-medium tracking-tight">{item.name}</span>
                         </Link>
                       );
                     })}
@@ -197,10 +210,10 @@ const Sidebar = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) =>
           </nav>
 
           {/* Footer Actions */}
-          <div className="p-4 mt-auto border-t border-white/10">
+          <div className="mt-auto border-t border-white/10 p-3 sm:p-4">
             <button
               onClick={() => setShowLogoutConfirm(true)}
-              className="flex items-center gap-4 px-4 py-3 rounded-xl text-rose-300 hover:bg-rose-500/10 transition-all w-full text-left"
+              className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-rose-300 transition-all hover:bg-rose-500/10"
             >
               <LogOut size={20} />
               <span className="text-sm font-black tracking-tight">Đăng xuất</span>

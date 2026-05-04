@@ -100,6 +100,41 @@ const ensureSessionAccess = (req: AuthRequest, sessionClassId?: string | null) =
   return null;
 };
 
+const logQrRisk = async (params: {
+  req: AuthRequest;
+  reason: string;
+  sessionId?: number | null;
+  studentId?: number | null;
+  severity?: 'LOW' | 'MEDIUM' | 'HIGH';
+  details?: Record<string, unknown>;
+}) => {
+  try {
+    const { req, reason, sessionId, studentId, severity = 'MEDIUM', details } = params;
+    const userId = Number(req.user?.id || 0);
+    const normalizedUserId = Number.isFinite(userId) && userId > 0 ? userId : undefined;
+
+    await prisma.auditLog.create({
+      data: {
+        userId: normalizedUserId,
+        action: 'QR_RISK',
+        targetType: 'AttendanceSession',
+        targetId: sessionId ? String(sessionId) : undefined,
+        details: {
+          reason,
+          severity,
+          studentId: studentId || undefined,
+          path: req.path,
+          ...(details || {}),
+        },
+        ipAddress: extractClientIp(req),
+        userAgent: String(req.headers['user-agent'] || ''),
+      },
+    });
+  } catch (error) {
+    console.error('logQrRisk error:', error);
+  }
+};
+
 export const checkAttendance = async (req: Request, res: Response) => {
   const { student_id, date, status } = req.body;
   const dayRange = parseDayRange(date);
@@ -421,10 +456,20 @@ export const qrCheckIn = async (req: AuthRequest, res: Response) => {
   const deviceInfo = req.headers['user-agent'] || 'unknown';
 
   if (typeof qrToken !== 'string' || !qrToken.trim()) {
+    await logQrRisk({
+      req,
+      reason: 'MISSING_QR_TOKEN',
+      severity: 'LOW',
+    });
     return res.status(400).json({ message: 'Thieu ma QR hop le' });
   }
 
   if (!Number.isFinite(studentId) || studentId <= 0) {
+    await logQrRisk({
+      req,
+      reason: 'INVALID_STUDENT_CONTEXT',
+      severity: 'HIGH',
+    });
     return res.status(403).json({ message: 'Chi sinh vien moi duoc diem danh QR' });
   }
 
@@ -445,6 +490,15 @@ export const qrCheckIn = async (req: AuthRequest, res: Response) => {
     });
 
     if (!session) {
+      await logQrRisk({
+        req,
+        studentId,
+        reason: 'INVALID_OR_ENDED_SESSION',
+        severity: 'HIGH',
+        details: {
+          qrTokenPrefix: qrToken.trim().slice(0, 8),
+        },
+      });
       return res.status(404).json({ message: 'Phien diem danh khong ton tai hoac da ket thuc' });
     }
 
@@ -464,6 +518,17 @@ export const qrCheckIn = async (req: AuthRequest, res: Response) => {
     }
 
     if (normalizeClassId(student.class_id) !== normalizeClassId(session.class_id)) {
+      await logQrRisk({
+        req,
+        sessionId: session.id,
+        studentId,
+        reason: 'CLASS_MISMATCH',
+        severity: 'HIGH',
+        details: {
+          sessionClass: session.class_id,
+          studentClass: student.class_id,
+        },
+      });
       return res.status(403).json({ message: 'Sinh vien khong thuoc lop cua phien diem danh nay' });
     }
 
@@ -475,11 +540,29 @@ export const qrCheckIn = async (req: AuthRequest, res: Response) => {
     });
 
     if (existingAttendance) {
+      await logQrRisk({
+        req,
+        sessionId: session.id,
+        studentId,
+        reason: 'DUPLICATE_CHECK_IN',
+        severity: 'LOW',
+      });
       return res.status(400).json({ message: 'Sinh vien da diem danh cho phien nay' });
     }
 
     const sessionDistance = getDistance(parsedLat, parsedLng, session.lat, session.lng);
     if (sessionDistance > session.radius) {
+      await logQrRisk({
+        req,
+        sessionId: session.id,
+        studentId,
+        reason: 'OUTSIDE_SESSION_RADIUS',
+        severity: 'HIGH',
+        details: {
+          sessionDistance: Math.round(sessionDistance),
+          radius: Math.round(session.radius),
+        },
+      });
       return res.status(400).json({
         message: 'Vi tri hien tai nam ngoai ban kinh cho phep cua lop hoc',
         distance: Math.round(sessionDistance),
@@ -507,10 +590,32 @@ export const qrCheckIn = async (req: AuthRequest, res: Response) => {
       verifiedLocation = profileDistance <= session.radius;
 
       if (!verifiedIp) {
+        await logQrRisk({
+          req,
+          sessionId: session.id,
+          studentId,
+          reason: 'IP_MISMATCH',
+          severity: 'HIGH',
+          details: {
+            currentIp: clientIp,
+            baselineIp: attendanceProfile.firstIpAddress,
+          },
+        });
         return res.status(400).json({ message: 'IP hien tai khong khop voi lan xac minh dau tien' });
       }
 
       if (!verifiedLocation) {
+        await logQrRisk({
+          req,
+          sessionId: session.id,
+          studentId,
+          reason: 'PROFILE_LOCATION_MISMATCH',
+          severity: 'HIGH',
+          details: {
+            profileDistance: profileDistance ? Math.round(profileDistance) : null,
+            radius: Math.round(session.radius),
+          },
+        });
         return res.status(400).json({
           message: 'Vi tri hien tai khong khop voi toa do da luu tren he thong',
           profileDistance: Math.round(profileDistance),
@@ -660,7 +765,7 @@ export const getSessionSummary = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: 'Phien diem danh cu nay chua duoc gan lop' });
     }
 
-    const [students, attendances] = await Promise.all([
+    const [students, attendances, riskLogs] = await Promise.all([
       prisma.student.findMany({
         where: {
           class_id: session.class_id,
@@ -679,6 +784,24 @@ export const getSessionSummary = async (req: AuthRequest, res: Response) => {
         },
         orderBy: [{ date: 'asc' }],
       }),
+      prisma.auditLog.findMany({
+        where: {
+          action: 'QR_RISK',
+          targetType: 'AttendanceSession',
+          targetId: String(numericSessionId),
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              name: true,
+            },
+          },
+        },
+        orderBy: [{ createdAt: 'desc' }],
+        take: 20,
+      }),
     ]);
 
     const attendanceMap = new Map(attendances.map((attendance) => [attendance.student_id, attendance]));
@@ -686,6 +809,10 @@ export const getSessionSummary = async (req: AuthRequest, res: Response) => {
     const totalStudents = students.length;
     const absentCount = Math.max(totalStudents - checkedIn, 0);
     const attendanceRate = totalStudents > 0 ? Number(((checkedIn / totalStudents) * 100).toFixed(2)) : 0;
+    const suspiciousCheckIns = attendances.filter((item) => {
+      if (typeof item.sessionDistance !== 'number') return false;
+      return item.sessionDistance >= session.radius * 0.85;
+    }).length;
 
     return res.json({
       session,
@@ -697,7 +824,21 @@ export const getSessionSummary = async (req: AuthRequest, res: Response) => {
         baselineCreatedCount: attendances.filter((item) => item.baselineCreated).length,
         verifiedIpCount: attendances.filter((item) => item.verifiedIp !== false).length,
         verifiedLocationCount: attendances.filter((item) => item.verifiedLocation !== false).length,
+        suspiciousCheckIns,
+        riskAttempts: riskLogs.length,
       },
+      riskWarnings: riskLogs.map((item) => ({
+        id: item.id,
+        createdAt: item.createdAt,
+        actor: item.user
+          ? {
+              id: item.user.id,
+              name: item.user.name,
+              username: item.user.username,
+            }
+          : null,
+        details: item.details,
+      })),
       students: students.map((student) => {
         const attendance = attendanceMap.get(student.id);
         return {

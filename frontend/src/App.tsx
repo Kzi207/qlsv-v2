@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './store/useAuthStore';
+import ScrollToTop from './components/ScrollToTop';
 import MainLayout from './layout/MainLayout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -85,6 +86,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <Toaster position="top-center" />
       <Routes>
         <Route

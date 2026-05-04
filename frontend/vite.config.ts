@@ -8,10 +8,10 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     server: {
-      allowedHosts: ['azt.kzii.site'],
+      allowedHosts: ['azt.kzii.site', 'myctut.kzii.site'],
       proxy: {
         [env.VITE_API_URL || '/api']: {
-          target: env.VITE_API_TARGET || 'http://localhost:5000',
+          target: env.VITE_API_TARGET || 'https://myctut.kzii.site/',
           changeOrigin: true,
         }
       }

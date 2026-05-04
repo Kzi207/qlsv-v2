@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../utils/prisma';
 import type { AuthRequest } from '../middleware/auth.middleware';
-import { clearAuthCookies, createCsrfToken, setAuthCookies, setCsrfCookie, getCookieValue, CSRF_COOKIE_NAME } from '../utils/security';
+import { clearAuthCookies, createCsrfToken, setAuthCookies, setCsrfCookie, getCookieValue, CSRF_COOKIE_NAME, AUTH_COOKIE_NAME } from '../utils/security';
 import { decrypt } from '../utils/crypto';
 import { logAudit } from '../utils/logger';
 
@@ -93,18 +93,36 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-export const me = async (req: AuthRequest, res: Response) => {
+export const me = async (req: Request, res: Response) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
 
-  if (!req.user?.id) {
-    return res.status(401).json({ message: 'Unauthorized' });
+  const tokenFromCookie = getCookieValue(req, AUTH_COOKIE_NAME);
+  const tokenFromHeader = req.header('Authorization')?.replace('Bearer ', '');
+  const tokenFromQuery = req.query.token as string;
+  const token = tokenFromCookie || tokenFromHeader || tokenFromQuery;
+
+  if (!token) {
+    return res.json({ user: null, isAuthenticated: false });
+  }
+
+  let decodedUser: any = null;
+  try {
+    decodedUser = jwt.verify(token, getJwtSecret());
+  } catch (error) {
+    clearAuthCookies(req, res);
+    return res.json({ user: null, isAuthenticated: false });
+  }
+
+  if (!decodedUser?.id) {
+    clearAuthCookies(req, res);
+    return res.json({ user: null, isAuthenticated: false });
   }
 
   try {
     const user = await prisma.user.findUnique({
-      where: { id: Number(req.user.id) },
+      where: { id: Number(decodedUser.id) },
       include: {
         student: true
       }
@@ -112,7 +130,7 @@ export const me = async (req: AuthRequest, res: Response) => {
 
     if (!user) {
       clearAuthCookies(req, res);
-      return res.status(401).json({ message: 'Unauthorized' });
+      return res.json({ user: null, isAuthenticated: false });
     }
 
     // Map student class_id if it's a student

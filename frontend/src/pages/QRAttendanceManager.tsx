@@ -46,6 +46,8 @@ interface SessionSummaryStats {
   baselineCreatedCount: number;
   verifiedIpCount: number;
   verifiedLocationCount: number;
+  suspiciousCheckIns?: number;
+  riskAttempts?: number;
 }
 
 interface SessionSummaryStudent {
@@ -78,6 +80,16 @@ interface SessionSummaryStudent {
 interface SessionSummaryResponse {
   session: SessionItem;
   stats: SessionSummaryStats;
+  riskWarnings?: Array<{
+    id: number;
+    createdAt: string;
+    actor: null | {
+      id: number;
+      name: string;
+      username: string;
+    };
+    details: Record<string, unknown> | null;
+  }>;
   students: SessionSummaryStudent[];
 }
 
@@ -614,7 +626,7 @@ const QRAttendanceManager = () => {
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:grid-cols-4">
                     <div className="rounded-3xl border border-emerald-100 bg-emerald-50 p-4">
                       <p className="text-xs font-bold uppercase tracking-wider text-emerald-600">Da diem danh</p>
                       <p className="mt-2 text-3xl font-black text-emerald-700">{summary.stats.checkedIn}</p>
@@ -633,7 +645,7 @@ const QRAttendanceManager = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
                     <div className="rounded-3xl border border-slate-100 bg-white p-4">
                       <p className="flex items-center gap-2 text-sm font-bold text-slate-700">
                         <ShieldCheck size={16} className="text-primary-500" />
@@ -652,7 +664,49 @@ const QRAttendanceManager = () => {
                       <p className="mt-2 text-2xl font-black text-slate-800">{summary.stats.verifiedLocationCount}</p>
                       <p className="text-sm text-slate-500">So lan diem danh hop le theo toa do ho so.</p>
                     </div>
+                    <div className="rounded-3xl border border-amber-100 bg-amber-50 p-4">
+                      <p className="text-sm font-bold text-amber-700">Canh bao khoang cach</p>
+                      <p className="mt-2 text-2xl font-black text-amber-800">{summary.stats.suspiciousCheckIns || 0}</p>
+                      <p className="text-sm text-amber-700">Lan check-in sat bien ban kinh (&gt;= 85%).</p>
+                    </div>
+                    <div className="rounded-3xl border border-rose-100 bg-rose-50 p-4">
+                      <p className="text-sm font-bold text-rose-700">Thu nghiem gian lan</p>
+                      <p className="mt-2 text-2xl font-black text-rose-800">{summary.stats.riskAttempts || 0}</p>
+                      <p className="text-sm text-rose-700">So lan he thong tu choi do rui ro QR.</p>
+                    </div>
                   </div>
+
+                  {Array.isArray(summary.riskWarnings) && summary.riskWarnings.length > 0 && (
+                    <div className="overflow-hidden rounded-[2rem] border border-rose-100 bg-white shadow-sm">
+                      <div className="border-b border-rose-100 bg-rose-50 px-5 py-4">
+                        <h4 className="font-bold text-rose-700">Canh bao gian lan gan day</h4>
+                      </div>
+                      <div className="max-h-72 overflow-y-auto">
+                        {summary.riskWarnings.map((warning) => {
+                          const details = warning.details || {};
+                          const reason =
+                            typeof details.reason === 'string' ? details.reason : 'QR_RISK';
+                          const severity =
+                            typeof details.severity === 'string' ? details.severity : 'MEDIUM';
+
+                          return (
+                            <div key={warning.id} className="border-b border-slate-100 px-5 py-4 text-sm last:border-b-0">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <p className="font-bold text-slate-800">{reason}</p>
+                                <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-black text-rose-700">
+                                  {severity}
+                                </span>
+                              </div>
+                              <p className="mt-1 text-xs text-slate-500">
+                                {new Date(warning.createdAt).toLocaleString('vi-VN')}
+                                {warning.actor?.name ? ` - ${warning.actor.name}` : ''}
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-sm">
                     <div className="border-b border-slate-100 px-5 py-4">
@@ -734,3 +788,4 @@ const QRAttendanceManager = () => {
 };
 
 export default QRAttendanceManager;
+

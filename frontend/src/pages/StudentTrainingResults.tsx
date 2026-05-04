@@ -144,7 +144,7 @@ const StudentTrainingResults = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm space-y-1">
           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Học kỳ đã học</p>
           <p className="text-2xl font-black text-slate-900">{stats.count}</p>
@@ -304,3 +304,4 @@ const StudentTrainingResults = () => {
 };
 
 export default StudentTrainingResults;
+

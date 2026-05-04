@@ -1,107 +1,288 @@
-import { useEffect, useState } from 'react';
-import { Users, CalendarCheck, Award, ClipboardList, TrendingUp, BookOpen } from 'lucide-react';
-import { motion } from 'framer-motion';
-import api from '../api/axios';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  AlertTriangle,
+  Bell,
+  CalendarCheck,
+  ClipboardList,
+  GraduationCap,
+  ShieldAlert,
+  TrendingUp,
+  Users,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useAuthStore } from '../store/useAuthStore';
+import api from '../api/axios';
 
-const StatCard = ({ title, value, icon: Icon, color, delay, to }: any) => (
-  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }}
-    className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm card-hover">
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-slate-500 text-sm font-medium mb-1">{title}</p>
-        <h3 className="text-3xl font-black text-slate-900">{value}</h3>
-      </div>
-      <div className={`p-4 rounded-2xl ${color}`}>
-        <Icon size={24} className="text-white" />
+interface AnalyticsOverview {
+  totalStudents: number;
+  totalClasses: number;
+  totalSubjects: number;
+  activeQrSessions: number;
+  pendingTraining: number;
+  approvedTraining: number;
+  notificationsToday: number;
+  fraudAlerts24h: number;
+}
+
+interface AttendanceTrendItem {
+  date: string;
+  checkIns: number;
+}
+
+interface TopClassItem {
+  classId: string;
+  sessions: number;
+  attendanceRate: number;
+}
+
+interface FraudWarningItem {
+  id: number;
+  createdAt: string;
+  actorName: string;
+  targetId: string | null;
+  details: Record<string, unknown> | null;
+}
+
+interface AdminAnalyticsResponse {
+  overview: AnalyticsOverview;
+  attendanceTrend: AttendanceTrendItem[];
+  topClassesByAttendance: TopClassItem[];
+  fraudWarnings: FraudWarningItem[];
+}
+
+const defaultOverview: AnalyticsOverview = {
+  totalStudents: 0,
+  totalClasses: 0,
+  totalSubjects: 0,
+  activeQrSessions: 0,
+  pendingTraining: 0,
+  approvedTraining: 0,
+  notificationsToday: 0,
+  fraudAlerts24h: 0,
+};
+
+const StatCard = ({
+  title,
+  value,
+  icon: Icon,
+  tone,
+  to,
+}: {
+  title: string;
+  value: string | number;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  tone: 'blue' | 'emerald' | 'amber' | 'rose' | 'slate' | 'indigo';
+  to?: string;
+}) => {
+  const toneClassMap: Record<string, string> = {
+    blue: 'bg-blue-500/10 text-blue-700 border-blue-100',
+    emerald: 'bg-emerald-500/10 text-emerald-700 border-emerald-100',
+    amber: 'bg-amber-500/10 text-amber-700 border-amber-100',
+    rose: 'bg-rose-500/10 text-rose-700 border-rose-100',
+    slate: 'bg-slate-500/10 text-slate-700 border-slate-100',
+    indigo: 'bg-indigo-500/10 text-indigo-700 border-indigo-100',
+  };
+
+  const content = (
+    <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition hover:shadow-md">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{title}</p>
+          <p className="mt-2 text-3xl font-black text-slate-900">{value}</p>
+        </div>
+        <div className={`rounded-2xl border p-3 ${toneClassMap[tone]}`}>
+          <Icon size={20} />
+        </div>
       </div>
     </div>
-    {to && (
-      <Link to={to} className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-primary-600 hover:underline">
-        Xem chi tiết →
-      </Link>
-    )}
-  </motion.div>
-);
+  );
 
-const Dashboard = () => {
-  const [stats, setStats] = useState({
-    totalStudents: 0,
-    pendingScores: 0,
-    approvedScores: 0,
-    activeSessions: 0,
-  });
-
-  const { user } = useAuthStore();
-  const role = user?.role?.toUpperCase();
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const isAdmin = role === 'QTV' || role === 'BCH';
-        
-        const requests = [
-          isAdmin ? api.get('/students/count') : Promise.resolve({ data: { total: 0 } }),
-          isAdmin ? api.get('/training/stats') : Promise.resolve({ data: { pending: 0, approved: 0 } }),
-          isAdmin ? api.get('/attendance/sessions/active') : Promise.resolve({ data: [] }),
-        ];
-
-        const [studentRes, trainingRes, sessionRes] = await Promise.all(requests);
-        
-        setStats({
-          totalStudents: Number(studentRes.data?.total || 0),
-          pendingScores: Number(trainingRes.data?.pending || 0),
-          approvedScores: Number(trainingRes.data?.approved || 0),
-          activeSessions: Array.isArray(sessionRes.data) ? sessionRes.data.length : 0,
-        });
-      } catch (e) { /* silent */ }
-    };
-    if (role) fetchStats();
-  }, [role]);
+  if (!to) return content;
 
   return (
-    <div className="space-y-8 mt-4">
-      <div>
-        <h2 className="text-3xl font-extrabold text-slate-900 mb-1">Thống kê hệ thống</h2>
-        <p className="text-slate-500">Tổng quan toàn bộ hoạt động học tập hôm nay</p>
-      </div>
+    <Link to={to} className="block">
+      {content}
+    </Link>
+  );
+};
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-        <StatCard title="Tổng sinh viên" value={stats.totalStudents} icon={Users} color="bg-blue-500" delay={0.1} to="/students" />
-        <StatCard title="Phiếu DRL chờ duyệt" value={stats.pendingScores} icon={ClipboardList} color="bg-amber-500" delay={0.2} to="/drl" />
-        <StatCard title="Phiên điểm danh đang mở" value={stats.activeSessions} icon={CalendarCheck} color="bg-emerald-500" delay={0.3} to="/attendance/manage" />
-        <StatCard title="Điểm DRL TB" value="—" icon={Award} color="bg-purple-500" delay={0.4} />
-      </div>
+const Dashboard = () => {
+  const [loading, setLoading] = useState(true);
+  const [overview, setOverview] = useState<AnalyticsOverview>(defaultOverview);
+  const [attendanceTrend, setAttendanceTrend] = useState<AttendanceTrendItem[]>([]);
+  const [topClasses, setTopClasses] = useState<TopClassItem[]>([]);
+  const [fraudWarnings, setFraudWarnings] = useState<FraudWarningItem[]>([]);
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5 }}
-          className="md:col-span-2 bg-white p-8 rounded-3xl border border-slate-100 shadow-sm h-64 flex flex-col justify-center items-center text-slate-400 border-dashed">
-          <TrendingUp size={48} className="mb-4 opacity-20" />
-          <p className="font-medium">Biểu đồ thống kê sẽ được cập nhật trong phiên bản tiếp theo</p>
-        </motion.div>
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      setLoading(true);
+      try {
+        const response = await api.get<AdminAnalyticsResponse>('/admin/analytics');
+        setOverview(response.data?.overview || defaultOverview);
+        setAttendanceTrend(Array.isArray(response.data?.attendanceTrend) ? response.data.attendanceTrend : []);
+        setTopClasses(Array.isArray(response.data?.topClassesByAttendance) ? response.data.topClassesByAttendance : []);
+        setFraudWarnings(Array.isArray(response.data?.fraudWarnings) ? response.data.fraudWarnings : []);
+      } catch (error) {
+        console.error('Failed to fetch admin analytics', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }}
-          className="bg-gradient-to-br from-primary-600 to-primary-800 p-6 rounded-3xl text-white space-y-4">
-          <h4 className="font-bold text-primary-100 text-sm uppercase tracking-widest">Thao tác nhanh</h4>
-          <div className="space-y-3">
-            <Link to="/attendance/manage" className="flex items-center gap-3 bg-white/10 hover:bg-white/20 rounded-xl px-4 py-3 transition-all text-sm font-bold">
-              <CalendarCheck size={16} /> Tạo phiên điểm danh
-            </Link>
-            <Link to="/drl" className="flex items-center gap-3 bg-white/10 hover:bg-white/20 rounded-xl px-4 py-3 transition-all text-sm font-bold">
-              <ClipboardList size={16} /> Duyệt phiếu DRL
-            </Link>
-            <Link to="/students" className="flex items-center gap-3 bg-white/10 hover:bg-white/20 rounded-xl px-4 py-3 transition-all text-sm font-bold">
-              <Users size={16} /> Quản lý sinh viên
-            </Link>
-            <Link to="/classes" className="flex items-center gap-3 bg-white/10 hover:bg-white/20 rounded-xl px-4 py-3 transition-all text-sm font-bold">
-              <BookOpen size={16} /> Quản lý lớp học
-            </Link>
+    fetchAnalytics();
+  }, []);
+
+  const trendMax = useMemo(() => {
+    const maxValue = attendanceTrend.reduce((max, item) => Math.max(max, item.checkIns), 0);
+    return maxValue > 0 ? maxValue : 1;
+  }, [attendanceTrend]);
+
+  return (
+    <div className="space-y-8">
+      <section className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
+        <p className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-blue-700">
+          <TrendingUp size={12} />
+          Analytics dashboard
+        </p>
+        <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900 md:text-4xl">
+          Tong quan van hanh he thong
+        </h1>
+        <p className="mt-2 text-sm font-medium text-slate-500">
+          Theo doi hoc vu, diem danh QR va canh bao rui ro theo thoi gian thuc.
+        </p>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard title="Tong sinh vien" value={overview.totalStudents} icon={Users} tone="blue" to="/students" />
+        <StatCard title="Tong lop hoc" value={overview.totalClasses} icon={GraduationCap} tone="indigo" to="/classes" />
+        <StatCard title="Phien QR dang mo" value={overview.activeQrSessions} icon={CalendarCheck} tone="emerald" to="/attendance/manage" />
+        <StatCard title="Canh bao QR 24h" value={overview.fraudAlerts24h} icon={ShieldAlert} tone="rose" to="/attendance/manage" />
+        <StatCard title="Phieu DRL cho duyet" value={overview.pendingTraining} icon={ClipboardList} tone="amber" to="/training/approval" />
+        <StatCard title="Phieu DRL da duyet" value={overview.approvedTraining} icon={ClipboardList} tone="slate" to="/drl" />
+        <StatCard title="Thong bao hom nay" value={overview.notificationsToday} icon={Bell} tone="blue" to="/notifications" />
+        <StatCard title="Tong mon hoc" value={overview.totalSubjects} icon={GraduationCap} tone="indigo" to="/academic/manage" />
+      </section>
+
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.3fr_1fr]">
+        <div className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
+          <div className="mb-5 flex items-center justify-between">
+            <h2 className="text-lg font-black text-slate-900">Luong diem danh 7 ngay</h2>
+            <span className="text-xs font-bold text-slate-500">Check-in theo ngay</span>
           </div>
-        </motion.div>
-      </div>
+
+          {loading ? (
+            <div className="h-56 animate-pulse rounded-2xl bg-slate-50" />
+          ) : attendanceTrend.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-12 text-center text-sm text-slate-500">
+              Chua co du lieu diem danh gan day.
+            </div>
+          ) : (
+            <div className="grid h-56 grid-cols-7 items-end gap-3">
+              {attendanceTrend.map((item) => {
+                const heightPercent = Math.max((item.checkIns / trendMax) * 100, item.checkIns > 0 ? 8 : 2);
+                return (
+                  <div key={item.date} className="flex flex-col items-center gap-2">
+                    <div className="relative flex h-44 w-full items-end justify-center rounded-xl bg-slate-50">
+                      <div
+                        className="w-[70%] rounded-lg bg-gradient-to-t from-blue-600 to-blue-400 transition-all"
+                        style={{ height: `${heightPercent}%` }}
+                      />
+                    </div>
+                    <p className="text-[11px] font-bold text-slate-500">
+                      {new Date(item.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
+          <div className="mb-5 flex items-center justify-between">
+            <h2 className="text-lg font-black text-slate-900">Top lop theo ty le diem danh</h2>
+            <span className="text-xs font-bold text-slate-500">30 ngay</span>
+          </div>
+
+          {loading ? (
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((item) => (
+                <div key={item} className="h-14 animate-pulse rounded-xl bg-slate-50" />
+              ))}
+            </div>
+          ) : topClasses.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-12 text-center text-sm text-slate-500">
+              Chua co lop du du lieu de tinh ti le.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {topClasses.map((item) => (
+                <div key={item.classId} className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="font-bold text-slate-800">{item.classId}</p>
+                    <p className="text-sm font-black text-emerald-700">{item.attendanceRate}%</p>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+                    <div
+                      className="h-full rounded-full bg-emerald-500"
+                      style={{ width: `${Math.min(item.attendanceRate, 100)}%` }}
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-slate-500">{item.sessions} phien gan day</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="rounded-[2rem] border border-rose-100 bg-white p-6 shadow-sm">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-lg font-black text-slate-900">
+            <AlertTriangle size={18} className="text-rose-600" />
+            Canh bao gian lan QR gan day
+          </h2>
+          <Link to="/attendance/manage" className="text-xs font-bold text-rose-600 hover:underline">
+            Mo quan ly QR
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((item) => (
+              <div key={item} className="h-16 animate-pulse rounded-xl bg-slate-50" />
+            ))}
+          </div>
+        ) : fraudWarnings.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-200 px-4 py-10 text-center text-sm text-slate-500">
+            Chua ghi nhan canh bao gian lan moi.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {fraudWarnings.map((warning) => {
+              const details = warning.details || {};
+              const reason = typeof details.reason === 'string' ? details.reason : 'QR_RISK';
+              const severity = typeof details.severity === 'string' ? details.severity : 'MEDIUM';
+              return (
+                <div key={warning.id} className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-bold text-rose-800">{reason}</p>
+                    <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-black text-rose-700">
+                      {severity}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-rose-700">
+                    {new Date(warning.createdAt).toLocaleString('vi-VN')} - {warning.actorName}
+                    {warning.targetId ? ` - Session #${warning.targetId}` : ''}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 };
 
 export default Dashboard;
+

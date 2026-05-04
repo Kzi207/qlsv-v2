@@ -89,7 +89,7 @@ const TuitionPayment = () => {
                            </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-8 pt-8 border-t border-white/10">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-8 border-t border-white/10">
                            <div>
                               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Học kỳ</p>
                               <p className="text-lg font-black">{currentTuition.semesterId}</p>
@@ -187,3 +187,4 @@ const TuitionPayment = () => {
 };
 
 export default TuitionPayment;
+

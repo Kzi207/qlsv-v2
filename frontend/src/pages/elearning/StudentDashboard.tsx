@@ -126,7 +126,7 @@ const StudentDashboard: React.FC = () => {
           </section>
 
           {/* Stats Bento Grid */}
-          <section className="grid grid-cols-2 gap-3 md:gap-6 px-2">
+          <section className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-6 px-2">
             {stats.map((stat) => (
               <motion.div
                 key={stat.label}
@@ -242,3 +242,4 @@ const StudentDashboard: React.FC = () => {
 };
 
 export default StudentDashboard;
+

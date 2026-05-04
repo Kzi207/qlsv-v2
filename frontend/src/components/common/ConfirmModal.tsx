@@ -67,7 +67,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 <p className="text-sm font-medium leading-relaxed text-slate-500">{message}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                 <button
                   onClick={onCancel}
                   className="w-full rounded-xl bg-slate-100 py-2.5 text-[11px] font-black uppercase tracking-[0.12em] text-slate-600 transition-all hover:bg-slate-200 sm:rounded-2xl sm:py-3.5 sm:text-xs sm:tracking-widest"
@@ -94,3 +94,4 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
 };
 
 export default ConfirmModal;
+

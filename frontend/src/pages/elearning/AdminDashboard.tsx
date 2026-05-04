@@ -65,7 +65,7 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Global Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
              {stats.map((stat, idx) => (
                <motion.div 
                  key={idx}
@@ -153,3 +153,4 @@ const GraduationCap = ({ size, className }: { size: number, className?: string }
 );
 
 export default AdminDashboard;
+

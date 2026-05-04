@@ -260,7 +260,7 @@ const Semesters = () => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">Ngày bắt đầu</label>
                       <input
@@ -308,7 +308,7 @@ const Semesters = () => {
                   {!formData.isGlobal && (
                     <div className="animate-in slide-in-from-top-4 duration-300">
                       <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 block">Chọn các lớp áp dụng ({formData.classNames.length})</label>
-                      <div className="max-h-40 overflow-y-auto pr-2 grid grid-cols-2 md:grid-cols-3 gap-2 scrollbar-hide">
+                      <div className="max-h-40 overflow-y-auto pr-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 scrollbar-hide">
                         {classes.map(c => (
                           <button
                             key={c.name}
@@ -351,3 +351,4 @@ const Semesters = () => {
 };
 
 export default Semesters;
+

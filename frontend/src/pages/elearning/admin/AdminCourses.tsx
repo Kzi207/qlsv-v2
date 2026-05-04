@@ -194,11 +194,11 @@ const AdminCourses: React.FC = () => {
                 <table className="w-full text-left">
                    <thead>
                       <tr className="bg-slate-50/50">
-                         <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Khóa học</th>
-                         <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Giảng viên</th>
-                         <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Tín chỉ</th>
-                         <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Trạng thái</th>
-                         <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Thao tác</th>
+                         <th className="px-4 xl:px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Khóa học</th>
+                         <th className="px-4 xl:px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Giảng viên</th>
+                         <th className="px-4 xl:px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Tín chỉ</th>
+                         <th className="px-4 xl:px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Trạng thái</th>
+                         <th className="px-4 xl:px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Thao tác</th>
                       </tr>
                    </thead>
                    <tbody className="divide-y divide-slate-50">
@@ -206,56 +206,56 @@ const AdminCourses: React.FC = () => {
                          <tr><td colSpan={5} className="px-8 py-20 text-center"><div className="h-10 w-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" /></td></tr>
                       ) : filteredCourses.length > 0 ? filteredCourses.map((course) => (
                         <tr key={course.id} className="hover:bg-slate-50/50 transition-colors group">
-                           <td className="px-8 py-5">
+                           <td className="px-4 xl:px-6 py-5">
                               <div className="flex items-center gap-4">
                                  <div className="h-12 w-12 rounded-2xl bg-slate-100 overflow-hidden shrink-0 border border-slate-100 group-hover:border-blue-200 transition-colors">
                                     <img src={course.image || 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?q=80&w=100&auto=format&fit=crop'} alt="" className="w-full h-full object-cover" />
                                  </div>
                                  <div className="flex flex-col">
-                                    <span className="text-xs font-black text-slate-900 group-hover:text-blue-600 transition-colors">{course.name}</span>
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{course.subject?.code}</span>
+                                    <span className="text-xs font-black text-slate-900 group-hover:text-blue-600 transition-colors whitespace-nowrap">{course.name}</span>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">{course.subject?.code}</span>
                                  </div>
                               </div>
                            </td>
-                           <td className="px-8 py-5">
+                           <td className="px-4 xl:px-6 py-5">
                               <div className="flex items-center gap-3">
-                                 <div className="h-7 w-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-[10px] font-black">
+                                 <div className="h-7 w-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-[10px] font-black shrink-0">
                                     {course.teacher?.name?.charAt(0)}
                                  </div>
-                                 <span className="text-xs font-bold text-slate-600">{course.teacher?.name}</span>
+                                 <span className="text-xs font-bold text-slate-600 whitespace-nowrap">{course.teacher?.name}</span>
                               </div>
                            </td>
-                           <td className="px-8 py-5 text-xs font-black text-slate-900 text-center">{course.subject?.credits}</td>
-                           <td className="px-8 py-5">
-                              <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${course.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                           <td className="px-4 xl:px-6 py-5 text-xs font-black text-slate-900 text-center">{course.subject?.credits}</td>
+                           <td className="px-4 xl:px-6 py-5">
+                              <span className={`whitespace-nowrap px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${course.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
                                  {course.isActive ? 'Đang mở' : 'Đã đóng'}
                               </span>
                            </td>
-                           <td className="px-8 py-5 text-right">
-                              <div className="flex items-center justify-end gap-2">
+                           <td className="px-4 xl:px-6 py-5 text-right">
+                              <div className="flex items-center justify-end gap-1.5 md:gap-2">
                                  <button 
                                    onClick={() => openStudentManagement(course)}
-                                   className="p-2.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all" title="Quản lý sinh viên"
+                                   className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all" title="Quản lý sinh viên"
                                  >
-                                    <Users size={18} />
+                                    <Users size={20} />
                                  </button>
                                  <button 
                                   onClick={() => window.location.href = `/elearning/course/${course.id}`}
-                                  className="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all" title="Xem chi tiết"
+                                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all" title="Xem chi tiết"
                                  >
-                                    <Eye size={18} />
+                                    <Eye size={20} />
                                  </button>
-                                 <button className="p-2.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all" title="Chỉnh sửa">
-                                    <Edit2 size={18} />
+                                 <button className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all" title="Chỉnh sửa">
+                                    <Edit2 size={20} />
                                  </button>
-                                 <button className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="Xóa">
-                                    <Trash2 size={18} />
+                                 <button className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="Xóa">
+                                    <Trash2 size={20} />
                                  </button>
                               </div>
                            </td>
                         </tr>
                       )) : (
-                        <tr><td colSpan={5} className="px-8 py-20 text-center text-xs font-black text-slate-400 uppercase tracking-widest">Không tìm thấy kết quả phù hợp</td></tr>
+                        <tr><td colSpan={5} className="px-4 xl:px-6 py-20 text-center text-xs font-black text-slate-400 uppercase tracking-widest">Không tìm thấy kết quả phù hợp</td></tr>
                       )}
                    </tbody>
                 </table>
@@ -306,7 +306,7 @@ const AdminCourses: React.FC = () => {
                  </div>
 
                  <form onSubmit={handleCreateCourse} className="p-10 space-y-6">
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                        <div className="space-y-2">
                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Môn học gốc</label>
                           <select 
@@ -510,3 +510,4 @@ const AdminCourses: React.FC = () => {
 };
 
 export default AdminCourses;
+

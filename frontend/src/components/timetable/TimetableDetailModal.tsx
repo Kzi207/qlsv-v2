@@ -46,7 +46,7 @@ const TimetableDetailModal: React.FC<Props> = ({ isOpen, onClose, event }) => {
         {/* Content - Scrollable if needed */}
         <div className="relative -mt-8 bg-white rounded-t-[2.5rem] p-6 pt-10 flex-1 overflow-y-auto custom-scrollbar space-y-6">
            
-           <div className="grid grid-cols-2 gap-4">
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="p-4 bg-slate-50 rounded-[1.5rem] border border-slate-100 space-y-1">
                  <div className="flex items-center gap-2 text-[9px] font-black text-slate-400 uppercase tracking-widest">
                     <Clock size={12} className="text-blue-500" /> Thời gian
@@ -125,3 +125,4 @@ const TimetableDetailModal: React.FC<Props> = ({ isOpen, onClose, event }) => {
 };
 
 export default TimetableDetailModal;
+

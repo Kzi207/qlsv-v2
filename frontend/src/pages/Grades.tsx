@@ -42,7 +42,7 @@ const Grades = () => {
           <p className="text-slate-500 font-bold text-xs md:text-sm">Xem điểm chi tiết và tiến độ học tập của bạn.</p>
         </div>
         
-        <div className="grid grid-cols-2 md:flex gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:flex gap-4">
           <div className="bg-white p-5 md:p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/20 flex flex-col md:flex-row items-center gap-3 md:gap-6 md:min-w-[200px]">
             <div className="h-10 w-10 md:h-14 md:w-14 rounded-xl md:rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 shadow-inner">
               <Star size={20} className="md:size-6" />
@@ -191,3 +191,4 @@ const Grades = () => {
 };
 
 export default Grades;
+

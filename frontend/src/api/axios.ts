@@ -53,12 +53,49 @@ const getEffectiveCsrfToken = () => {
   return stored;
 };
 
+export const getBaseURL = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  const envTarget = import.meta.env.VITE_API_TARGET;
+  const isCapacitor = Capacitor.getPlatform() !== 'web';
+
+  // Nếu là Capacitor, bắt buộc dùng URL tuyệt đối
+  if (isCapacitor) {
+    if (envTarget) return envTarget.endsWith('/') ? `${envTarget}api` : `${envTarget}/api`;
+    if (envUrl && envUrl.startsWith('http')) return envUrl;
+    return 'https://test.kzii.site/api';
+  }
+
+  if (envUrl && envUrl.startsWith('http')) {
+    return envUrl;
+  }
+
+  return '/api';
+};
+
+export const getAssetBaseURL = () => {
+  const envTarget = import.meta.env.VITE_API_TARGET;
+  const envUrl = import.meta.env.VITE_API_URL;
+  const isCapacitor = Capacitor.getPlatform() !== 'web';
+
+  if (isCapacitor) {
+    if (envTarget) return envTarget.endsWith('/') ? envTarget.slice(0, -1) : envTarget;
+    if (envUrl && envUrl.startsWith('http')) return envUrl.replace(/\/api\/?$/, '');
+    return 'https://test.kzii.site';
+  }
+
+  if (envUrl && envUrl.startsWith('http')) {
+    return envUrl.replace(/\/api\/?$/, '');
+  }
+
+  // Trên web prod/dev, /api/abc -> domain/api/abc
+  // Nên base asset thường là domain/
+  return window.location.origin;
+};
+
 const api = axios.create({
-  baseURL: Capacitor.getPlatform() !== 'web'
-    ? 'https://test.kzii.site/api' 
-    : (import.meta.env.VITE_API_URL || '/api'),
+  baseURL: getBaseURL(),
   withCredentials: true,
-  timeout: 10000, // Thêm timeout 10s
+  timeout: 15000, // Tăng lên 15s cho server chậm
 });
 
 api.interceptors.request.use((config) => {

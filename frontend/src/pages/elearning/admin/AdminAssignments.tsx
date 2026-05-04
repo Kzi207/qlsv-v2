@@ -323,7 +323,7 @@ const AdminAssignments: React.FC = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hạn chót</label>
                     <input 
@@ -385,3 +385,4 @@ const AdminAssignments: React.FC = () => {
 };
 
 export default AdminAssignments;
+

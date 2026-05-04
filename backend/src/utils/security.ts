@@ -17,7 +17,12 @@ export const getAllowedOrigins = () => {
     return configuredOrigins;
   }
 
-  return ['http://localhost:5173'];
+  // Mặc định cho development, nhưng log cảnh báo nếu ở production
+  if (process.env.NODE_ENV === 'production') {
+    console.warn('WARNING: FRONTEND_ORIGIN is not configured in production!');
+  }
+
+  return ['http://localhost:5173', 'http://localhost:3000'];
 };
 
 const getSameSite = (): CookieOptions['sameSite'] => {

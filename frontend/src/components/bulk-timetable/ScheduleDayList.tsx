@@ -60,7 +60,7 @@ const ScheduleDayList = ({ previewEvents, onRemove }: ScheduleDayListProps) => {
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-50">
                       <div>
                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Lớp / Phòng</p>
                         <p className="text-xs font-bold text-slate-700">{e.classId} • {e.room}</p>
@@ -99,3 +99,4 @@ const ScheduleDayList = ({ previewEvents, onRemove }: ScheduleDayListProps) => {
 };
 
 export default ScheduleDayList;
+

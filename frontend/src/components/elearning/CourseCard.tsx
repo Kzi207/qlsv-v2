@@ -78,7 +78,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onEnter, role = 'STUDEN
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-3 text-slate-500">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-500">
           <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2">
             <BookOpen size={15} />
             <span className="text-[11px] font-bold">{getCount(course, 'lessons')} bài giảng</span>
@@ -107,3 +107,4 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onEnter, role = 'STUDEN
 };
 
 export default CourseCard;
+

@@ -51,7 +51,11 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     try {
       const res = await api.get('/auth/me');
-      set({ user: res.data.user, isAuthenticated: true, authInitialized: true });
+      if (res.data.user) {
+        set({ user: res.data.user, isAuthenticated: true, authInitialized: true });
+      } else {
+        set({ user: null, isAuthenticated: false, authInitialized: true });
+      }
     } catch (_error) {
       set({ user: null, isAuthenticated: false, authInitialized: true });
     }

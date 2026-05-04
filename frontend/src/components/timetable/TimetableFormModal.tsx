@@ -226,7 +226,7 @@ const TimetableFormModal: React.FC<TimetableFormModalProps> = ({
                />
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                <div className="space-y-2">
                   <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Học kỳ</label>
                   <select 
@@ -296,7 +296,7 @@ const TimetableFormModal: React.FC<TimetableFormModalProps> = ({
                </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                <div className="space-y-2">
                   <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Giảng viên</label>
                   <select 
@@ -330,7 +330,7 @@ const TimetableFormModal: React.FC<TimetableFormModalProps> = ({
                </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
                    <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Ngày học</label>
                     <input 
@@ -355,7 +355,7 @@ const TimetableFormModal: React.FC<TimetableFormModalProps> = ({
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                <div className="space-y-2">
                   <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Từ tiết</label>
                   <select 
@@ -413,3 +413,4 @@ const TimetableFormModal: React.FC<TimetableFormModalProps> = ({
 };
 
 export default TimetableFormModal;
+

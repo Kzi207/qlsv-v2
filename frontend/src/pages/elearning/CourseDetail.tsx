@@ -24,6 +24,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../api/axios';
 import { useAuthStore } from '../../store/useAuthStore';
 import { toast } from 'react-hot-toast';
+import { getAssetBaseURL } from '../../api/axios';
 
 const CourseDetail: React.FC = () => {
   const { id } = useParams();
@@ -499,7 +500,7 @@ const CourseDetail: React.FC = () => {
                         {course.description || "Chưa có mô tả chi tiết cho khóa học này."}
                       </p>
                    </div>
-                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-6">
+                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-6">
                       <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
                          <p className="text-[10px] font-black text-slate-400 uppercase">Bài giảng</p>
                          <p className="text-xl font-black text-slate-900">{course.lessons?.length || 0}</p>
@@ -543,7 +544,7 @@ const CourseDetail: React.FC = () => {
                           onClick={() => {
                             const url = lesson.fileUrl.startsWith('http') 
                               ? lesson.fileUrl 
-                              : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${lesson.fileUrl}`;
+                              : `${getAssetBaseURL()}${lesson.fileUrl}`;
                             window.open(url, '_blank');
                           }}
                           className={`cursor-pointer group bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:border-blue-600 hover:shadow-blue-600/5 active:scale-[0.98] transition-all ${!lesson.isVisible ? 'opacity-60' : ''}`}
@@ -567,7 +568,7 @@ const CourseDetail: React.FC = () => {
                                 onClick={() => {
                                   const url = lesson.fileUrl.startsWith('http') 
                                     ? lesson.fileUrl 
-                                    : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${lesson.fileUrl}`;
+                                    : `${getAssetBaseURL()}${lesson.fileUrl}`;
                                   window.open(url, '_blank');
                                 }}
                                 className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-slate-50 text-slate-400 rounded-full hover:bg-slate-900 hover:text-white transition-all shadow-sm group-hover:scale-110"
@@ -636,7 +637,7 @@ const CourseDetail: React.FC = () => {
                                       const sub = assignment.submissions[0];
                                       const url = sub.fileUrl.startsWith('http') 
                                         ? sub.fileUrl 
-                                        : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${sub.fileUrl}`;
+                                        : `${getAssetBaseURL()}${sub.fileUrl}`;
                                       window.open(url, '_blank');
                                     } else {
                                       setActiveAssignment(assignment);
@@ -947,7 +948,7 @@ const CourseDetail: React.FC = () => {
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mô tả bài tập</label>
                   <textarea rows={3} value={newAssignment.description} onChange={e => setNewAssignment({...newAssignment, description: e.target.value})} className="w-full bg-slate-50 border border-transparent focus:border-indigo-500 focus:bg-white rounded-2xl px-5 py-3.5 font-bold text-sm outline-none transition-all resize-none" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hạn nộp</label>
                     <input type="datetime-local" value={newAssignment.dueDate} onChange={e => setNewAssignment({...newAssignment, dueDate: e.target.value})} className="w-full bg-slate-50 border border-transparent focus:border-indigo-500 focus:bg-white rounded-2xl px-5 py-3.5 font-bold text-sm outline-none transition-all" required />
@@ -1002,7 +1003,7 @@ const CourseDetail: React.FC = () => {
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mô tả (Tùy chọn)</label>
                       <textarea value={newExam.description} onChange={e => setNewExam({...newExam, description: e.target.value})} className="w-full bg-slate-50 border border-transparent focus:border-rose-500 focus:bg-white rounded-2xl px-5 py-3.5 font-bold text-sm outline-none transition-all resize-none" rows={2} />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Thời gian bắt đầu</label>
                         <input type="datetime-local" value={newExam.startTime} onChange={e => setNewExam({...newExam, startTime: e.target.value})} className="w-full bg-slate-50 border border-transparent focus:border-rose-500 focus:bg-white rounded-2xl px-5 py-3.5 font-bold text-sm outline-none transition-all" required />
@@ -1284,3 +1285,4 @@ const CourseDetail: React.FC = () => {
 };
 
 export default CourseDetail;
+

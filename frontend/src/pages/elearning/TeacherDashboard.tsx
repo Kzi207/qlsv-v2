@@ -132,7 +132,7 @@ const TeacherDashboard: React.FC = () => {
             </button>
           </section>
 
-          <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <section className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:grid-cols-4">
             {stats.map((stat) => (
               <motion.div
                 key={stat.label}
@@ -261,3 +261,4 @@ const TeacherDashboard: React.FC = () => {
 };
 
 export default TeacherDashboard;
+

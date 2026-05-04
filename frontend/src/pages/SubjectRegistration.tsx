@@ -357,7 +357,7 @@ const SubjectRegistration = () => {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 border-t border-slate-100">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-4 border-t border-slate-100">
                 <button
                   onClick={() => setCancelTarget(null)}
                   className="py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 text-sm font-black hover:bg-slate-100 transition-all active:scale-95"
@@ -380,3 +380,4 @@ const SubjectRegistration = () => {
 };
 
 export default SubjectRegistration;
+

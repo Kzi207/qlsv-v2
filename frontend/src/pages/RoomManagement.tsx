@@ -361,7 +361,7 @@ const RoomManagement = () => {
                       className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-blue-500/20 transition-all text-white"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Từ tiết</label>
                       <select 
@@ -442,7 +442,7 @@ const RoomManagement = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Sức chứa</label>
                     <input 
@@ -528,7 +528,7 @@ const RoomManagement = () => {
                           className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-blue-500/10"
                         />
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                          <div className="space-y-2">
                             <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1">Từ tiết</label>
                             <input 
@@ -637,3 +637,4 @@ const RoomManagement = () => {
 };
 
 export default RoomManagement;
+

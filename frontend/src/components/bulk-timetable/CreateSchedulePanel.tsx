@@ -69,7 +69,7 @@ const CreateSchedulePanel = ({
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Thứ học</label>
               <select 
@@ -94,7 +94,7 @@ const CreateSchedulePanel = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tiết bắt đầu</label>
               <select 
@@ -164,3 +164,4 @@ const CreateSchedulePanel = ({
 };
 
 export default CreateSchedulePanel;
+

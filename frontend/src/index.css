@@ -7,6 +7,12 @@
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
   h1, h2, h3, h4, h5, h6 {
     @apply font-k2d;
   }
@@ -14,6 +20,15 @@
   select, input[type="range"] {
     -webkit-appearance: none;
     appearance: none;
+  }
+
+  img,
+  svg,
+  video,
+  canvas {
+    display: block;
+    max-width: 100%;
+    height: auto;
   }
 }
 
@@ -25,6 +40,41 @@ body {
   color: #1e293b;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+  overflow-x: clip;
+}
+
+.page-shell > * {
+  min-width: 0;
+}
+
+.page-shell .grid > *,
+.page-shell .flex > * {
+  min-width: 0;
+}
+
+.page-shell .overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 1023px) {
+  .page-shell {
+    overflow-x: hidden;
+  }
+
+  .page-shell input,
+  .page-shell select,
+  .page-shell textarea,
+  .page-shell button {
+    max-width: 100%;
+  }
+
+  .page-shell table {
+    font-size: 0.875rem;
+  }
 }
 
 /* Modern Layout Utilities */
