@@ -4,26 +4,27 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id          Int             @id @default(autoincrement())
-  username    String          @unique
-  password    String
-  name        String
-  email       String?
-  phone       String?
-  class_id    String?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  role        Role            @default(STUDENT)
-  studentId   Int?            @unique
-  student     Student?        @relation(fields: [studentId], references: [id])
-  assignments BchAssignment[]
-  courses     Course[]        @relation("TeacherCourses")
-  auditLogs   AuditLog[]
+  id                  Int                  @id @default(autoincrement())
+  username            String               @unique
+  password            String
+  name                String
+  email               String?
+  phone               String?
+  class_id            String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  role                Role                 @default(STUDENT)
+  studentId           Int?                 @unique
+  student             Student?             @relation(fields: [studentId], references: [id])
+  assignments         BchAssignment[]
+  courses             Course[]             @relation("TeacherCourses")
+  auditLogs           AuditLog[]
+  teachingAssignments TeachingAssignment[]
 }
 
 model AuditLog {
@@ -325,6 +326,7 @@ model Subject {
   curriculumAssignments CurriculumSubject[]
   requiredBy            CurriculumSubject[]  @relation("Prerequisite")
   courses               Course[]
+  teachingAssignments   TeachingAssignment[]
 }
 
 model Faculty {
@@ -677,4 +679,17 @@ model ActivityEvidence {
 
   @@index([studentId])
   @@index([status])
+}
+
+model TeachingAssignment {
+  id        Int      @id @default(autoincrement())
+  userId    Int // Giảng viên
+  subjectId Int // Môn học
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, subjectId])
+  @@index([subjectId])
 }

@@ -603,6 +603,13 @@ exports.Prisma.ActivityEvidenceScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.TeachingAssignmentScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  subjectId: 'subjectId',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -617,20 +624,257 @@ exports.Prisma.JsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
-exports.Prisma.QueryMode = {
-  default: 'default',
-  insensitive: 'insensitive'
-};
-
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
+};
+
+exports.Prisma.UserOrderByRelevanceFieldEnum = {
+  username: 'username',
+  password: 'password',
+  name: 'name',
+  email: 'email',
+  phone: 'phone',
+  class_id: 'class_id'
 };
 
 exports.Prisma.JsonNullValueFilter = {
   DbNull: Prisma.DbNull,
   JsonNull: Prisma.JsonNull,
   AnyNull: Prisma.AnyNull
+};
+
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+};
+
+exports.Prisma.AuditLogOrderByRelevanceFieldEnum = {
+  action: 'action',
+  targetType: 'targetType',
+  targetId: 'targetId',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent'
+};
+
+exports.Prisma.ClassOrderByRelevanceFieldEnum = {
+  name: 'name',
+  active_semester_id: 'active_semester_id'
+};
+
+exports.Prisma.StudentOrderByRelevanceFieldEnum = {
+  name: 'name',
+  student_code: 'student_code',
+  email: 'email',
+  class_id: 'class_id',
+  birthday: 'birthday',
+  gender: 'gender',
+  id_card: 'id_card',
+  hometown: 'hometown',
+  address: 'address'
+};
+
+exports.Prisma.BchAssignmentOrderByRelevanceFieldEnum = {
+  classId: 'classId'
+};
+
+exports.Prisma.SemesterOrderByRelevanceFieldEnum = {
+  name: 'name'
+};
+
+exports.Prisma.TrainingScoreOrderByRelevanceFieldEnum = {
+  status: 'status',
+  admin_notes: 'admin_notes',
+  semester_id: 'semester_id'
+};
+
+exports.Prisma.AttendanceOrderByRelevanceFieldEnum = {
+  status: 'status',
+  deviceInfo: 'deviceInfo',
+  ipAddress: 'ipAddress'
+};
+
+exports.Prisma.AttendanceSessionOrderByRelevanceFieldEnum = {
+  title: 'title',
+  subject: 'subject',
+  class_id: 'class_id',
+  qrToken: 'qrToken'
+};
+
+exports.Prisma.StudentAttendanceProfileOrderByRelevanceFieldEnum = {
+  firstIpAddress: 'firstIpAddress',
+  lastIpAddress: 'lastIpAddress'
+};
+
+exports.Prisma.ActivityAttendanceSessionOrderByRelevanceFieldEnum = {
+  title: 'title',
+  category: 'category',
+  qrToken: 'qrToken',
+  sectionId: 'sectionId',
+  criterionId: 'criterionId',
+  semesterId: 'semesterId',
+  classId: 'classId'
+};
+
+exports.Prisma.TrainingEvidenceSlipOrderByRelevanceFieldEnum = {
+  semesterId: 'semesterId',
+  status: 'status'
+};
+
+exports.Prisma.RoomOrderByRelevanceFieldEnum = {
+  name: 'name',
+  type: 'type'
+};
+
+exports.Prisma.TimetableOrderByRelevanceFieldEnum = {
+  subject: 'subject',
+  teacher: 'teacher',
+  room: 'room',
+  classId: 'classId',
+  semesterId: 'semesterId',
+  type: 'type'
+};
+
+exports.Prisma.RoomBorrowingOrderByRelevanceFieldEnum = {
+  roomName: 'roomName',
+  borrowerName: 'borrowerName',
+  purpose: 'purpose',
+  status: 'status'
+};
+
+exports.Prisma.SubjectOrderByRelevanceFieldEnum = {
+  code: 'code',
+  name: 'name',
+  subjectType: 'subjectType'
+};
+
+exports.Prisma.FacultyOrderByRelevanceFieldEnum = {
+  code: 'code',
+  name: 'name',
+  description: 'description'
+};
+
+exports.Prisma.MajorOrderByRelevanceFieldEnum = {
+  code: 'code',
+  name: 'name',
+  description: 'description'
+};
+
+exports.Prisma.CurriculumSemesterOrderByRelevanceFieldEnum = {
+  name: 'name'
+};
+
+exports.Prisma.CourseRegistrationOrderByRelevanceFieldEnum = {
+  semesterId: 'semesterId',
+  status: 'status'
+};
+
+exports.Prisma.TuitionOrderByRelevanceFieldEnum = {
+  semesterId: 'semesterId',
+  status: 'status',
+  notes: 'notes'
+};
+
+exports.Prisma.PaymentOrderByRelevanceFieldEnum = {
+  paymentCode: 'paymentCode',
+  provider: 'provider',
+  providerTransactionId: 'providerTransactionId',
+  status: 'status',
+  paymentUrl: 'paymentUrl'
+};
+
+exports.Prisma.PaymentLogOrderByRelevanceFieldEnum = {
+  provider: 'provider',
+  type: 'type'
+};
+
+exports.Prisma.GradeOrderByRelevanceFieldEnum = {
+  subject: 'subject',
+  semesterId: 'semesterId'
+};
+
+exports.Prisma.ClassSubjectOrderByRelevanceFieldEnum = {
+  classId: 'classId',
+  semesterId: 'semesterId'
+};
+
+exports.Prisma.SystemSettingOrderByRelevanceFieldEnum = {
+  schoolName: 'schoolName',
+  schoolAddress: 'schoolAddress',
+  activeSemester: 'activeSemester',
+  contactEmail: 'contactEmail',
+  contactPhone: 'contactPhone'
+};
+
+exports.Prisma.CourseOrderByRelevanceFieldEnum = {
+  semesterId: 'semesterId',
+  classId: 'classId',
+  name: 'name',
+  description: 'description',
+  image: 'image',
+  enrollKey: 'enrollKey'
+};
+
+exports.Prisma.LessonOrderByRelevanceFieldEnum = {
+  title: 'title',
+  content: 'content',
+  fileUrl: 'fileUrl',
+  fileType: 'fileType',
+  duration: 'duration'
+};
+
+exports.Prisma.AssignmentOrderByRelevanceFieldEnum = {
+  title: 'title',
+  description: 'description',
+  fileUrl: 'fileUrl'
+};
+
+exports.Prisma.AssignmentSubmissionOrderByRelevanceFieldEnum = {
+  fileUrl: 'fileUrl',
+  content: 'content',
+  feedback: 'feedback'
+};
+
+exports.Prisma.ExamOrderByRelevanceFieldEnum = {
+  title: 'title',
+  description: 'description',
+  status: 'status'
+};
+
+exports.Prisma.ExamQuestionOrderByRelevanceFieldEnum = {
+  question: 'question',
+  type: 'type'
+};
+
+exports.Prisma.ExamOptionOrderByRelevanceFieldEnum = {
+  content: 'content'
+};
+
+exports.Prisma.ExamResultOrderByRelevanceFieldEnum = {
+  status: 'status'
+};
+
+exports.Prisma.NotificationOrderByRelevanceFieldEnum = {
+  title: 'title',
+  content: 'content',
+  tag: 'tag',
+  color: 'color'
+};
+
+exports.Prisma.StudentAwardOrderByRelevanceFieldEnum = {
+  title: 'title',
+  description: 'description',
+  type: 'type'
+};
+
+exports.Prisma.ActivityEvidenceOrderByRelevanceFieldEnum = {
+  title: 'title',
+  imageUrl: 'imageUrl',
+  status: 'status',
+  adminTitle: 'adminTitle',
+  sectionId: 'sectionId',
+  criterionId: 'criterionId',
+  semesterId: 'semesterId'
 };
 exports.Role = exports.$Enums.Role = {
   QTV: 'QTV',
@@ -678,7 +922,8 @@ exports.Prisma.ModelName = {
   ExamResult: 'ExamResult',
   Notification: 'Notification',
   StudentAward: 'StudentAward',
-  ActivityEvidence: 'ActivityEvidence'
+  ActivityEvidence: 'ActivityEvidence',
+  TeachingAssignment: 'TeachingAssignment'
 };
 
 /**

@@ -141,39 +141,39 @@ const Dashboard = () => {
       <section className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
         <p className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-blue-700">
           <TrendingUp size={12} />
-          Analytics dashboard
+          BẢNG ĐIỀU KHIỂN PHÂN TÍCH
         </p>
         <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900 md:text-4xl">
-          Tong quan van hanh he thong
+          Tổng quan vận hành hệ thống
         </h1>
         <p className="mt-2 text-sm font-medium text-slate-500">
-          Theo doi hoc vu, diem danh QR va canh bao rui ro theo thoi gian thuc.
+          Theo dõi học vụ, điểm danh QR và cảnh báo rủi ro theo thời gian thực.
         </p>
       </section>
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard title="Tong sinh vien" value={overview.totalStudents} icon={Users} tone="blue" to="/students" />
-        <StatCard title="Tong lop hoc" value={overview.totalClasses} icon={GraduationCap} tone="indigo" to="/classes" />
-        <StatCard title="Phien QR dang mo" value={overview.activeQrSessions} icon={CalendarCheck} tone="emerald" to="/attendance/manage" />
-        <StatCard title="Canh bao QR 24h" value={overview.fraudAlerts24h} icon={ShieldAlert} tone="rose" to="/attendance/manage" />
-        <StatCard title="Phieu DRL cho duyet" value={overview.pendingTraining} icon={ClipboardList} tone="amber" to="/training/approval" />
-        <StatCard title="Phieu DRL da duyet" value={overview.approvedTraining} icon={ClipboardList} tone="slate" to="/drl" />
-        <StatCard title="Thong bao hom nay" value={overview.notificationsToday} icon={Bell} tone="blue" to="/notifications" />
-        <StatCard title="Tong mon hoc" value={overview.totalSubjects} icon={GraduationCap} tone="indigo" to="/academic/manage" />
+        <StatCard title="Tổng sinh viên" value={overview.totalStudents} icon={Users} tone="blue" to="/students" />
+        <StatCard title="Tổng lớp học" value={overview.totalClasses} icon={GraduationCap} tone="indigo" to="/classes" />
+        <StatCard title="Phiên QR đang mở" value={overview.activeQrSessions} icon={CalendarCheck} tone="emerald" to="/attendance/manage" />
+        <StatCard title="Cảnh báo QR 24h" value={overview.fraudAlerts24h} icon={ShieldAlert} tone="rose" to="/attendance/manage" />
+        <StatCard title="Phiếu ĐRL chờ duyệt" value={overview.pendingTraining} icon={ClipboardList} tone="amber" to="/training/approval" />
+        <StatCard title="Phiếu ĐRL đã duyệt" value={overview.approvedTraining} icon={ClipboardList} tone="slate" to="/drl" />
+        <StatCard title="Thông báo hôm nay" value={overview.notificationsToday} icon={Bell} tone="blue" to="/notifications" />
+        <StatCard title="Tổng môn học" value={overview.totalSubjects} icon={GraduationCap} tone="indigo" to="/academic/manage" />
       </section>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.3fr_1fr]">
         <div className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
           <div className="mb-5 flex items-center justify-between">
-            <h2 className="text-lg font-black text-slate-900">Luong diem danh 7 ngay</h2>
-            <span className="text-xs font-bold text-slate-500">Check-in theo ngay</span>
+            <h2 className="text-lg font-black text-slate-900">Lượng điểm danh 7 ngày</h2>
+            <span className="text-xs font-bold text-slate-500">Check-in theo ngày</span>
           </div>
 
           {loading ? (
             <div className="h-56 animate-pulse rounded-2xl bg-slate-50" />
           ) : attendanceTrend.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-12 text-center text-sm text-slate-500">
-              Chua co du lieu diem danh gan day.
+              Chưa có dữ liệu điểm danh gần đây.
             </div>
           ) : (
             <div className="grid h-56 grid-cols-7 items-end gap-3">
@@ -199,8 +199,8 @@ const Dashboard = () => {
 
         <div className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
           <div className="mb-5 flex items-center justify-between">
-            <h2 className="text-lg font-black text-slate-900">Top lop theo ty le diem danh</h2>
-            <span className="text-xs font-bold text-slate-500">30 ngay</span>
+            <h2 className="text-lg font-black text-slate-900">Top lớp theo tỷ lệ điểm danh</h2>
+            <span className="text-xs font-bold text-slate-500">30 ngày</span>
           </div>
 
           {loading ? (
@@ -211,7 +211,7 @@ const Dashboard = () => {
             </div>
           ) : topClasses.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-12 text-center text-sm text-slate-500">
-              Chua co lop du du lieu de tinh ti le.
+              Chưa có lớp đủ dữ liệu để tính tỉ lệ.
             </div>
           ) : (
             <div className="space-y-3">
@@ -227,7 +227,7 @@ const Dashboard = () => {
                       style={{ width: `${Math.min(item.attendanceRate, 100)}%` }}
                     />
                   </div>
-                  <p className="mt-1 text-xs text-slate-500">{item.sessions} phien gan day</p>
+                  <p className="mt-1 text-xs text-slate-500">{item.sessions} phiên gần đây</p>
                 </div>
               ))}
             </div>
@@ -239,10 +239,10 @@ const Dashboard = () => {
         <div className="mb-4 flex items-center justify-between">
           <h2 className="flex items-center gap-2 text-lg font-black text-slate-900">
             <AlertTriangle size={18} className="text-rose-600" />
-            Canh bao gian lan QR gan day
+            Cảnh báo gian lận QR gần đây
           </h2>
           <Link to="/attendance/manage" className="text-xs font-bold text-rose-600 hover:underline">
-            Mo quan ly QR
+            Mở quản lý QR
           </Link>
         </div>
 
@@ -254,7 +254,7 @@ const Dashboard = () => {
           </div>
         ) : fraudWarnings.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-200 px-4 py-10 text-center text-sm text-slate-500">
-            Chua ghi nhan canh bao gian lan moi.
+            Chưa ghi nhận cảnh báo gian lận mới.
           </div>
         ) : (
           <div className="space-y-3">

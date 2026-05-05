@@ -24,6 +24,7 @@ model User {
   assignments BchAssignment[]
   courses     Course[] @relation("TeacherCourses")
   auditLogs   AuditLog[]
+  teachingAssignments TeachingAssignment[]
 }
 
 model AuditLog {
@@ -324,6 +325,7 @@ model Subject {
   curriculumAssignments CurriculumSubject[]
   requiredBy     CurriculumSubject[] @relation("Prerequisite")
   courses        Course[]
+  teachingAssignments TeachingAssignment[]
 }
 
 model Faculty {
@@ -674,4 +676,17 @@ model ActivityEvidence {
 
   @@index([studentId])
   @@index([status])
+}
+
+model TeachingAssignment {
+  id        Int      @id @default(autoincrement())
+  userId    Int      // Giảng viên
+  subjectId Int      // Môn học
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, subjectId])
+  @@index([subjectId])
 }
