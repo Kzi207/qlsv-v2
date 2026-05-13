@@ -99,10 +99,10 @@ export const globalAdminSearch = async (req: AuthRequest, res: Response) => {
       prisma.student.findMany({
         where: {
           OR: [
-            { name: { contains: keyword, mode: 'insensitive' } },
-            { student_code: { contains: keyword, mode: 'insensitive' } },
-            { class_id: { contains: keyword, mode: 'insensitive' } },
-            { email: { contains: keyword, mode: 'insensitive' } },
+            { name: { contains: keyword } },
+            { student_code: { contains: keyword } },
+            { class_id: { contains: keyword } },
+            { email: { contains: keyword } },
           ],
         },
         select: {
@@ -117,8 +117,8 @@ export const globalAdminSearch = async (req: AuthRequest, res: Response) => {
       prisma.class.findMany({
         where: {
           OR: [
-            { name: { contains: keyword, mode: 'insensitive' } },
-            { major: { name: { contains: keyword, mode: 'insensitive' } } },
+            { name: { contains: keyword } },
+            { major: { name: { contains: keyword } } },
           ],
         },
         select: {
@@ -127,7 +127,7 @@ export const globalAdminSearch = async (req: AuthRequest, res: Response) => {
             select: { name: true },
           },
           _count: {
-            select: { students: true },
+            select: { student: true },
           },
         },
         take: limit,
@@ -136,8 +136,8 @@ export const globalAdminSearch = async (req: AuthRequest, res: Response) => {
       prisma.subject.findMany({
         where: {
           OR: [
-            { name: { contains: keyword, mode: 'insensitive' } },
-            { code: { contains: keyword, mode: 'insensitive' } },
+            { name: { contains: keyword } },
+            { code: { contains: keyword } },
           ],
         },
         select: {
@@ -152,9 +152,9 @@ export const globalAdminSearch = async (req: AuthRequest, res: Response) => {
       prisma.attendanceSession.findMany({
         where: {
           OR: [
-            { title: { contains: keyword, mode: 'insensitive' } },
-            { subject: { contains: keyword, mode: 'insensitive' } },
-            { class_id: { contains: keyword, mode: 'insensitive' } },
+            { title: { contains: keyword } },
+            { subject: { contains: keyword } },
+            { class_id: { contains: keyword } },
           ],
         },
         select: {
@@ -171,9 +171,9 @@ export const globalAdminSearch = async (req: AuthRequest, res: Response) => {
       prisma.notification.findMany({
         where: {
           OR: [
-            { title: { contains: keyword, mode: 'insensitive' } },
-            { content: { contains: keyword, mode: 'insensitive' } },
-            { tag: { contains: keyword, mode: 'insensitive' } },
+            { title: { contains: keyword } },
+            { content: { contains: keyword } },
+            { tag: { contains: keyword } },
           ],
         },
         select: {
@@ -188,7 +188,7 @@ export const globalAdminSearch = async (req: AuthRequest, res: Response) => {
     ]);
 
     const items: SearchResultItem[] = [
-      ...students.map((item) => ({
+      ...students.map((item: any) => ({
         id: `student-${item.id}`,
         type: 'student' as const,
         title: `${item.name} (${item.student_code})`,
@@ -196,15 +196,15 @@ export const globalAdminSearch = async (req: AuthRequest, res: Response) => {
         route: '/students',
         badge: 'Sinh vien',
       })),
-      ...classes.map((item) => ({
+      ...classes.map((item: any) => ({
         id: `class-${item.name}`,
         type: 'class' as const,
         title: `Lop ${item.name}`,
-        subtitle: `${item.major?.name || 'Chua gan nganh'} - ${item._count.students} sinh vien`,
+        subtitle: `${item.major?.name || 'Chua gan nganh'} - ${item._count.student} sinh vien`,
         route: '/classes',
         badge: 'Lop',
       })),
-      ...subjects.map((item) => ({
+      ...subjects.map((item: any) => ({
         id: `subject-${item.id}`,
         type: 'subject' as const,
         title: `${item.code} - ${item.name}`,
@@ -212,7 +212,7 @@ export const globalAdminSearch = async (req: AuthRequest, res: Response) => {
         route: '/academic/manage',
         badge: 'Mon hoc',
       })),
-      ...sessions.map((item) => ({
+      ...sessions.map((item: any) => ({
         id: `session-${item.id}`,
         type: 'session' as const,
         title: item.title,
@@ -220,7 +220,7 @@ export const globalAdminSearch = async (req: AuthRequest, res: Response) => {
         route: '/attendance/manage',
         badge: item.isActive ? 'Dang mo' : 'Da dong',
       })),
-      ...notifications.map((item) => ({
+      ...notifications.map((item: any) => ({
         id: `notification-${item.id}`,
         type: 'notification' as const,
         title: item.title,
@@ -304,7 +304,7 @@ export const getAdminAnalytics = async (req: AuthRequest, res: Response) => {
           createdAt: { gte: trendStart },
           ...(classIdForBch
             ? {
-                session: {
+                attendancesession: {
                   class_id: classIdForBch,
                 },
               }
@@ -323,7 +323,7 @@ export const getAdminAnalytics = async (req: AuthRequest, res: Response) => {
           id: true,
           class_id: true,
           _count: {
-            select: { attendances: true },
+            select: { attendance: true },
           },
         },
       }),
@@ -331,7 +331,7 @@ export const getAdminAnalytics = async (req: AuthRequest, res: Response) => {
         select: {
           name: true,
           _count: {
-            select: { students: true },
+            select: { student: true },
           },
         },
       }),
@@ -353,7 +353,7 @@ export const getAdminAnalytics = async (req: AuthRequest, res: Response) => {
       }),
     ]);
 
-    const classSizeMap = new Map(classStudentCounts.map((c) => [c.name, c._count.students]));
+    const classSizeMap = new Map<string, number>(classStudentCounts.map((c: any) => [c.name, c._count.student]));
     const classRateAccumulator = new Map<
       string,
       { checkIns: number; expected: number; sessions: number }
@@ -369,10 +369,10 @@ export const getAdminAnalytics = async (req: AuthRequest, res: Response) => {
         sessions: 0,
       };
 
-      existing.checkIns += session._count.attendances;
-      existing.expected += expected;
-      existing.sessions += 1;
-      classRateAccumulator.set(session.class_id, existing);
+      (existing as any).checkIns += (session as any)._count.attendance;
+      (existing as any).expected += expected;
+      (existing as any).sessions += 1;
+      classRateAccumulator.set(session.class_id, existing as any);
     }
 
     const topClassesByAttendance = Array.from(classRateAccumulator.entries())
@@ -412,7 +412,7 @@ export const getAdminAnalytics = async (req: AuthRequest, res: Response) => {
       },
       attendanceTrend,
       topClassesByAttendance,
-      fraudWarnings: recentFraudLogs.map((log) => ({
+      fraudWarnings: recentFraudLogs.map((log: any) => ({
         id: log.id,
         createdAt: log.createdAt,
         actorName: log.user?.name || log.user?.username || 'Unknown',

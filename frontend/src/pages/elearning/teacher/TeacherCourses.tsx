@@ -106,6 +106,17 @@ const TeacherCourses: React.FC = () => {
     }
   };
 
+  const handleDeleteCourse = async (id: number | string) => {
+    try {
+      await api.delete(`/elearning/courses/${id}`);
+      setCourses(courses.filter((c) => c.id !== id));
+      toast.success('Đã xóa khóa học');
+    } catch (error) {
+      console.error('Failed to delete course', error);
+      toast.error('Không thể xóa khóa học');
+    }
+  };
+
   return (
     <div className="mx-auto max-w-[1600px] pb-20 animate-fade-up">
       <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1fr_360px]">
@@ -156,6 +167,7 @@ const TeacherCourses: React.FC = () => {
                   course={course}
                   role="LECTURER"
                   onEnter={() => navigate(`/elearning/manage/${course.id}`)}
+                  onDelete={handleDeleteCourse}
                 />
               ))}
             </div>

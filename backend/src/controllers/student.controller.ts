@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import bcrypt from 'bcryptjs';
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '../generated/client_final';
 import { encrypt } from '../utils/crypto';
 
 const removeAccents = (str: string) => {
@@ -49,41 +49,47 @@ export const getStudents = async (req: Request, res: Response) => {
   const normalizedKeyword = String(keyword || '').trim();
 
   try {
-    let whereClause = 'WHERE 1=1';
-    const params: any[] = [];
+    const where: Record<string, any> = {};
 
     if (normalizedClassId) {
-      params.push(normalizedClassId);
-      whereClause += ` AND s.class_id = $${params.length}`;
+      where.class_id = normalizedClassId;
     }
 
     if (normalizedKeyword) {
-      params.push(`%${normalizedKeyword}%`);
-      const pIdx = params.length;
-      whereClause += ` AND (s.name ILIKE $${pIdx} OR s.student_code ILIKE $${pIdx} OR s.email ILIKE $${pIdx})`;
+      where.OR = [
+        { name: { contains: normalizedKeyword } },
+        { student_code: { contains: normalizedKeyword } },
+        { email: { contains: normalizedKeyword } }
+      ];
     }
 
-    const totalRes: any[] = await prisma.$queryRawUnsafe(`SELECT COUNT(*)::int as count FROM "Student" s ${whereClause}`, ...params);
-    const total = totalRes[0]?.count || 0;
+    const total = await prisma.student.count({ where });
 
-    let query = `
-      SELECT s.*, u.role as role 
-      FROM "Student" s 
-      LEFT JOIN "User" u ON s.id = u."studentId" 
-      ${whereClause} 
-      ORDER BY s.class_id ASC, s.order_number ASC, s.name ASC
-    `;
+    const items = await prisma.student.findMany({
+      where,
+      include: {
+        user: {
+          select: { role: true }
+        }
+      },
+      orderBy: [
+        { class_id: 'asc' },
+        { order_number: 'asc' },
+        { name: 'asc' }
+      ],
+      skip: pagination.skip,
+      take: pagination.take
+    });
 
-    if (pagination.enabled) {
-      query += ` LIMIT ${pagination.take} OFFSET ${pagination.skip}`;
-    }
-
-    const items = await prisma.$queryRawUnsafe(query, ...params);
+    const itemsWithRole = items.map((item: any) => ({
+      ...item,
+      role: item.user?.role || null
+    }));
 
     if (pagination.enabled) {
       const totalPages = Math.max(Math.ceil(total / pagination.pageSize), 1);
       return res.json({
-        items,
+        items: itemsWithRole,
         pagination: {
           page: pagination.page,
           pageSize: pagination.pageSize,
@@ -95,7 +101,7 @@ export const getStudents = async (req: Request, res: Response) => {
       });
     }
 
-    return res.json(items);
+    return res.json(itemsWithRole);
   } catch (error) {
     console.error('getStudents error:', error);
     return res.status(500).json({ message: 'Server error' });
@@ -112,9 +118,9 @@ export const getStudentCount = async (req: Request, res: Response) => {
     if (normalizedClassId) where.class_id = normalizedClassId;
     if (normalizedKeyword) {
       where.OR = [
-        { name: { contains: normalizedKeyword, mode: 'insensitive' } },
-        { student_code: { contains: normalizedKeyword, mode: 'insensitive' } },
-        { email: { contains: normalizedKeyword, mode: 'insensitive' } },
+        { name: { contains: normalizedKeyword } },
+        { student_code: { contains: normalizedKeyword } },
+        { email: { contains: normalizedKeyword } }
       ];
     }
 
@@ -128,36 +134,108 @@ export const getStudentCount = async (req: Request, res: Response) => {
 export const createStudent = async (req: Request, res: Response) => {
   const { name, student_code, email, class_id } = req.body;
 
+  // Validation các trường bắt buộc
+  if (!name || !name.trim()) {
+    return res.status(400).json({ message: 'Tên sinh viên không được để trống' });
+  }
+  if (!student_code || !student_code.trim()) {
+    return res.status(400).json({ message: 'Mã sinh viên không được để trống' });
+  }
+  if (!email || !email.trim()) {
+    return res.status(400).json({ message: 'Email không được để trống' });
+  }
+  if (!class_id || !class_id.trim()) {
+    return res.status(400).json({ message: 'Lớp học không được để trống' });
+  }
+
   try {
+    const normalizedClassId = class_id.trim().toUpperCase();
+    const trimmedCode = student_code.trim();
+    const trimmedEmail = email.trim();
+
+    // Check xem student_code hoặc email đã tồn tại không
+    const existingStudent = await prisma.student.findFirst({
+      where: {
+        OR: [
+          { student_code: trimmedCode },
+          { email: trimmedEmail }
+        ]
+      }
+    });
+
+    if (existingStudent) {
+      if (existingStudent.student_code === trimmedCode) {
+        return res.status(400).json({ message: 'Mã sinh viên đã tồn tại' });
+      }
+      if (existingStudent.email === trimmedEmail) {
+        return res.status(400).json({ message: 'Email đã được sử dụng' });
+      }
+    }
+
+    // Check xem User.username (student_code) đã tồn tại không
+    const existingUser = await prisma.user.findUnique({
+      where: { username: trimmedCode }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ message: 'Mã sinh viên đã tồn tại trong hệ thống tài khoản' });
+    }
+
     // Đảm bảo lớp học tồn tại
-    await (prisma as any).class.upsert({
-      where: { name: class_id.trim().toUpperCase() },
-      update: {},
-      create: { name: class_id.trim().toUpperCase() }
+    await (prisma as any).renamedclass.upsert({
+      where: { name: normalizedClassId },
+      update: { updatedAt: new Date() },
+      create: { name: normalizedClassId, updatedAt: new Date() }
     });
 
     const student = await prisma.student.create({
       data: {
-        name,
-        student_code,
-        email,
-        class_id: class_id.trim().toUpperCase()
+        name: name.trim(),
+        student_code: trimmedCode,
+        email: trimmedEmail,
+        class_id: normalizedClassId,
+        updatedAt: new Date()
       },
     });
 
     // Tự động tạo tài khoản với mật khẩu mặc định '1234'
     const hashedPassword = await bcrypt.hash('1234', 10);
-    await prisma.$executeRawUnsafe(
-      'INSERT INTO "User" (username, password, name, role, "studentId", "createdAt", "updatedAt") VALUES ($1, $2, $3, \'STUDENT\'::"Role", $4, NOW(), NOW())',
-      student_code, hashedPassword, name, student.id
-    );
+    try {
+      await prisma.user.create({
+        data: {
+          username: trimmedCode,
+          password: hashedPassword,
+          name: name.trim(),
+          role: 'STUDENT',
+          studentId: student.id,
+          updatedAt: new Date()
+        }
+      });
+    } catch (userError: any) {
+      // Rollback: xóa Student nếu tạo User fail
+      await prisma.student.delete({
+        where: { id: student.id }
+      });
+      throw userError;
+    }
 
     res.json(student);
   } catch (error: any) {
+    console.error('createStudent error:', error);
+    
+    // Handle Prisma unique constraint violation
     if (error.code === 'P2002') {
-      return res.status(400).json({ message: 'Student code or email already exists' });
+      const field = error.meta?.target?.[0];
+      if (field === 'student_code') {
+        return res.status(400).json({ message: 'Mã sinh viên đã tồn tại' });
+      }
+      if (field === 'email') {
+        return res.status(400).json({ message: 'Email đã được sử dụng' });
+      }
+      return res.status(400).json({ message: 'Dữ liệu đã tồn tại' });
     }
-    res.status(500).json({ message: 'Server error' });
+    
+    res.status(500).json({ message: 'Lỗi máy chủ: ' + (error.message || 'Unknown error') });
   }
 };
 
@@ -168,7 +246,7 @@ export const updateStudent = async (req: Request, res: Response) => {
   try {
     const student = await prisma.student.update({
       where: { id: Number(id) },
-      data: { name, student_code, email, class_id },
+      data: { name, student_code, email, class_id, updatedAt: new Date() },
     });
     res.json(student);
   } catch (error) {
@@ -180,12 +258,32 @@ export const deleteStudent = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
-    await prisma.student.delete({
+    // Get student with user account info
+    const student = await prisma.student.findUnique({
       where: { id: Number(id) },
+      include: { user: true }
     });
-    res.json({ message: 'Student deleted' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+
+    if (!student) {
+      return res.status(404).json({ message: 'Sinh viên không tồn tại' });
+    }
+
+    // Delete user account if exists
+    if (student.user) {
+      await prisma.user.delete({
+        where: { id: student.user.id }
+      });
+    }
+
+    // Delete student
+    await prisma.student.delete({
+      where: { id: Number(id) }
+    });
+
+    res.json({ message: 'Sinh viên đã bị xóa' });
+  } catch (error: any) {
+    console.error('deleteStudent error:', error);
+    res.status(500).json({ message: 'Lỗi máy chủ khi xóa sinh viên' });
   }
 };
 
@@ -209,25 +307,55 @@ export const createStudentAccount = async (req: Request, res: Response) => {
       // Update existing account
       await prisma.user.update({
         where: { id: student.user.id },
-        data: { password: hashedPassword }
-      });
-    } else {
-      // Create new account
-      await prisma.user.create({
-        data: {
-          username: student.student_code,
+        data: { 
           password: hashedPassword,
-          name: student.name,
-          role: 'STUDENT',
-          studentId: student.id
+          updatedAt: new Date()
         }
       });
+    } else {
+      // Check if username already exists for someone else
+      const existingUser = await prisma.user.findUnique({
+        where: { username: student.student_code }
+      });
+
+      if (existingUser) {
+        // If it exists but isn't linked to this student, we should probably link it
+        // OR if it's already linked to another student, that's a conflict
+        if (existingUser.studentId && existingUser.studentId !== student.id) {
+          return res.status(400).json({ 
+            message: `Tên đăng nhập ${student.student_code} đã được sử dụng bởi sinh viên khác.` 
+          });
+        }
+
+        // Update the existing user to point to this student
+        await prisma.user.update({
+          where: { id: existingUser.id },
+          data: { 
+            password: hashedPassword,
+            studentId: student.id,
+            role: 'STUDENT',
+            updatedAt: new Date()
+          }
+        });
+      } else {
+        // Create new account
+        await prisma.user.create({
+          data: {
+            username: student.student_code,
+            password: hashedPassword,
+            name: student.name,
+            role: 'STUDENT',
+            studentId: student.id,
+            updatedAt: new Date()
+          }
+        });
+      }
     }
 
-    res.json({ message: 'Account created/updated successfully' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.json({ message: 'Đã cấp/cập nhật tài khoản thành công' });
+  } catch (error: any) {
+    console.error('Error in createStudentAccount:', error);
+    res.status(500).json({ message: `Lỗi hệ thống: ${error.message || 'Server error'}` });
   }
 };
 
@@ -389,7 +517,7 @@ export const importStudentsExcel = async (req: Request, res: Response) => {
 
     // Group students by class to assign order_number correctly
     const classGroups: Record<string, any[]> = {};
-    students.forEach(s => {
+    students.forEach((s: any) => {
       const cid = s.class_id || 'UNKNOWN';
       if (!classGroups[cid]) classGroups[cid] = [];
       classGroups[cid]?.push(s);
@@ -408,11 +536,12 @@ export const importStudentsExcel = async (req: Request, res: Response) => {
           try {
             // Đảm bảo lớp tồn tại trước khi thêm sinh viên (Tránh lỗi Foreign Key)
             if (student.class_id && student.class_id !== 'Chưa xếp lớp') {
-              await (prisma as any).class.upsert({
+              await (prisma as any).renamedclass.upsert({
                 where: { name: student.class_id },
-                update: {},
+                update: { updatedAt: new Date() },
                 create: {
-                  name: student.class_id
+                  name: student.class_id,
+                  updatedAt: new Date()
                 }
               });
             }
@@ -423,28 +552,48 @@ export const importStudentsExcel = async (req: Request, res: Response) => {
                 name: student.name,
                 email: student.email,
                 class_id: student.class_id,
-                order_number: orderNumber
+                order_number: orderNumber,
+                updatedAt: new Date()
               },
               create: {
                 name: student.name,
                 student_code: student.student_code,
                 email: student.email,
                 class_id: student.class_id,
-                order_number: orderNumber
+                order_number: orderNumber,
+                updatedAt: new Date()
               },
               include: { user: true }
             });
 
             if (!studentRecord.user) {
-              await prisma.user.create({
-                data: {
-                  username: student.student_code,
-                  password: defaultHashedPassword,
-                  name: student.name,
-                  role: 'STUDENT',
-                  studentId: studentRecord.id
-                }
+              // Check if username already exists to avoid unique constraint error
+              const existingUser = await prisma.user.findUnique({
+                where: { username: student.student_code }
               });
+
+              if (existingUser) {
+                // If user exists but not linked to this student, link it
+                await prisma.user.update({
+                  where: { id: existingUser.id },
+                  data: {
+                    studentId: studentRecord.id,
+                    role: 'STUDENT',
+                    updatedAt: new Date()
+                  }
+                });
+              } else {
+                await prisma.user.create({
+                  data: {
+                    username: student.student_code,
+                    password: defaultHashedPassword,
+                    name: student.name,
+                    role: 'STUDENT',
+                    studentId: studentRecord.id,
+                    updatedAt: new Date()
+                  }
+                });
+              }
             }
             return true;
           } catch (e: any) {
@@ -537,7 +686,8 @@ export const bulkCreateStudentAccounts = async (req: Request, res: Response) => 
             password: hashedPassword,
             name: student.name,
             role: 'STUDENT',
-            studentId: student.id
+            studentId: student.id,
+            updatedAt: new Date()
           }
         });
         count++;
@@ -561,7 +711,7 @@ export const deleteClassStudents = async (req: Request, res: Response) => {
       select: { id: true }
     });
 
-    const studentIds = students.map(s => s.id);
+    const studentIds = students.map((s: any) => s.id);
 
     if (studentIds.length === 0) {
       return res.json({ message: `Lớp ${classId} không có sinh viên nào để xóa.` });
@@ -570,7 +720,7 @@ export const deleteClassStudents = async (req: Request, res: Response) => {
     // 2. Thực hiện xóa trong một giao dịch
     await prisma.$transaction([
       // Xóa điểm rèn luyện
-      prisma.trainingScore.deleteMany({
+      (prisma as any).trainingscore.deleteMany({
         where: { student_id: { in: studentIds } }
       }),
       // Xóa điểm danh
@@ -635,7 +785,7 @@ export const exportStudentAccounts = async (req: Request, res: Response) => {
       fgColor: { argb: 'FF059669' } 
     };
 
-    students.forEach(s => {
+    students.forEach((s: any) => {
       sheet.addRow({
         class: s.class_id,
         stt: s.order_number || '',
@@ -674,7 +824,7 @@ export const getStudentStats = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Khong tim thay sinh vien' });
     }
 
-    const latestScore = await prisma.trainingScore.findFirst({
+    const latestScore = await (prisma as any).trainingscore.findFirst({
       where: { student_id: Number(studentId) },
       orderBy: { createdAt: 'desc' }
     });
@@ -690,7 +840,7 @@ export const getStudentStats = async (req: Request, res: Response) => {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const activeSessionsCount = await prisma.attendanceSession.count({
+    const activeSessionsCount = await (prisma as any).attendancesession.count({
       where: {
         class_id: student.class_id,
         sessionDate: {
@@ -729,6 +879,7 @@ export const updateStudentProfile = async (req: Request, res: Response) => {
         id_card: id_card ? encrypt(id_card) : undefined,
         hometown: hometown ? encrypt(hometown) : undefined,
         address: address ? encrypt(address) : undefined,
+        updatedAt: new Date()
       },
     });
 
@@ -750,13 +901,13 @@ export const getStudentProfileDetails = async (req: Request, res: Response) => {
   }
 
   try {
-    const trainingScores = await prisma.trainingScore.findMany({
+    const trainingScores = await (prisma as any).trainingscore.findMany({
       where: { student_id: Number(studentId) },
-      include: { semester: true },
+      include: { semester_trainingScore_semester_idTosemester: true },
       orderBy: { semester_id: 'desc' }
     });
 
-    const awards = await (prisma as any).studentAward.findMany({
+    const awards = await (prisma as any).studentaward.findMany({
       where: { studentId: Number(studentId) },
       orderBy: { date: 'desc' }
     });
@@ -770,3 +921,24 @@ export const getStudentProfileDetails = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Lỗi server khi lấy chi tiết hồ sơ' });
   }
 };
+
+export const getStudentAwards = async (req: Request, res: Response) => {
+  const studentId = (req as any).user?.studentId;
+
+  if (!studentId) {
+    return res.status(400).json({ message: 'Không tìm thấy thông tin sinh viên' });
+  }
+
+  try {
+    const awards = await (prisma as any).studentaward.findMany({
+      where: { studentId: Number(studentId) },
+      orderBy: { date: 'desc' }
+    });
+
+    res.json(awards);
+  } catch (error) {
+    console.error('getStudentAwards error:', error);
+    res.status(500).json({ message: 'Lỗi server khi lấy danh sách khen thưởng' });
+  }
+};
+

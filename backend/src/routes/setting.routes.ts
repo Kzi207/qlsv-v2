@@ -6,5 +6,6 @@ const router = Router();
 
 router.get('/', getSettings);
 router.patch('/', protect, admin, updateSettings);
+router.put('/', protect, admin, updateSettings);
 
 export default router;

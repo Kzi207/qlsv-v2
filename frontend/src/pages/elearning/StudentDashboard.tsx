@@ -104,7 +104,7 @@ const StudentDashboard: React.FC = () => {
               <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-1.5 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-blue-600 shadow-sm">
                 <Award size={12} className="animate-pulse" /> MyCTUTs E-Learning System
               </div>
-              <h1 className="text-3xl font-black tracking-tighter text-slate-900 md:text-6xl lg:text-7xl leading-none">Học trực tuyến</h1>
+              <h1 className="text-xl md:text-3xl font-black tracking-tight text-slate-900 leading-tight">Học trực tuyến</h1>
               <p className="max-w-2xl text-xs md:text-lg font-bold leading-relaxed text-slate-500">
                 Chào mừng <span className="text-blue-600 font-black">{user?.name || 'sinh viên'}</span>! 
                 Tiến độ trung bình của bạn: <span className="text-slate-900 font-black px-2 py-0.5 bg-slate-100 rounded-lg">{summary.avgProgress}%</span>
@@ -126,22 +126,22 @@ const StudentDashboard: React.FC = () => {
           </section>
 
           {/* Stats Bento Grid */}
-          <section className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-6 px-2">
+          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-2">
             {stats.map((stat) => (
               <motion.div
                 key={stat.label}
                 whileHover={{ y: -5 }}
-                className="relative overflow-hidden rounded-[1.5rem] md:rounded-[2.5rem] border border-slate-100 bg-white p-4 md:p-8 shadow-xl shadow-slate-200/20 group"
+                className="relative overflow-hidden rounded-[1.5rem] md:rounded-[2rem] border border-slate-100 bg-white p-4 md:p-6 shadow-xl shadow-slate-200/20 group"
               >
-                <div className={`mb-4 md:mb-6 flex h-10 w-10 md:h-16 md:w-16 items-center justify-center rounded-xl md:rounded-2xl text-white shadow-lg ${stat.color} transition-transform group-hover:scale-110`}>
-                  <stat.icon size={20} className="md:size-8" />
+                <div className={`mb-3 md:mb-5 flex h-10 w-10 md:h-14 md:w-14 items-center justify-center rounded-xl md:rounded-2xl text-white shadow-lg ${stat.color} transition-transform group-hover:scale-110`}>
+                  <stat.icon size={20} className="md:size-7" />
                 </div>
                 <div className="space-y-1">
                    <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-400">{stat.label}</p>
-                   <p className="text-xl md:text-4xl font-black text-slate-900 tracking-tight leading-none">{stat.value}</p>
+                   <p className="text-xl md:text-3xl font-black text-slate-900 tracking-tight leading-none">{stat.value}</p>
                    <p className="text-[8px] md:text-[10px] font-bold text-slate-400 opacity-60 italic">{stat.sub}</p>
                 </div>
-                <div className={`absolute -right-4 -bottom-4 h-20 w-20 rounded-full opacity-[0.03] ${stat.color}`} />
+                <div className={`absolute -right-4 -bottom-4 h-16 w-16 rounded-full opacity-[0.03] ${stat.color}`} />
               </motion.div>
             ))}
           </section>
@@ -157,7 +157,7 @@ const StudentDashboard: React.FC = () => {
                  </span>
               </div>
               
-              <div className="flex rounded-2xl border border-slate-100 bg-white p-1.5 shadow-sm overflow-x-auto no-scrollbar scroll-smooth">
+              <div className="flex rounded-2xl border border-slate-100 bg-white p-1 shadow-sm overflow-x-auto no-scrollbar scroll-smooth">
                 {[
                   { key: 'all', label: 'Tất cả' },
                   { key: 'active', label: 'Đang học' },
@@ -166,7 +166,7 @@ const StudentDashboard: React.FC = () => {
                   <button
                     key={item.key}
                     onClick={() => setFilter(item.key as FilterKey)}
-                    className={`rounded-xl px-5 md:px-7 py-3 text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                    className={`rounded-xl px-4 md:px-6 py-2.5 text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
                       filter === item.key 
                         ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' 
                         : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50'

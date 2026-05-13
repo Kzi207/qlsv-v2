@@ -30,12 +30,12 @@ export const createBorrowing = async (req: Request, res: Response) => {
     const timetableDay = jsDay === 0 ? 8 : jsDay + 1;
 
     const timetableConflicts: any[] = await prisma.$queryRaw`
-      SELECT id FROM "Timetable" 
-      WHERE "room" = ${roomName} AND "day" = ${timetableDay} 
+      SELECT id FROM timetable 
+      WHERE room = ${roomName} AND day = ${timetableDay} 
       AND (
-        ("startPeriod" <= ${parseInt(startPeriod)} AND "endPeriod" >= ${parseInt(startPeriod)})
-        OR ("startPeriod" <= ${parseInt(endPeriod)} AND "endPeriod" >= ${parseInt(endPeriod)})
-        OR (${parseInt(startPeriod)} <= "startPeriod" AND ${parseInt(endPeriod)} >= "startPeriod")
+        (startPeriod <= ${parseInt(startPeriod)} AND endPeriod >= ${parseInt(startPeriod)})
+        OR (startPeriod <= ${parseInt(endPeriod)} AND endPeriod >= ${parseInt(endPeriod)})
+        OR (${parseInt(startPeriod)} <= startPeriod AND ${parseInt(endPeriod)} >= startPeriod)
       )
       LIMIT 1
     `;
@@ -71,7 +71,8 @@ export const createBorrowing = async (req: Request, res: Response) => {
         date: new Date(date),
         startPeriod: parseInt(startPeriod),
         endPeriod: parseInt(endPeriod),
-        status: 'APPROVED'
+        status: 'APPROVED',
+        updatedAt: new Date()
       }
     });
     res.json(borrowing);
@@ -86,7 +87,10 @@ export const updateBorrowingStatus = async (req: Request, res: Response) => {
     const { status } = req.body;
     const borrowing = await prisma.roomBorrowing.update({
       where: { id: parseInt(id as string) },
-      data: { status }
+      data: { 
+        status,
+        updatedAt: new Date()
+      }
     });
     res.json(borrowing);
   } catch (error: any) {

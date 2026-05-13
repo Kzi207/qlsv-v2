@@ -150,6 +150,25 @@ const Students = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation
+    if (!formData.name?.trim()) {
+      return toast.error('Vui lòng nhập họ tên');
+    }
+    if (!formData.student_code?.trim()) {
+      return toast.error('Vui lòng nhập mã sinh viên');
+    }
+    if (!formData.email?.trim()) {
+      return toast.error('Vui lòng nhập email');
+    }
+    if (!formData.class_id?.trim()) {
+      return toast.error('Vui lòng chọn lớp');
+    }
+    // Email format validation
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      return toast.error('Email không hợp lệ');
+    }
+
     try {
       if (currentStudent) {
         await api.put(`/students/${currentStudent.id}`, formData);

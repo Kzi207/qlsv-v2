@@ -11,20 +11,19 @@ import {
   getTeacherName,
   type ElearningCourse,
 } from '../../utils/elearning';
+import { Trash2 } from 'lucide-react';
 
 interface CourseCardProps {
   course: ElearningCourse;
   onEnter?: () => void;
+  onDelete?: (id: number | string) => void;
   role?: 'STUDENT' | 'LECTURER' | 'QTV';
 }
 
-const CourseCard: React.FC<CourseCardProps> = ({ course, onEnter, role = 'STUDENT' }) => {
+const CourseCard: React.FC<CourseCardProps> = ({ course, onEnter, onDelete, role = 'STUDENT' }) => {
   const progress = getCourseProgress(course);
   const badgeClass = role === 'STUDENT' ? 'text-blue-600' : 'text-indigo-600';
-  const buttonClass =
-    role === 'STUDENT'
-      ? 'hover:bg-blue-600 hover:text-white'
-      : 'hover:bg-indigo-600 hover:text-white';
+
 
   return (
     <motion.article
@@ -42,6 +41,18 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onEnter, role = 'STUDEN
         <span className={`absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-[10px] font-black uppercase tracking-widest ${badgeClass} shadow-sm`}>
           {getCourseCode(course)}
         </span>
+        
+        {role !== 'STUDENT' && onDelete && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(course.id!);
+            }}
+            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-white shadow-lg transition hover:bg-red-600 active:scale-90"
+          >
+            <Trash2 size={16} />
+          </button>
+        )}
         <div className="absolute bottom-4 left-4 right-4">
           <p className="line-clamp-1 text-[10px] font-black uppercase tracking-widest text-white/70">
             {getCourseCategory(course)}
@@ -95,12 +106,16 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onEnter, role = 'STUDEN
           )}
         </div>
 
-        <div
-          className={`mt-auto flex w-full items-center justify-center gap-3 rounded-xl border border-slate-100 bg-slate-50 py-3.5 text-[10px] font-black uppercase tracking-widest text-slate-900 transition-all ${buttonClass}`}
+        <button
+          className={`mt-auto flex w-full items-center justify-center gap-3 rounded-2xl py-3 text-[10px] font-black uppercase tracking-widest transition-all ${
+            role === 'STUDENT'
+              ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5'
+              : 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-0.5'
+          } active:scale-95`}
         >
           {role === 'STUDENT' ? 'Vào học' : 'Quản lý lớp'}
           {role === 'STUDENT' ? <PlayCircle size={16} /> : <ArrowRight size={16} />}
-        </div>
+        </button>
       </div>
     </motion.article>
   );

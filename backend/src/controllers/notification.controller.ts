@@ -32,8 +32,8 @@ const buildReadMap = async (userId: number, notificationIds: number[]) => {
 
   return new Set(
     readLogs
-      .map((item) => toNotificationId(item.targetId))
-      .filter((id): id is number => id !== null),
+      .map((item: any) => toNotificationId(item.targetId))
+      .filter((id: any): id is number => id !== null),
   );
 };
 
@@ -48,14 +48,14 @@ export const getNotifications = async (req: AuthRequest, res: Response) => {
       take: limit,
     });
 
-    const readIds = userId > 0 ? await buildReadMap(userId, notifications.map((item) => item.id)) : new Set<number>();
+    const readIds = userId > 0 ? await buildReadMap(userId, notifications.map((item: any) => item.id)) : new Set<number>();
 
     const mapped = notifications
-      .map((item) => ({
+      .map((item: any) => ({
         ...item,
         isRead: readIds.has(item.id),
       }))
-      .filter((item) => (unreadOnly ? !item.isRead : true));
+      .filter((item: any) => (unreadOnly ? !item.isRead : true));
 
     return res.json(mapped);
   } catch (error) {
@@ -78,7 +78,7 @@ export const getNotificationCenter = async (req: AuthRequest, res: Response) => 
       take: limit,
     });
 
-    const readIds = await buildReadMap(userId, notifications.map((item) => item.id));
+    const readIds = await buildReadMap(userId, notifications.map((item: any) => item.id));
     const [totalNotifications, readLogTargets] = await Promise.all([
       prisma.notification.count(),
       prisma.auditLog.findMany({
@@ -94,19 +94,22 @@ export const getNotificationCenter = async (req: AuthRequest, res: Response) => 
       }),
     ]);
 
-    const uniqueReadCount = readLogTargets.filter((item) => toNotificationId(item.targetId) !== null).length;
+    const uniqueReadCount = readLogTargets.filter((item: any) => toNotificationId(item.targetId) !== null).length;
     const unreadCount = Math.max(totalNotifications - uniqueReadCount, 0);
 
     return res.json({
       unreadCount,
-      items: notifications.map((item) => ({
+      items: notifications.map((item: any) => ({
         ...item,
         isRead: readIds.has(item.id),
       })),
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to fetch notification center:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json({ 
+      message: 'Internal server error',
+      details: error.message 
+    });
   }
 };
 
@@ -178,12 +181,12 @@ export const markAllNotificationsRead = async (req: AuthRequest, res: Response) 
       orderBy: { createdAt: 'desc' },
     });
 
-    const readIds = await buildReadMap(userId, notifications.map((item) => item.id));
-    const unreadIds = notifications.map((item) => item.id).filter((id) => !readIds.has(id));
+    const readIds = await buildReadMap(userId, notifications.map((item: any) => item.id));
+    const unreadIds = notifications.map((item: any) => item.id).filter((id: any) => !readIds.has(id));
 
     if (unreadIds.length > 0) {
       await prisma.auditLog.createMany({
-        data: unreadIds.map((id) => ({
+        data: unreadIds.map((id: any) => ({
           userId,
           action: 'NOTIFICATION_READ',
           targetType: 'Notification',
@@ -219,6 +222,7 @@ export const createNotification = async (req: Request, res: Response) => {
         content,
         tag,
         color: color || 'blue',
+        updatedAt: new Date(),
       },
     });
 

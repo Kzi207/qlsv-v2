@@ -24,30 +24,30 @@ export const getCourses = async (req: AuthRequest, res: Response) => {
         return res.json([]);
       }
 
-      const student = await prisma.student.findUnique({
+      const student = await (prisma as any).student.findUnique({
         where: { id: studentId },
         include: {
-          registrations: {
+          courseregistration: {
             where: { status: 'APPROVED' },
             include: {
               subject: {
                 include: {
-                  courses: {
+                  course: {
                     where: { isActive: true },
                     include: {
                       subject: true,
-                      teacher: true,
-                      lessons: { where: { isVisible: true } },
-                      assignments: {
+                      user: true,
+                      lesson: { where: { isVisible: true } },
+                      assignment: {
                         include: {
-                          submissions: {
+                          assignmentsubmission: {
                             where: { studentId: Number(studentId) }
                           }
                         }
                       },
-                      exams: {
+                      exam: {
                         include: {
-                          results: {
+                          examresult: {
                             where: { studentId: Number(studentId) }
                           }
                         }
@@ -62,28 +62,43 @@ export const getCourses = async (req: AuthRequest, res: Response) => {
       });
 
       if (!student) return res.json([]);
-
+      
       // Flatten courses from approved registrations
-      const courses = student.registrations?.flatMap((reg: any) => reg.subject.courses) || [];
+      const courses = (student as any).courseregistration?.flatMap((reg: any) => 
+        reg.subject.course.map((c: any) => ({
+          ...c,
+          teacher: c.user,
+          lessons: c.lesson,
+          assignments: c.assignment?.map((a: any) => ({
+            ...a,
+            submissions: a.assignmentsubmission
+          })),
+          exams: c.exam?.map((e: any) => ({
+            ...e,
+            results: e.examresult
+          }))
+        }))
+      ) || [];
+      
       return res.json(courses);
     } 
     
     if (role === 'LECTURER' || role === 'QTV') {
-      const courses = await prisma.course.findMany({
+      const courses = await (prisma as any).course.findMany({
         where: role === 'LECTURER' ? { teacherId: userId } : {},
         include: {
           subject: {
             include: {
               _count: {
-                select: { registrations: true }
+                select: { courseregistration: true }
               }
             }
           },
-          teacher: true,
-          lessons: true,
-          assignments: {
+          user: true,
+          lesson: true,
+          assignment: {
             include: {
-              submissions: {
+              assignmentsubmission: {
                 include: {
                   student: true
                 },
@@ -91,14 +106,27 @@ export const getCourses = async (req: AuthRequest, res: Response) => {
               }
             }
           },
-          exams: true,
+          exam: true,
           _count: {
-            select: { lessons: true, assignments: true, exams: true }
+            select: { lesson: true, assignment: true, exam: true }
           }
         },
         orderBy: { updatedAt: 'desc' }
       });
-      return res.json(courses);
+      
+      // Map for frontend compatibility
+      const mapped = courses.map((c: any) => ({
+        ...c,
+        teacher: c.user, // Map user to teacher
+        lessons: c.lesson,
+        assignments: c.assignment?.map((a: any) => ({
+          ...a,
+          submissions: a.assignmentsubmission
+        })),
+        exams: c.exam
+      }));
+      
+      return res.json(mapped);
     }
 
     return res.status(403).json({ message: 'Forbidden' });
@@ -136,7 +164,7 @@ export const getTeacherStats = async (req: AuthRequest, res: Response) => {
       prisma.courseRegistration.count({ 
         where: { 
           subject: {
-            courses: {
+            course: {
               some: { teacherId: userId }
             }
           }
@@ -145,7 +173,7 @@ export const getTeacherStats = async (req: AuthRequest, res: Response) => {
       prisma.lesson.count({
         where: { course: { teacherId: userId } }
       }),
-      prisma.assignmentSubmission.count({
+      prisma.assignmentsubmission.count({
         where: { 
           assignment: { course: { teacherId: userId } },
           grade: null
@@ -176,26 +204,26 @@ export const getCourseDetail = async (req: AuthRequest, res: Response) => {
     const role = req.user?.role?.toUpperCase();
     const studentId = req.user?.studentId ? Number(req.user.studentId) : null;
 
-    const course = await prisma.course.findUnique({
+    const course = await (prisma as any).course.findUnique({
       where: { id: courseId },
       include: {
         subject: true,
-        teacher: true,
-        lessons: { 
+        user: true,
+        lesson: { 
           where: role === 'STUDENT' ? { isVisible: true } : undefined,
           orderBy: { order: 'asc' } 
         },
-        assignments: {
+        assignment: {
           include: {
-            submissions: {
+            assignmentsubmission: {
               where: role === 'STUDENT' && studentId ? { studentId: studentId } : undefined,
               include: { student: true }
             }
           }
         },
-        exams: {
+        exam: {
           include: {
-            results: {
+            examresult: {
               where: role === 'STUDENT' && studentId ? { studentId: studentId } : undefined
             }
           }
@@ -215,8 +243,18 @@ export const getCourseDetail = async (req: AuthRequest, res: Response) => {
     
     const responseData = { 
       ...course, 
+      teacher: (course as any).user,
+      lessons: (course as any).lesson,
+      assignments: (course as any).assignment?.map((a: any) => ({
+        ...a,
+        submissions: a.assignmentsubmission
+      })),
+      exams: (course as any).exam?.map((e: any) => ({
+        ...e,
+        results: e.examresult
+      })),
       isRegistered: !!registration,
-      hasEnrollKey: !!course.enrollKey
+      hasEnrollKey: !!(course as any).enrollKey
     };
 
     // Hide the key from students
@@ -246,7 +284,7 @@ export const submitAssignment = async (req: AuthRequest, res: Response) => {
       fileUrl = `/uploads/media/${file.filename}`;
     }
 
-    const submission = await prisma.assignmentSubmission.upsert({
+    const submission = await prisma.assignmentsubmission.upsert({
       where: {
         assignmentId_studentId: {
           assignmentId: Number(assignmentId),
@@ -295,11 +333,12 @@ export const createCourse = async (req: AuthRequest, res: Response) => {
         description,
         image,
         enrollKey: enrollKey || null,
-        isActive: true
-      } as any,
+        isActive: true,
+        updatedAt: new Date()
+      },
       include: {
         subject: true,
-        teacher: true
+        user: true
       }
     });
     res.status(201).json(course);
@@ -329,8 +368,7 @@ export const updateCourse = async (req: AuthRequest, res: Response) => {
         description,
         image,
         enrollKey,
-        isActive
-      }
+        isActive, updatedAt: new Date() }
     });
     res.json(updated);
   } catch (error: any) {
@@ -475,7 +513,7 @@ export const createLesson = async (req: AuthRequest, res: Response) => {
         fileUrl: fileUrl || '',
         fileType,
         duration: req.body.duration || '',
-        order: Number(order || 0)
+        order: Number(order || 0), updatedAt: new Date()
       }
     });
     res.status(201).json(lesson);
@@ -504,7 +542,7 @@ export const createAssignment = async (req: AuthRequest, res: Response) => {
         fileUrl,
         dueDate: new Date(dueDate),
         maxPoints: Number(maxPoints || 10),
-        allowLate: !!allowLate
+        allowLate: !!allowLate, updatedAt: new Date()
       }
     });
     res.status(201).json(assignment);
@@ -537,7 +575,7 @@ export const createExam = async (req: AuthRequest, res: Response) => {
         duration: Number(duration),
         maxPoints: Number(maxPoints || 10),
         shuffle: !!shuffle,
-        status: 'PUBLISHED',
+        status: 'PUBLISHED', updatedAt: new Date(),
         questions: {
           create: questions?.map((q: any, idx: number) => ({
             question: q.question,
@@ -576,7 +614,7 @@ export const gradeSubmission = async (req: AuthRequest, res: Response) => {
   }
 
   try {
-    const submission = await prisma.assignmentSubmission.update({
+    const submission = await prisma.assignmentsubmission.update({
       where: { id: Number(id) },
       data: {
         grade: parseFloat(grade),
@@ -654,17 +692,17 @@ export const submitExam = async (req: AuthRequest, res: Response) => {
     let totalPoints = 0;
     const questions = exam.questions;
 
-    questions.forEach(q => {
+    questions.forEach((q: any) => {
       const selectedOptionId = answers[q.id];
-      const correctOption = q.options.find(opt => opt.isCorrect);
+      const correctOption = q.options.find((opt: any) => opt.isCorrect);
       if (selectedOptionId && correctOption && Number(selectedOptionId) === correctOption.id) {
         totalPoints += q.points;
       }
     });
 
-    const score = (totalPoints / questions.reduce((sum, q) => sum + q.points, 0)) * exam.maxPoints;
+    const score = (totalPoints / questions.reduce((sum: number, q: any) => sum + q.points, 0)) * exam.maxPoints;
 
-    const result = await prisma.examResult.upsert({
+    const result = await prisma.examresult.upsert({
       where: {
         examId_studentId: {
           examId: Number(examId),
@@ -742,20 +780,25 @@ export const getCourseRegistrations = async (req: AuthRequest, res: Response) =>
 export const enrollStudent = async (req: AuthRequest, res: Response) => {
   const { courseId } = req.body;
   const studentId = req.body.studentId || req.user?.studentId;
+  const role = req.user?.role?.toUpperCase();
   
-  if (!studentId) return res.status(400).json({ message: 'Student ID is required' });
+  if (!studentId) return res.status(400).json({ message: 'Thiếu mã sinh viên' });
+
   try {
     const course = await prisma.course.findUnique({
       where: { id: Number(courseId) }
     });
-    if (!course) return res.status(404).json({ message: 'Course not found' });
+    if (!course) return res.status(404).json({ message: 'Không tìm thấy khóa học' });
 
-    // Check if already enrolled
-    const { password } = req.body;
-    if (course.enrollKey && course.enrollKey !== password) {
-      return res.status(403).json({ message: 'Mật khẩu ghi danh không chính xác' });
+    // Kiểm tra mật khẩu ghi danh (Bỏ qua nếu là Giảng viên hoặc QTV đang ghi danh cho sinh viên)
+    if (role === 'STUDENT') {
+      const { password } = req.body;
+      if (course.enrollKey && course.enrollKey !== password) {
+        return res.status(403).json({ message: 'Mật khẩu ghi danh không chính xác' });
+      }
     }
 
+    // Kiểm tra xem sinh viên đã đăng ký môn học này trong học kỳ này chưa
     const existing = await prisma.courseRegistration.findUnique({
       where: {
         studentId_subjectId_semesterId: {
@@ -766,19 +809,23 @@ export const enrollStudent = async (req: AuthRequest, res: Response) => {
       }
     });
 
-    if (existing) return res.status(400).json({ error: 'Sinh viên đã đăng ký môn học này' });
+    if (existing) {
+      // Nếu đã đăng ký rồi thì trả về thông tin cũ (Idempotent) thay vì báo lỗi
+      return res.status(200).json(existing);
+    }
 
     const registration = await prisma.courseRegistration.create({
       data: {
         studentId: Number(studentId),
         subjectId: course.subjectId,
         semesterId: course.semesterId,
-        status: 'APPROVED'
+        status: 'APPROVED', updatedAt: new Date()
       }
     });
     res.status(201).json(registration);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    console.error('Enroll student error:', error);
+    res.status(500).json({ error: 'Lỗi ghi danh: ' + (error.message || 'Unknown error') });
   }
 };
 
@@ -854,5 +901,81 @@ export const importExamQuestionsWord = async (req: AuthRequest, res: Response) =
   } catch (error: any) {
     console.error('Word import error:', error);
     res.status(500).json({ error: 'Không thể xử lý tệp Word' });
+  }
+};
+
+export const deleteCourse = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  const courseId = Number(id);
+  const role = req.user?.role?.toUpperCase();
+  const userId = Number(req.user?.id);
+
+  if (isNaN(courseId)) return res.status(400).json({ error: 'ID khóa học không hợp lệ' });
+
+  try {
+    const course = await prisma.course.findUnique({ 
+      where: { id: courseId },
+      include: {
+        exam: { include: { examquestion: true } },
+        assignment: true,
+        lesson: true
+      }
+    });
+
+    if (!course) return res.status(404).json({ error: 'Không tìm thấy khóa học' });
+
+    // Quyền: QTV hoặc Giảng viên sở hữu
+    if (role !== 'QTV' && course.teacherId !== userId) {
+      return res.status(403).json({ error: 'Bạn không có quyền xóa khóa học này' });
+    }
+
+    // Thực hiện xóa cascade trong một transaction với timeout cao hơn
+    await prisma.$transaction(async (tx: any) => {
+      const examIds = (course.exam || []).map((e: any) => e.id);
+      const assignmentIds = (course.assignment || []).map((a: any) => a.id);
+      const lessonIds = (course.lesson || []).map((l: any) => l.id);
+
+      // 1. Xóa các dữ liệu liên quan đến đề thi
+      if (examIds.length > 0) {
+        await tx.examresult.deleteMany({ where: { examId: { in: examIds } } });
+        
+        const questions = await tx.examquestion.findMany({ 
+          where: { examId: { in: examIds } },
+          select: { id: true }
+        });
+        const questionIds = questions.map((q: any) => q.id);
+        
+        if (questionIds.length > 0) {
+          await tx.examoption.deleteMany({ where: { questionId: { in: questionIds } } });
+        }
+        
+        await tx.examquestion.deleteMany({ where: { examId: { in: examIds } } });
+        await tx.exam.deleteMany({ where: { id: { in: examIds } } });
+      }
+
+      // 2. Xóa các dữ liệu liên quan đến bài tập
+      if (assignmentIds.length > 0) {
+        await tx.assignmentsubmission.deleteMany({ where: { assignmentId: { in: assignmentIds } } });
+        await tx.assignment.deleteMany({ where: { id: { in: assignmentIds } } });
+      }
+
+      // 3. Xóa bài giảng
+      if (lessonIds.length > 0) {
+        await tx.lesson.deleteMany({ where: { id: { in: lessonIds } } });
+      }
+
+      // 4. Cuối cùng xóa khóa học
+      await tx.course.delete({ where: { id: courseId } });
+    }, {
+      timeout: 10000 // 10 seconds
+    });
+
+    res.json({ message: 'Đã xóa khóa học thành công' });
+  } catch (error: any) {
+    console.error('Delete course error:', error);
+    res.status(500).json({ 
+      error: 'Lỗi máy chủ khi xóa khóa học: ' + (error.message || 'Unknown error'),
+      code: error.code
+    });
   }
 };

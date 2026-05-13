@@ -18,6 +18,7 @@ const toSafeUser = (user: any) => ({
   role: String(user.role || '').toUpperCase(),
   studentId: user.studentId,
   class_id: user.class_id,
+  major_name: user.major_name,
   student: user.student ? {
     id: user.student.id,
     mssv: user.student.student_code,
@@ -38,12 +39,22 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Username and password are required' });
     }
 
+    console.log('Login attempt for username:', username);
     const user = await prisma.user.findUnique({
       where: { username },
       include: {
-        student: true
+        student: {
+          include: {
+            Renamedclass: {
+              include: {
+                major: true
+              }
+            }
+          }
+        }
       }
     });
+    console.log('User found in DB:', user ? 'YES' : 'NO');
 
     if (!user) {
       console.warn(`Login failed: User not found - ${username}`);
@@ -59,6 +70,7 @@ export const login = async (req: Request, res: Response) => {
     // Map student class_id if it's a student
     if (user.student) {
       (user as any).class_id = user.student.class_id;
+      (user as any).major_name = user.student.Renamedclass?.major?.name;
     }
 
     const token = jwt.sign(
@@ -88,8 +100,8 @@ export const login = async (req: Request, res: Response) => {
       csrfToken,
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Login error full details:', error);
+    res.status(500).json({ message: 'Server error', error: process.env.NODE_ENV === 'development' ? String(error) : undefined });
   }
 };
 
@@ -124,7 +136,15 @@ export const me = async (req: Request, res: Response) => {
     const user = await prisma.user.findUnique({
       where: { id: Number(decodedUser.id) },
       include: {
-        student: true
+        student: {
+          include: {
+            Renamedclass: {
+              include: {
+                major: true
+              }
+            }
+          }
+        }
       }
     });
 
@@ -133,9 +153,10 @@ export const me = async (req: Request, res: Response) => {
       return res.json({ user: null, isAuthenticated: false });
     }
 
-    // Map student class_id if it's a student
+    // Map student class_id and major_name if it's a student
     if (user.student) {
       (user as any).class_id = user.student.class_id;
+      (user as any).major_name = user.student.Renamedclass?.major?.name;
     }
 
     const safeUser = toSafeUser(user);
@@ -151,8 +172,8 @@ export const me = async (req: Request, res: Response) => {
       csrfToken,
     });
   } catch (error) {
-    console.error('Me error:', error);
-    return res.status(500).json({ message: 'Server error' });
+    console.error('Me error full details:', error);
+    return res.status(500).json({ message: 'Server error', error: process.env.NODE_ENV === 'development' ? String(error) : undefined });
   }
 };
 
@@ -187,6 +208,7 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
       data: {
         name,
         email: emailValue || null,
+        updatedAt: new Date(),
       },
     });
 
@@ -231,7 +253,10 @@ export const changePassword = async (req: AuthRequest, res: Response) => {
 
     await prisma.user.update({
       where: { id: user.id },
-      data: { password: hashedPassword },
+      data: { 
+        password: hashedPassword,
+        updatedAt: new Date()
+      },
     });
 
     return res.json({ message: 'Password updated successfully' });

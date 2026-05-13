@@ -3,30 +3,95 @@ import prisma from '../utils/prisma';
 import bcrypt from 'bcryptjs';
 
 export const createBchAccount = async (req: Request, res: Response) => {
-  const { username, password, name, email, phone, class_id, role } = req.body;
+  const requestUser = (req as any).user || {};
+  const requestRole = String(requestUser.role || '').toUpperCase();
+  const { username, password, name, email, phone, class_id, role, position, teachingSubjectIds } = req.body;
+  const normalizedRole = requestRole === 'BCH' ? 'BCH' : String(role || 'BCH').toUpperCase();
+  const subjectIds = Array.isArray(teachingSubjectIds) ? teachingSubjectIds.map(Number).filter(id => !isNaN(id)) : [];
+  const normalizedClassId = requestRole === 'BCH' ? String(requestUser.class_id || '').trim() : String(class_id || '').trim();
+
+  if (!username || !String(username).trim() || !name || !String(name).trim()) {
+    return res.status(400).json({ message: 'Thiếu thông tin bắt buộc' });
+  }
+
+  if (!['QTV', 'LECTURER', 'BCH'].includes(normalizedRole)) {
+    return res.status(400).json({ message: 'Vai trò không hợp lệ' });
+  }
+
+  if (requestRole === 'BCH' && normalizedRole !== 'BCH') {
+    return res.status(403).json({ message: 'BCH chỉ được tạo tài khoản BCH trong lớp của mình' });
+  }
+
+  if (requestRole === 'BCH' && !normalizedClassId) {
+    return res.status(403).json({ message: 'Tài khoản BCH chưa được gán lớp quản lý' });
+  }
+
+  if (normalizedRole === 'LECTURER' && subjectIds.length === 0) {
+    return res.status(400).json({ message: 'Giảng viên phải có ít nhất một môn dạy' });
+  }
+
+  if (normalizedRole === 'BCH' && !normalizedClassId) {
+    return res.status(400).json({ message: 'BCH phải được gán lớp quản lý' });
+  }
+
+  if (normalizedRole === 'BCH' && !position) {
+    return res.status(400).json({ message: 'BCH phải có chức vụ' });
+  }
 
   try {
     const hashedPassword = await bcrypt.hash(password || '1234', 10);
-    await prisma.$executeRawUnsafe(
-      'INSERT INTO "User" ("username", "password", "name", "email", "phone", "class_id", "role", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6, CAST($7 AS "Role"), NOW(), NOW())',
-      username, hashedPassword, name, email || null, phone || null, class_id || null, role || 'BCH'
-    );
-    
-    const users: any[] = await prisma.$queryRawUnsafe(
-      'SELECT * FROM "User" WHERE "username" = $1 LIMIT 1',
-      username
-    );
-    res.json(users[0]);
+
+    const newUser = await (prisma as any).$transaction(async (tx: any) => {
+      const user = await tx.user.create({
+        data: {
+          username: String(username).trim(),
+          password: hashedPassword,
+          name: String(name).trim(),
+          email: email ? String(email).trim() : null,
+          phone: phone ? String(phone).trim() : null,
+          position: position ? String(position).trim() : null,
+          class_id: normalizedClassId || null,
+          role: normalizedRole as any,
+          updatedAt: new Date()
+        }
+      });
+
+      if (normalizedRole === 'LECTURER' && subjectIds.length > 0) {
+        await tx.teachingassignment.createMany({
+          data: subjectIds.map(id => ({
+            userId: user.id,
+            subjectId: id
+          }))
+        });
+      }
+
+      return user;
+    });
+
+    const createdAccount = await (prisma as any).user.findUnique({
+      where: { id: newUser.id },
+      include: {
+        teachingassignment: { include: { subject: true } },
+        bchassignment: true
+      }
+    });
+
+    res.json(createdAccount || newUser);
   } catch (error: any) {
     console.error('createBchAccount detailed error:', error);
     if (error.code === 'P2002') {
-      return res.status(400).json({ message: 'Username already exists' });
+      return res.status(400).json({ message: 'Tên đăng nhập đã tồn tại' });
     }
-    res.status(500).json({ message: 'Server error' });
+    if (error.code === 'P2003') {
+      return res.status(400).json({ message: 'Môn dạy hoặc lớp quản lý không hợp lệ' });
+    }
+    res.status(500).json({ message: 'Lỗi máy chủ khi tạo tài khoản', details: error.message });
   }
 };
 
 export const getBchAccounts = async (req: Request, res: Response) => {
+  const requestUser = (req as any).user || {};
+  const requestRole = String(requestUser.role || '').toUpperCase();
   const { class_id, role } = req.query;
 
   try {
@@ -36,77 +101,183 @@ export const getBchAccounts = async (req: Request, res: Response) => {
       }
     };
 
-    if (role) {
-      where.role = role;
+    if (requestRole === 'BCH') {
+      where.role = 'BCH';
+      where.class_id = String(requestUser.class_id || '');
+    } else if (role) {
+      where.role = String(role).toUpperCase();
     }
 
-    if (class_id) {
+    if (requestRole !== 'BCH' && class_id) {
       where.class_id = String(class_id);
     }
 
-    const users = await prisma.user.findMany({
+    const users = await (prisma as any).user.findMany({
       where,
       include: {
-        assignments: true
+        teachingassignment: {
+          include: {
+            subject: true
+          }
+        },
+        bchassignment: true
       },
       orderBy: {
         createdAt: 'desc'
       }
     });
 
-    res.json(users);
-  } catch (error) {
+    const usersWithAssignments = users.map((user: any) => ({
+      ...user,
+      assignments: user.bchassignment || [],
+      teachingSubjects: Array.isArray(user.teachingassignment)
+        ? user.teachingassignment.map((assignment: any) => assignment.subject).filter(Boolean)
+        : []
+    }));
+
+    res.json(usersWithAssignments);
+  } catch (error: any) {
     console.error('getBchAccounts error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      message: 'Server error',
+      details: error.message
+    });
   }
 };
 
 export const updateBchAccount = async (req: Request, res: Response) => {
+  const requestUser = (req as any).user || {};
+  const requestRole = String(requestUser.role || '').toUpperCase();
   const { id } = req.params;
-  const { name, email, phone, class_id, password, role } = req.body;
+  const { name, email, phone, class_id, password, role, position, teachingSubjectIds } = req.body;
 
   try {
-    let query = 'UPDATE "User" SET "name" = $1, "email" = $2, "phone" = $3, "class_id" = $4, "updatedAt" = NOW()';
-    const params: any[] = [name, email || null, phone || null, class_id || null];
+    const existingUser = await (prisma as any).user.findUnique({ where: { id: Number(id) } });
 
-    if (role) {
-      params.push(role);
-      query += `, "role" = CAST($${params.length} AS "Role")`;
+    if (!existingUser) {
+      return res.status(404).json({ message: 'Không tìm thấy tài khoản' });
     }
 
-    if (password) {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      params.push(hashedPassword);
-      query += `, "password" = $${params.length}`;
+    if (requestRole === 'BCH' && String(existingUser.class_id || '') !== String(requestUser.class_id || '')) {
+      return res.status(403).json({ message: 'BCH chỉ được chỉnh sửa tài khoản trong lớp của mình' });
     }
 
-    params.push(Number(id));
-    query += ` WHERE "id" = $${params.length}`;
+    const normalizedRole = String(role || existingUser.role).toUpperCase();
+    const subjectIds = Array.isArray(teachingSubjectIds) ? teachingSubjectIds.map(Number).filter(id => !isNaN(id)) : [];
 
-    await prisma.$queryRawUnsafe(query, ...params);
-    
-    const users: any[] = await prisma.$queryRawUnsafe('SELECT * FROM "User" WHERE "id" = $1 LIMIT 1', Number(id));
-    res.json(users[0]);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    if (!['QTV', 'LECTURER', 'BCH'].includes(normalizedRole)) {
+      return res.status(400).json({ message: 'Vai trò không hợp lệ' });
+    }
+
+    if (requestRole === 'BCH' && normalizedRole !== 'BCH') {
+      return res.status(403).json({ message: 'BCH chỉ được quản lý tài khoản BCH' });
+    }
+
+    if (requestRole === 'BCH' && class_id && String(class_id) !== String(requestUser.class_id || '')) {
+      return res.status(403).json({ message: 'BCH chỉ được gán lớp của mình' });
+    }
+
+    if (normalizedRole === 'LECTURER' && subjectIds.length === 0) {
+      return res.status(400).json({ message: 'Giảng viên phải có ít nhất một môn dạy' });
+    }
+
+    if (normalizedRole === 'BCH' && !class_id && !existingUser.class_id) {
+      return res.status(400).json({ message: 'BCH phải được gán lớp quản lý' });
+    }
+
+    if (normalizedRole === 'BCH' && !position && !existingUser.position) {
+      return res.status(400).json({ message: 'BCH phải có chức vụ' });
+    }
+
+    const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
+    const finalClassId = requestRole === 'BCH' ? String(requestUser.class_id || '') : (class_id ? String(class_id).trim() : null);
+
+    const updatedUser = await (prisma as any).$transaction(async (tx: any) => {
+      const user = await tx.user.update({
+        where: { id: Number(id) },
+        data: {
+          name: name ? String(name).trim() : existingUser.name,
+          email: email ? String(email).trim() : null,
+          phone: phone ? String(phone).trim() : null,
+          position: position ? String(position).trim() : null,
+          class_id: finalClassId,
+          ...(role ? { role: normalizedRole as any } : {}),
+          ...(hashedPassword ? { password: hashedPassword } : {}),
+          updatedAt: new Date()
+        }
+      });
+
+      if (normalizedRole !== 'LECTURER') {
+        await tx.teachingassignment.deleteMany({ where: { userId: user.id } });
+      }
+
+      if (normalizedRole !== 'BCH') {
+        await tx.bchassignment.deleteMany({ where: { bchUserId: user.id } });
+      }
+
+      if (normalizedRole === 'LECTURER' && subjectIds.length > 0) {
+        await tx.teachingassignment.deleteMany({ where: { userId: user.id } });
+        await tx.teachingassignment.createMany({
+          data: subjectIds.map(id => ({
+            userId: user.id,
+            subjectId: id
+          }))
+        });
+      }
+
+      return user;
+    });
+
+    const account = await (prisma as any).user.findUnique({
+      where: { id: updatedUser.id },
+      include: {
+        teachingassignment: { include: { subject: true } },
+        bchassignment: true
+      }
+    });
+
+    res.json(account || updatedUser);
+  } catch (error: any) {
+    console.error('updateBchAccount error:', error);
+    if (error.code === 'P2003') {
+      return res.status(400).json({ message: 'Môn dạy hoặc lớp quản lý không hợp lệ' });
+    }
+    res.status(500).json({ message: 'Lỗi máy chủ khi cập nhật tài khoản', details: error.message });
   }
 };
 
 export const deleteBchAccount = async (req: Request, res: Response) => {
+  const requestUser = (req as any).user || {};
+  const requestRole = String(requestUser.role || '').toUpperCase();
   const { id } = req.params;
 
   try {
-    await (prisma as any).$transaction([
-      (prisma as any).bchAssignment.deleteMany({ where: { bchUserId: Number(id) } }),
-      (prisma as any).user.delete({ where: { id: Number(id) } })
-    ]);
-    res.json({ message: 'BCH account deleted' });
-  } catch (error) {
+    const targetUser = await (prisma as any).user.findUnique({ where: { id: Number(id) } });
+
+    if (!targetUser) {
+      return res.status(404).json({ message: 'Không tìm thấy tài khoản' });
+    }
+
+    if (requestRole === 'BCH' && String(targetUser.class_id || '') !== String(requestUser.class_id || '')) {
+      return res.status(403).json({ message: 'BCH chỉ được xóa tài khoản trong lớp của mình' });
+    }
+
+    await (prisma as any).$transaction(async (tx: any) => {
+      await tx.teachingassignment.deleteMany({ where: { userId: Number(id) } });
+      await tx.bchassignment.deleteMany({ where: { bchUserId: Number(id) } });
+      await tx.user.delete({ where: { id: Number(id) } });
+    });
+
+    res.json({ message: 'Tài khoản CBNT đã được xóa' });
+  } catch (error: any) {
+    console.error('deleteBchAccount error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
 
 export const assignStudents = async (req: Request, res: Response) => {
+  const requestUser = (req as any).user || {};
+  const requestRole = String(requestUser.role || '').toUpperCase();
   const { bchUserId, assignments } = req.body; 
 
   if (!bchUserId) {
@@ -114,21 +285,32 @@ export const assignStudents = async (req: Request, res: Response) => {
   }
 
   try {
+    const targetUser = await (prisma as any).user.findUnique({ where: { id: Number(bchUserId) } });
+
+    if (!targetUser) {
+      return res.status(404).json({ message: 'Không tìm thấy tài khoản' });
+    }
+
+    if (requestRole === 'BCH' && String(targetUser.class_id || '') !== String(requestUser.class_id || '')) {
+      return res.status(403).json({ message: 'BCH chỉ được phân công trong lớp của mình' });
+    }
+
     const targetUserId = Number(bchUserId);
     
-    await prisma.$transaction(async (tx) => {
-      // 1. Delete all existing assignments for this user
-      await (tx as any).bchAssignment.deleteMany({
+    await prisma.$transaction(async (tx: any) => {
+      await (tx as any).bchassignment.deleteMany({
         where: { bchUserId: targetUserId }
       });
 
-      // 2. Create new assignments one by one if provided
       if (assignments && assignments.length > 0) {
         for (const a of assignments) {
-          await (tx as any).bchAssignment.create({
+          const classId = String(a.classId || '').trim();
+          if (!classId) continue;
+          if (requestRole === 'BCH' && classId !== String(requestUser.class_id || '')) continue;
+          await (tx as any).bchassignment.create({
             data: {
               bchUserId: targetUserId,
-              classId: String(a.classId),
+              classId,
               fromOrder: parseInt(String(a.fromOrder)) || 0,
               toOrder: parseInt(String(a.toOrder)) || 0
             }
@@ -145,20 +327,36 @@ export const assignStudents = async (req: Request, res: Response) => {
 };
 
 export const getAssignments = async (req: Request, res: Response) => {
+  const requestUser = (req as any).user || {};
+  const requestRole = String(requestUser.role || '').toUpperCase();
   const { bchUserId } = req.params;
 
   try {
-    const assignments = await (prisma as any).bchAssignment.findMany({
+    const targetUser = await (prisma as any).user.findUnique({ where: { id: Number(bchUserId) } });
+
+    if (!targetUser) {
+      return res.status(404).json({ message: 'Không tìm thấy tài khoản' });
+    }
+
+    if (requestRole === 'BCH' && String(targetUser.class_id || '') !== String(requestUser.class_id || '')) {
+      return res.status(403).json({ message: 'BCH chỉ được xem phân công của lớp mình' });
+    }
+
+    const assignments = await (prisma as any).bchassignment.findMany({
       where: { bchUserId: Number(bchUserId) }
     });
+
     res.json(assignments);
-  } catch (error) {
+  } catch (error: any) {
+    console.error('getAssignments error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-export const exportBchAssignments = async (req: Request, res: Response) => {
-  const { class_id } = req.query;
+export const exportAssignments = async (req: Request, res: Response) => {
+  const requestUser = (req as any).user || {};
+  const requestRole = String(requestUser.role || '').toUpperCase();
+  const class_id = req.query.class_id || (requestRole === 'BCH' ? requestUser.class_id : null);
 
   if (!class_id) {
     return res.status(400).json({ message: 'Thiếu tham số class_id' });
@@ -170,7 +368,7 @@ export const exportBchAssignments = async (req: Request, res: Response) => {
       orderBy: { order_number: 'asc' }
     });
 
-    const assignments = await (prisma as any).bchAssignment.findMany({
+    const assignments = await (prisma as any).bchassignment.findMany({
       where: { classId: String(class_id) },
       include: { bchUser: true }
     });
@@ -207,7 +405,7 @@ export const exportBchAssignments = async (req: Request, res: Response) => {
         stt: order,
         student_code: student.student_code,
         name: student.name,
-        bch_name: bchNames || '' // Bỏ trống nếu không được phân công cụ thể
+        bch_name: bchNames || ''
       });
     });
 
@@ -220,8 +418,8 @@ export const exportBchAssignments = async (req: Request, res: Response) => {
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="phan-cong-${class_id}.xlsx"`);
     res.status(200).send(buffer);
-  } catch (error) {
-    console.error(error);
+  } catch (error: any) {
+    console.error('exportAssignments error:', error);
     res.status(500).json({ message: 'Lỗi server khi xuất file phân công' });
   }
 };

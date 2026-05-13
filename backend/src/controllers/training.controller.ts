@@ -353,20 +353,20 @@ export const getTrainingScores = async (req: AuthRequest, res: Response) => {
         ...(Array.isArray(where.AND) ? where.AND : []),
         {
           OR: [
-            { semester_id: { contains: normalizedKeyword, mode: 'insensitive' } },
+            { semester_id: { contains: normalizedKeyword } },
             {
               student: {
-                name: { contains: normalizedKeyword, mode: 'insensitive' },
+                name: { contains: normalizedKeyword },
               },
             },
             {
               student: {
-                student_code: { contains: normalizedKeyword, mode: 'insensitive' },
+                student_code: { contains: normalizedKeyword },
               },
             },
             {
               student: {
-                class_id: { contains: normalizedKeyword, mode: 'insensitive' },
+                class_id: { contains: normalizedKeyword },
               },
             },
           ],

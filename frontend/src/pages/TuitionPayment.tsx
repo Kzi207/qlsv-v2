@@ -6,13 +6,16 @@ import {
   AlertCircle, 
   ArrowRight,
   ShieldCheck,
-  Wallet
+  Wallet,
+  Smartphone
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
 import toast from 'react-hot-toast';
 
 const TuitionPayment = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [tuitions, setTuitions] = useState<any[]>([]);
 
   useEffect(() => {
@@ -32,19 +35,42 @@ const TuitionPayment = () => {
   const handlePayment = async () => {
     if (!currentTuition) return;
     try {
-      toast.loading('Đang khởi tạo thanh toán...', { id: 'payment' });
+      toast.loading('Dang khoi tao thanh toan...', { id: 'payment' });
       const res = await axios.post('/payments/vnpay/create', {
         tuitionId: currentTuition.id
       });
-      
-      if (res.data.paymentUrl) {
-        toast.success('Đang chuyển hướng sang cổng thanh toán...', { id: 'payment' });
+      const orderCode = res.data?.orderCode || res.data?.paymentCode;
+
+      if (res.data.paymentUrl && orderCode) {
+        toast.success('Da tao ma don hang ' + orderCode + '. Dang chuyen huong sang cong thanh toan...', { id: 'payment' });
         window.location.href = res.data.paymentUrl;
       } else {
-        toast.error('Không nhận được link thanh toán', { id: 'payment' });
+        toast.error('Khong nhan duoc ma don hang hoac link thanh toan', { id: 'payment' });
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Lỗi khởi tạo thanh toán', { id: 'payment' });
+      toast.error(error.response?.data?.error || 'Loi khoi tao thanh toan', { id: 'payment' });
+    }
+  };
+
+  const handleBankTransfer = async () => {
+    if (!currentTuition) return;
+    try {
+      toast.loading('Dang khoi tao giao dich...', { id: 'bank' });
+      const res = await axios.post('/payments/create', {
+        tuitionId: currentTuition.id,
+        provider: 'SEPAY'
+      });
+      const orderCode = res.data?.orderCode || res.data?.paymentCode;
+
+      if (!orderCode) {
+        toast.error('Khong nhan duoc ma don hang', { id: 'bank' });
+        return;
+      }
+
+      toast.success('Da tao ma don hang ' + orderCode, { id: 'bank' });
+      navigate(`/checkout/${orderCode}`);
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Loi khoi tao giao dich', { id: 'bank' });
     }
   };
 
@@ -115,10 +141,14 @@ const TuitionPayment = () => {
                               <p className="text-sm font-black text-slate-900">Ví điện tử / Ngân hàng</p>
                               <p className="text-[10px] font-bold text-slate-400 uppercase leading-tight">Thanh toán qua mã QR hoặc ứng dụng ngân hàng</p>
                            </button>
-                           <button className="p-6 border-2 border-slate-100 rounded-[2rem] text-left space-y-3 grayscale opacity-50 cursor-not-allowed">
-                              <div className="h-10 w-10 bg-slate-200 rounded-xl flex items-center justify-center text-slate-400"><HistoryIcon size={20} /></div>
-                              <p className="text-sm font-black text-slate-400">Tiền mặt</p>
-                              <p className="text-[10px] font-bold text-slate-300 uppercase leading-tight">Nộp trực tiếp tại phòng tài chính kế hoạch</p>
+                           <button 
+                             onClick={handleBankTransfer}
+                             disabled={currentTuition.status === 'PAID'}
+                             className="p-6 border-2 border-slate-100 rounded-[2rem] text-left space-y-3 group transition-all hover:bg-white hover:border-blue-600 hover:shadow-xl disabled:opacity-50 disabled:grayscale"
+                           >
+                              <div className="h-10 w-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 group-hover:bg-blue-600 group-hover:text-white transition-all"><Smartphone size={20} /></div>
+                              <p className="text-sm font-black text-slate-900">Chuyển khoản Ngân hàng</p>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase leading-tight">Quét mã QR VietQR (Hỗ trợ SePay xác thực nhanh)</p>
                            </button>
                         </div>
                      </div>
@@ -187,4 +217,6 @@ const TuitionPayment = () => {
 };
 
 export default TuitionPayment;
+
+
 

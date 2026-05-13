@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getStudents, createStudent, updateStudent, deleteStudent, createStudentAccount, deleteStudentAccount, importStudentsExcel, getStudentTemplate, deleteClassStudents, exportStudentAccounts, getStudentStats, getStudentCount, updateStudentProfile, getStudentProfileDetails } from '../controllers/student.controller';
+import { getStudents, createStudent, updateStudent, deleteStudent, createStudentAccount, deleteStudentAccount, importStudentsExcel, getStudentTemplate, deleteClassStudents, exportStudentAccounts, getStudentStats, getStudentCount, updateStudentProfile, getStudentProfileDetails, getStudentAwards } from '../controllers/student.controller';
 import { getStudentDashboardStats } from '../controllers/studentDashboard.controller';
 import { authMiddleware, roleMiddleware } from '../middleware/auth.middleware';
 import multer from 'multer';
@@ -13,6 +13,7 @@ router.use(authMiddleware);
 router.get('/stats', getStudentStats);
 router.get('/dashboard-stats', getStudentDashboardStats);
 router.get('/profile-details', getStudentProfileDetails);
+router.get('/awards', getStudentAwards);
 router.put('/update-profile', updateStudentProfile);
 
 // Protected routes (ADMIN, BCH & LECTURER)

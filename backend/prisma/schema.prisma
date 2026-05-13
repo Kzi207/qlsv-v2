@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/client"
+  output   = "../src/generated/client_final"
 }
 
 datasource db {
@@ -8,270 +8,625 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+model activityattendancerecord {
+  id                        Int                       @id @default(autoincrement())
+  sessionId                 Int
+  studentId                 Int
+  points                    Int
+  scannedAt                 DateTime                  @default(now())
+  activityattendancesession activityattendancesession @relation(fields: [sessionId], references: [id], map: "ActivityAttendanceRecord_sessionId_fkey")
+  student                   student                   @relation(fields: [studentId], references: [id], map: "ActivityAttendanceRecord_studentId_fkey")
+
+  @@unique([sessionId, studentId], map: "ActivityAttendanceRecord_sessionId_studentId_key")
+  @@index([studentId], map: "ActivityAttendanceRecord_studentId_fkey")
+}
+
+model activityattendancesession {
+  id                       Int                        @id @default(autoincrement())
+  title                    String
+  category                 String
+  points                   Int
+  qrToken                  String                     @unique(map: "ActivityAttendanceSession_qrToken_key")
+  sectionId                String?
+  criterionId              String?
+  semesterId               String?
+  classId                  String?
+  isActive                 Boolean                    @default(true)
+  createdAt                DateTime                   @default(now())
+  activityattendancerecord activityattendancerecord[]
+}
+
+model activityevidence {
   id          Int      @id @default(autoincrement())
-  username    String   @unique
-  password    String
-  name        String
-  email       String?
-  phone       String?
-  class_id    String?
+  studentId   Int
+  title       String
+  imageUrl    String
+  status      String   @default("PENDING")
+  adminTitle  String?
+  points      Int?
+  sectionId   String?
+  criterionId String?
+  semesterId  String?
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  role        Role     @default(STUDENT)
-  studentId   Int?     @unique
-  student     Student? @relation(fields: [studentId], references: [id])
-  assignments BchAssignment[]
-  courses     Course[] @relation("TeacherCourses")
-  auditLogs   AuditLog[]
-  teachingAssignments TeachingAssignment[]
+  updatedAt   DateTime
+  student     student  @relation(fields: [studentId], references: [id], onDelete: Cascade, map: "ActivityEvidence_studentId_fkey")
+
+  @@index([status], map: "ActivityEvidence_status_idx")
+  @@index([studentId], map: "ActivityEvidence_studentId_idx")
 }
 
-model AuditLog {
-  id          Int      @id @default(autoincrement())
-  userId      Int?
-  action      String   // LOGIN, LOGOUT, EDIT_DRL, APPROVE_DRL, EDIT_GRADE, etc.
-  targetType  String?  // e.g., "TrainingScore", "Grade", "User"
-  targetId    String?
-  details     Json?    // Detailed info (old/new values)
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime @default(now())
+model assignment {
+  id                   Int                    @id @default(autoincrement())
+  courseId             Int
+  title                String
+  description          String?                @db.Text
+  fileUrl              String?
+  dueDate              DateTime
+  maxPoints            Int                    @default(10)
+  allowLate            Boolean                @default(false)
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime
+  course               course                 @relation(fields: [courseId], references: [id], onDelete: Cascade, map: "Assignment_courseId_fkey")
+  assignmentsubmission assignmentsubmission[]
 
-  user        User?    @relation(fields: [userId], references: [id])
-
-  @@index([userId])
-  @@index([action])
-  @@index([createdAt])
+  @@index([courseId], map: "Assignment_courseId_fkey")
 }
 
-model Class {
-  name               String              @id
-  active_semester_id String?
-  majorId            Int?
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  students           Student[]
-  attendanceSessions AttendanceSession[]
-  activeSemester     Semester?           @relation("ActiveClass", fields: [active_semester_id], references: [name])
-  availableSemesters Semester[]          @relation("SemesterScope")
-  major              Major?              @relation(fields: [majorId], references: [id])
+model assignmentsubmission {
+  id           Int        @id @default(autoincrement())
+  assignmentId Int
+  studentId    Int
+  fileUrl      String
+  content      String?    @db.Text
+  grade        Float?
+  feedback     String?    @db.Text
+  submittedAt  DateTime   @default(now())
+  updatedAt    DateTime
+  assignment   assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade, map: "AssignmentSubmission_assignmentId_fkey")
+  student      student    @relation(fields: [studentId], references: [id], onDelete: Cascade, map: "AssignmentSubmission_studentId_fkey")
 
-  @@index([active_semester_id])
-  @@index([majorId])
+  @@unique([assignmentId, studentId], map: "AssignmentSubmission_assignmentId_studentId_key")
+  @@index([studentId], map: "AssignmentSubmission_studentId_fkey")
 }
 
-model Student {
-  id                Int                      @id @default(autoincrement())
-  name              String
-  student_code      String                   @unique
-  email             String                   @unique
-  class_id          String
-  order_number      Int?
-  createdAt         DateTime                 @default(now())
-  updatedAt         DateTime                 @updatedAt
-  attendances       Attendance[]
-  attendanceProfile StudentAttendanceProfile?
-  class             Class                    @relation(fields: [class_id], references: [name])
-  trainingScores    TrainingScore[]
-  evidenceSlips     TrainingEvidenceSlip[]
-  activityRecords   ActivityAttendanceRecord[]
-  grades            Grade[]
-  registrations     CourseRegistration[]
-  tuitions          Tuition[]
-  assignmentSubmissions AssignmentSubmission[]
-  examResults           ExamResult[]
-  user              User?
-  studentAwards     StudentAward[]
-  activityEvidence  ActivityEvidence[]
-  
-  // Encrypted Sensitive Info
-  birthday          String?
-  gender            String?
-  id_card           String?
-  hometown          String?
-  address           String?
+model attendance {
+  id                Int                @id @default(autoincrement())
+  student_id        Int
+  date              DateTime           @default(now())
+  status            String
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime
+  deviceInfo        String?
+  ipAddress         String?
+  latitude          Float?
+  longitude         Float?
+  baselineCreated   Boolean            @default(false)
+  verifiedIp        Boolean?
+  verifiedLocation  Boolean?
+  profileDistance   Float?
+  sessionDistance   Float?
+  session_id        Int?
+  attendancesession attendancesession? @relation(fields: [session_id], references: [id], onDelete: Cascade, map: "Attendance_session_id_fkey")
+  student           student            @relation(fields: [student_id], references: [id], onDelete: Cascade, map: "Attendance_student_id_fkey")
 
-  @@index([class_id])
-  @@index([class_id, order_number])
+  @@index([date], map: "Attendance_date_idx")
+  @@index([session_id], map: "Attendance_session_id_idx")
+  @@index([session_id, student_id], map: "Attendance_session_id_student_id_idx")
+  @@index([student_id, date], map: "Attendance_student_id_date_idx")
 }
 
-model BchAssignment {
+model attendancesession {
+  id           Int           @id @default(autoincrement())
+  title        String
+  subject      String        @default("")
+  class_id     String?
+  qrToken      String        @unique(map: "AttendanceSession_qrToken_key")
+  lat          Float
+  lng          Float
+  radius       Float
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime
+  endedAt      DateTime?
+  sessionDate  DateTime      @default(now())
+  attendance   attendance[]
+  Renamedclass Renamedclass? @relation(fields: [class_id], references: [name], onDelete: Cascade, map: "AttendanceSession_class_id_fkey")
+
+  @@index([class_id, isActive], map: "AttendanceSession_class_id_isActive_idx")
+  @@index([class_id, sessionDate], map: "AttendanceSession_class_id_sessionDate_idx")
+  @@index([isActive, sessionDate], map: "AttendanceSession_isActive_sessionDate_idx")
+}
+
+model auditlog {
+  id         Int      @id @default(autoincrement())
+  userId     Int?
+  action     String
+  targetType String?
+  targetId   String?
+  details    String?  @db.LongText
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  user       user?    @relation(fields: [userId], references: [id], map: "AuditLog_userId_fkey")
+
+  @@index([action], map: "AuditLog_action_idx")
+  @@index([createdAt], map: "AuditLog_createdAt_idx")
+  @@index([userId], map: "AuditLog_userId_idx")
+}
+
+model bchassignment {
   id        Int      @id @default(autoincrement())
   bchUserId Int
   classId   String
   fromOrder Int
   toOrder   Int
   createdAt DateTime @default(now())
-  bchUser   User     @relation(fields: [bchUserId], references: [id])
+  user      user     @relation(fields: [bchUserId], references: [id], map: "BchAssignment_bchUserId_fkey")
 
-  @@index([bchUserId])
-  @@index([classId, fromOrder, toOrder])
+  @@index([bchUserId], map: "BchAssignment_bchUserId_idx")
+  @@index([classId, fromOrder, toOrder], map: "BchAssignment_classId_fromOrder_toOrder_idx")
 }
 
-model Semester {
-  name           String          @id
-  startDate      DateTime?
-  endDate        DateTime?
-  isGlobal       Boolean         @default(true)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  trainingScores TrainingScore[]
-  activeInClasses Class[]        @relation("ActiveClass")
-  scopeClasses    Class[]        @relation("SemesterScope")
+/// This model has been renamed to 'Renamedclass' during introspection, because the original name 'class' is reserved.
+model Renamedclass {
+  name                                               String              @id
+  active_semester_id                                 String?
+  majorId                                            Int?
+  createdAt                                          DateTime            @default(now())
+  updatedAt                                          DateTime
+  attendancesession                                  attendancesession[]
+  semester_Renamedclass_active_semester_idTosemester semester?           @relation("Renamedclass_active_semester_idTosemester", fields: [active_semester_id], references: [name], map: "Class_active_semester_id_fkey")
+  major                                              major?              @relation(fields: [majorId], references: [id], map: "Class_majorId_fkey")
+  student                                            student[]
+  semester_semesterscope                             semester[]          @relation("semesterscope")
 
-  @@index([isGlobal, startDate, endDate])
+  @@index([active_semester_id], map: "Class_active_semester_id_idx")
+  @@index([majorId], map: "Class_majorId_idx")
+  @@map("class")
 }
 
-model TrainingScore {
-  id              Int      @id @default(autoincrement())
-  student_id      Int
-  y_thuc          Int
-  hoat_dong       Int
-  ky_luat         Int
-  total           Int
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  details         Json?
-  admin_details   Json?
-  status          String   @default("APPROVED")
-  admin_hoat_dong Int?
-  admin_ky_luat   Int?
-  admin_notes     String?
-  admin_total     Int?
-  admin_y_thuc    Int?
-  semester_id     String
-  semester        Semester @relation(fields: [semester_id], references: [name])
-  student         Student  @relation(fields: [student_id], references: [id])
+model classsubject {
+  id         Int      @id @default(autoincrement())
+  classId    String
+  subjectId  Int
+  semesterId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime
+  subject    subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade, map: "ClassSubject_subjectId_fkey")
 
-  @@unique([student_id, semester_id])
-  @@index([status])
-  @@index([semester_id])
-  @@index([student_id, createdAt])
-  @@index([semester_id, status])
+  @@unique([classId, subjectId, semesterId], map: "ClassSubject_classId_subjectId_semesterId_key")
+  @@index([classId], map: "ClassSubject_classId_idx")
+  @@index([semesterId], map: "ClassSubject_semesterId_idx")
+  @@index([subjectId], map: "ClassSubject_subjectId_fkey")
 }
 
-model Attendance {
-  id               Int                @id @default(autoincrement())
-  student_id       Int
-  date             DateTime           @default(now())
-  status           String
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-  deviceInfo       String?
-  ipAddress        String?
-  latitude         Float?
-  longitude        Float?
-  baselineCreated  Boolean            @default(false)
-  verifiedIp       Boolean?
-  verifiedLocation Boolean?
-  profileDistance  Float?
-  sessionDistance  Float?
-  session_id       Int?
-  session          AttendanceSession? @relation(fields: [session_id], references: [id], onDelete: Cascade)
-  student          Student            @relation(fields: [student_id], references: [id], onDelete: Cascade)
-
-  @@index([date])
-  @@index([student_id, date])
-  @@index([session_id])
-  @@index([session_id, student_id])
-}
-
-model AttendanceSession {
+model course {
   id          Int          @id @default(autoincrement())
-  title       String
-  subject     String       @default("")
-  class_id    String?
-  qrToken     String       @unique
-  lat         Float
-  lng         Float
-  radius      Float
+  subjectId   Int
+  teacherId   Int
+  semesterId  String
+  classId     String?
+  name        String
+  description String?
+  image       String?
+  enrollKey   String?
   isActive    Boolean      @default(true)
   createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  endedAt     DateTime?
-  sessionDate DateTime     @default(now())
-  attendances Attendance[]
-  class       Class?       @relation(fields: [class_id], references: [name], onDelete: Cascade)
+  updatedAt   DateTime
+  assignment  assignment[]
+  subject     subject      @relation(fields: [subjectId], references: [id], map: "Course_subjectId_fkey")
+  user        user         @relation(fields: [teacherId], references: [id], map: "Course_teacherId_fkey")
+  exam        exam[]
+  lesson      lesson[]
 
-  @@index([class_id, isActive])
-  @@index([class_id, sessionDate])
-  @@index([isActive, sessionDate])
+  @@index([subjectId], map: "Course_subjectId_idx")
+  @@index([teacherId], map: "Course_teacherId_idx")
 }
 
-model StudentAttendanceProfile {
-  id                    Int      @id @default(autoincrement())
-  student_id            Int      @unique
+model courseregistration {
+  id         Int      @id @default(autoincrement())
+  studentId  Int
+  subjectId  Int
+  semesterId String
+  status     String   @default("PENDING")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime
+  student    student  @relation(fields: [studentId], references: [id], onDelete: Cascade, map: "CourseRegistration_studentId_fkey")
+  subject    subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade, map: "CourseRegistration_subjectId_fkey")
+
+  @@unique([studentId, subjectId, semesterId], map: "CourseRegistration_studentId_subjectId_semesterId_key")
+  @@index([semesterId], map: "CourseRegistration_semesterId_idx")
+  @@index([studentId], map: "CourseRegistration_studentId_idx")
+  @@index([subjectId], map: "CourseRegistration_subjectId_fkey")
+}
+
+model curriculumsemester {
+  id                Int                 @id @default(autoincrement())
+  majorId           Int
+  semesterNumber    Int
+  name              String
+  expectedCredits   Int
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime
+  major             major               @relation(fields: [majorId], references: [id], map: "CurriculumSemester_majorId_fkey")
+  curriculumsubject curriculumsubject[]
+
+  @@index([majorId], map: "CurriculumSemester_majorId_fkey")
+}
+
+model curriculumsubject {
+  id                                                       Int                @id @default(autoincrement())
+  majorId                                                  Int
+  semesterId                                               Int
+  subjectId                                                Int
+  isRequired                                               Boolean            @default(true)
+  prerequisiteSubjectId                                    Int?
+  displayOrder                                             Int                @default(0)
+  createdAt                                                DateTime           @default(now())
+  updatedAt                                                DateTime
+  major                                                    major              @relation(fields: [majorId], references: [id], map: "CurriculumSubject_majorId_fkey")
+  subject_curriculumsubject_prerequisiteSubjectIdTosubject subject?           @relation("curriculumsubject_prerequisiteSubjectIdTosubject", fields: [prerequisiteSubjectId], references: [id], map: "CurriculumSubject_prerequisiteSubjectId_fkey")
+  curriculumsemester                                       curriculumsemester @relation(fields: [semesterId], references: [id], map: "CurriculumSubject_semesterId_fkey")
+  subject_curriculumsubject_subjectIdTosubject             subject            @relation("curriculumsubject_subjectIdTosubject", fields: [subjectId], references: [id], map: "CurriculumSubject_subjectId_fkey")
+
+  @@index([majorId], map: "CurriculumSubject_majorId_fkey")
+  @@index([prerequisiteSubjectId], map: "CurriculumSubject_prerequisiteSubjectId_fkey")
+  @@index([semesterId], map: "CurriculumSubject_semesterId_fkey")
+  @@index([subjectId], map: "CurriculumSubject_subjectId_fkey")
+}
+
+model exam {
+  id           Int            @id @default(autoincrement())
+  courseId     Int
+  title        String
+  description  String?        @db.Text
+  startTime    DateTime
+  endTime      DateTime
+  duration     Int
+  maxPoints    Int            @default(10)
+  shuffle      Boolean        @default(false)
+  status       String         @default("DRAFT")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime
+  course       course         @relation(fields: [courseId], references: [id], onDelete: Cascade, map: "Exam_courseId_fkey")
+  examquestion examquestion[]
+  examresult   examresult[]
+
+  @@index([courseId], map: "Exam_courseId_fkey")
+}
+
+model examoption {
+  id           Int          @id @default(autoincrement())
+  questionId   Int
+  content      String       @db.Text
+  isCorrect    Boolean      @default(false)
+  examquestion examquestion @relation(fields: [questionId], references: [id], onDelete: Cascade, map: "ExamOption_questionId_fkey")
+
+  @@index([questionId], map: "ExamOption_questionId_fkey")
+}
+
+model examquestion {
+  id         Int          @id @default(autoincrement())
+  examId     Int
+  question   String       @db.Text
+  type       String       @default("MULTIPLE_CHOICE")
+  points     Float        @default(1)
+  order      Int          @default(0)
+  examoption examoption[]
+  exam       exam         @relation(fields: [examId], references: [id], onDelete: Cascade, map: "ExamQuestion_examId_fkey")
+
+  @@index([examId], map: "ExamQuestion_examId_fkey")
+}
+
+model examresult {
+  id         Int       @id @default(autoincrement())
+  examId     Int
+  studentId  Int
+  score      Float?
+  status     String    @default("STARTED")
+  answers    String?   @db.LongText
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  exam       exam      @relation(fields: [examId], references: [id], onDelete: Cascade, map: "ExamResult_examId_fkey")
+  student    student   @relation(fields: [studentId], references: [id], onDelete: Cascade, map: "ExamResult_studentId_fkey")
+
+  @@unique([examId, studentId], map: "ExamResult_examId_studentId_key")
+  @@index([studentId], map: "ExamResult_studentId_fkey")
+}
+
+model faculty {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique(map: "Faculty_code_key")
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+  major       major[]
+}
+
+model grade {
+  id           Int      @id @default(autoincrement())
+  studentId    Int
+  subject      String
+  semesterId   String
+  processScore Float?
+  midtermScore Float?
+  finalScore   Float?
+  totalScore   Float?
+  teacherId    Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+  student      student  @relation(fields: [studentId], references: [id], onDelete: Cascade, map: "Grade_studentId_fkey")
+
+  @@unique([studentId, subject, semesterId], map: "Grade_studentId_subject_semesterId_key")
+  @@index([semesterId], map: "Grade_semesterId_idx")
+  @@index([studentId], map: "Grade_studentId_idx")
+}
+
+model lesson {
+  id        Int      @id @default(autoincrement())
+  courseId  Int
+  title     String
+  content   String?  @db.Text
+  fileUrl   String?
+  fileType  String?
+  duration  String?
+  order     Int      @default(0)
+  isVisible Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  course    course   @relation(fields: [courseId], references: [id], onDelete: Cascade, map: "Lesson_courseId_fkey")
+
+  @@index([courseId], map: "Lesson_courseId_fkey")
+}
+
+model major {
+  id                 Int                  @id @default(autoincrement())
+  facultyId          Int
+  code               String               @unique(map: "Major_code_key")
+  name               String
+  totalCredits       Int                  @default(161)
+  totalSemesters     Int                  @default(13)
+  description        String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime
+  Renamedclass       Renamedclass[]
+  curriculumsemester curriculumsemester[]
+  curriculumsubject  curriculumsubject[]
+  faculty            faculty              @relation(fields: [facultyId], references: [id], map: "Major_facultyId_fkey")
+
+  @@index([facultyId], map: "Major_facultyId_fkey")
+}
+
+model notification {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String?  @db.Text
+  tag       String
+  color     String   @default("blue")
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+}
+
+model payment {
+  id                    Int          @id @default(autoincrement())
+  studentId             Int
+  tuitionId             Int
+  paymentCode           String       @unique(map: "Payment_paymentCode_key")
+  amount                Float
+  provider              String       @default("VNPAY")
+  providerTransactionId String?
+  status                String       @default("PENDING")
+  paymentUrl            String?      @db.Text
+  paidAt                DateTime?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime
+  tuition               tuition      @relation(fields: [tuitionId], references: [id], map: "Payment_tuitionId_fkey")
+  paymentlog            paymentlog[]
+
+  @@index([paymentCode], map: "Payment_paymentCode_idx")
+  @@index([status], map: "Payment_status_idx")
+  @@index([studentId], map: "Payment_studentId_idx")
+  @@index([tuitionId], map: "Payment_tuitionId_fkey")
+}
+
+model paymentlog {
+  id        Int      @id @default(autoincrement())
+  paymentId Int
+  provider  String   @default("VNPAY")
+  type      String
+  payload   String   @db.LongText
+  createdAt DateTime @default(now())
+  payment   payment  @relation(fields: [paymentId], references: [id], map: "PaymentLog_paymentId_fkey")
+
+  @@index([paymentId], map: "PaymentLog_paymentId_idx")
+}
+
+model room {
+  id            Int             @id @default(autoincrement())
+  name          String          @unique(map: "Room_name_key")
+  capacity      Int?
+  type          String?         @default("lecture")
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime
+  roomborrowing roomborrowing[]
+}
+
+model roomborrowing {
+  id           Int      @id @default(autoincrement())
+  roomId       Int
+  roomName     String
+  borrowerName String
+  purpose      String
+  date         DateTime
+  startPeriod  Int
+  endPeriod    Int
+  status       String   @default("APPROVED")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+  room         room     @relation(fields: [roomId], references: [id], map: "RoomBorrowing_roomId_fkey")
+
+  @@index([date, roomName], map: "RoomBorrowing_date_roomName_idx")
+  @@index([roomId], map: "RoomBorrowing_roomId_fkey")
+}
+
+model semester {
+  name                                                   String          @id
+  startDate                                              DateTime?
+  endDate                                                DateTime?
+  isGlobal                                               Boolean         @default(true)
+  createdAt                                              DateTime        @default(now())
+  updatedAt                                              DateTime
+  Renamedclass_Renamedclass_active_semester_idTosemester Renamedclass[]  @relation("Renamedclass_active_semester_idTosemester")
+  trainingscore                                          trainingscore[]
+  Renamedclass_semesterscope                             Renamedclass[]  @relation("semesterscope")
+
+  @@index([isGlobal, startDate, endDate], map: "Semester_isGlobal_startDate_endDate_idx")
+}
+
+model student {
+  id                       Int                        @id @default(autoincrement())
+  name                     String
+  student_code             String                     @unique(map: "Student_student_code_key")
+  email                    String                     @unique(map: "Student_email_key")
+  class_id                 String
+  order_number             Int?
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime
+  birthday                 String?
+  gender                   String?
+  id_card                  String?
+  hometown                 String?
+  address                  String?
+  activityattendancerecord activityattendancerecord[]
+  activityevidence         activityevidence[]
+  assignmentsubmission     assignmentsubmission[]
+  attendance               attendance[]
+  courseregistration       courseregistration[]
+  examresult               examresult[]
+  grade                    grade[]
+  servicerequest           servicerequest[]
+  Renamedclass             Renamedclass               @relation(fields: [class_id], references: [name], onDelete: Cascade, map: "Student_class_id_fkey")
+  studentattendanceprofile studentattendanceprofile?
+  studentaward             studentaward[]
+  trainingevidenceslip     trainingevidenceslip[]
+  trainingscore            trainingscore[]
+  tuition                  tuition[]
+  user                     user?
+
+  @@index([class_id], map: "Student_class_id_idx")
+  @@index([class_id, order_number], map: "Student_class_id_order_number_idx")
+  @@index([createdAt], map: "Student_createdAt_idx")
+  @@index([email], map: "Student_email_idx")
+  @@index([student_code], map: "Student_student_code_idx")
+}
+
+model servicerequest {
+  id          Int      @id @default(autoincrement())
+  studentId   Int
+  studentName String
+  type        String
+  status      String   @default("PENDING")
+  details     String   @db.LongText
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  student     student  @relation(fields: [studentId], references: [id], onDelete: Cascade, map: "ServiceRequest_studentId_fkey")
+
+  @@index([studentId], map: "ServiceRequest_studentId_idx")
+  @@index([status], map: "ServiceRequest_status_idx")
+}
+
+model onestopservice {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String   @db.Text
+  icon        String
+  category    String
+  color       String
+  route       String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model studentattendanceprofile {
+  id                    Int       @id @default(autoincrement())
+  student_id            Int       @unique(map: "StudentAttendanceProfile_student_id_key")
   firstIpAddress        String
   firstLatitude         Float
   firstLongitude        Float
-  firstCheckInAt        DateTime @default(now())
+  firstCheckInAt        DateTime  @default(now())
   lastIpAddress         String?
   lastLatitude          Float?
   lastLongitude         Float?
   lastCheckInAt         DateTime?
-  totalVerifiedCheckIns Int      @default(0)
-  student               Student  @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  totalVerifiedCheckIns Int       @default(0)
+  student               student   @relation(fields: [student_id], references: [id], onDelete: Cascade, map: "StudentAttendanceProfile_student_id_fkey")
 }
 
-model ActivityAttendanceSession {
+model studentaward {
   id          Int      @id @default(autoincrement())
+  studentId   Int
   title       String
-  category    String   // e.g., "Hoạt động"
-  points      Int
-  qrToken     String   @unique
-  sectionId   String?
-  criterionId String?
-  semesterId  String?
-  classId     String?
-  isActive    Boolean  @default(true)
+  description String?  @db.Text
+  type        String   @default("AWARD")
+  date        DateTime @default(now())
   createdAt   DateTime @default(now())
-  records     ActivityAttendanceRecord[]
+  updatedAt   DateTime
+  student     student  @relation(fields: [studentId], references: [id], onDelete: Cascade, map: "StudentAward_studentId_fkey")
+
+  @@index([studentId], map: "StudentAward_studentId_idx")
 }
 
-model ActivityAttendanceRecord {
-  id          Int      @id @default(autoincrement())
-  sessionId   Int
-  studentId   Int
-  points      Int      // Copied from session, but editable by admin
-  scannedAt   DateTime @default(now())
-  session     ActivityAttendanceSession @relation(fields: [sessionId], references: [id])
-  student     Student  @relation(fields: [studentId], references: [id])
-  
-  @@unique([sessionId, studentId])
+model subject {
+  id                                                                 Int                  @id @default(autoincrement())
+  code                                                               String               @unique(map: "Subject_code_key")
+  name                                                               String
+  credits                                                            Int
+  theoryPeriods                                                      Int                  @default(0)
+  practicePeriods                                                    Int                  @default(0)
+  subjectType                                                        String               @default("LECTURE")
+  pricePerCredit                                                     Float                @default(500000)
+  createdAt                                                          DateTime             @default(now())
+  updatedAt                                                          DateTime
+  classsubject                                                       classsubject[]
+  course                                                             course[]
+  courseregistration                                                 courseregistration[]
+  curriculumsubject_curriculumsubject_prerequisiteSubjectIdTosubject curriculumsubject[]  @relation("curriculumsubject_prerequisiteSubjectIdTosubject")
+  curriculumsubject_curriculumsubject_subjectIdTosubject             curriculumsubject[]  @relation("curriculumsubject_subjectIdTosubject")
+  teachingassignment                                                 teachingassignment[]
 }
 
-model TrainingEvidenceSlip {
-  id          Int      @id @default(autoincrement())
-  studentId   Int
-  semesterId  String
-  status      String   @default("DRAFT") // DRAFT, SUBMITTED, APPROVED
-  manualData  Json?    // User entered points
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  student     Student  @relation(fields: [studentId], references: [id])
-
-  @@unique([studentId, semesterId])
+model systemsetting {
+  id                    Int      @id @default(1)
+  schoolName            String   @default("Trường Đại học Công nghệ")
+  schoolAddress         String?
+  activeSemester        String?
+  registrationOpen      Boolean  @default(false)
+  maintenanceMode       Boolean  @default(false)
+  contactEmail          String?
+  contactPhone          String?
+  showGpa               Boolean  @default(true)
+  allowEditPhone        Boolean  @default(true)
+  allowEditAddress      Boolean  @default(true)
+  showActivityPoints    Boolean  @default(true)
+  tuitionPricePerCredit Float    @default(500000)
+  updatedAt             DateTime @updatedAt
 }
 
-enum Role {
-  QTV
-  LECTURER
-  BCH
-  STUDENT
+model teachingassignment {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  subjectId Int
+  createdAt DateTime @default(now())
+  subject   subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade, map: "TeachingAssignment_subjectId_fkey")
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "TeachingAssignment_userId_fkey")
+
+  @@unique([userId, subjectId], map: "TeachingAssignment_userId_subjectId_key")
+  @@index([subjectId], map: "TeachingAssignment_subjectId_idx")
 }
 
-model Room {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  capacity    Int?
-  type        String?  @default("lecture") // lecture, lab, etc.
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  borrowings  RoomBorrowing[]
-}
-
-model Timetable {
+model timetable {
   id          Int      @id @default(autoincrement())
   subject     String
   teacher     String
@@ -284,409 +639,101 @@ model Timetable {
   type        String   @default("offline")
   startDate   DateTime @default(now())
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  updatedAt   DateTime
 
-  @@index([classId, semesterId])
-  @@index([teacher])
-  @@index([room, day])
+  @@index([classId, semesterId], map: "Timetable_classId_semesterId_idx")
+  @@index([room, day], map: "Timetable_room_day_idx")
+  @@index([teacher], map: "Timetable_teacher_idx")
 }
 
-model RoomBorrowing {
-  id           Int      @id @default(autoincrement())
-  roomId       Int
-  roomName     String
-  borrowerName String
-  purpose      String
-  date         DateTime
-  startPeriod  Int
-  endPeriod    Int
-  status       String   @default("APPROVED") // APPROVED, RETURNED, CANCELLED
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  room         Room     @relation(fields: [roomId], references: [id])
-
-  @@index([date, roomName])
-}
-model Subject {
-  id             Int      @id @default(autoincrement())
-  code           String   @unique
-  name           String
-  credits        Int
-  theoryPeriods  Int      @default(0)
-  practicePeriods Int     @default(0)
-  subjectType    String   @default("LECTURE") // LECTURE, PRACTICE, INTERNSHIP, THESIS
-  pricePerCredit Float    @default(500000)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  
-  registrations  CourseRegistration[]
-  classSubjects  ClassSubject[]
-  curriculumAssignments CurriculumSubject[]
-  requiredBy     CurriculumSubject[] @relation("Prerequisite")
-  courses        Course[]
-  teachingAssignments TeachingAssignment[]
-}
-
-model Faculty {
-  id          Int      @id @default(autoincrement())
-  code        String   @unique
-  name        String
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  majors      Major[]
-}
-
-model Major {
-  id             Int      @id @default(autoincrement())
-  facultyId      Int
-  code           String   @unique
-  name           String
-  totalCredits   Int      @default(161)
-  totalSemesters Int      @default(13)
-  description    String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  faculty        Faculty  @relation(fields: [facultyId], references: [id])
-  curriculumSemesters CurriculumSemester[]
-  curriculumSubjects  CurriculumSubject[]
-  classes             Class[]
-}
-
-model CurriculumSemester {
-  id              Int      @id @default(autoincrement())
-  majorId         Int
-  semesterNumber  Int
-  name            String
-  expectedCredits Int
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  major           Major    @relation(fields: [majorId], references: [id])
-  subjects        CurriculumSubject[]
-}
-
-model CurriculumSubject {
-  id                   Int      @id @default(autoincrement())
-  majorId              Int
-  semesterId           Int      // Refers to CurriculumSemester
-  subjectId            Int
-  isRequired           Boolean  @default(true)
-  prerequisiteSubjectId Int?
-  displayOrder         Int      @default(0)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  
-  major                Major    @relation(fields: [majorId], references: [id])
-  semester             CurriculumSemester @relation(fields: [semesterId], references: [id])
-  subject              Subject  @relation(fields: [subjectId], references: [id])
-  prerequisite         Subject? @relation("Prerequisite", fields: [prerequisiteSubjectId], references: [id])
-}
-
-model CourseRegistration {
+model trainingevidenceslip {
   id         Int      @id @default(autoincrement())
   studentId  Int
-  subjectId  Int
   semesterId String
-  status     String   @default("PENDING") // PENDING, APPROVED, CANCELLED
+  status     String   @default("DRAFT")
+  manualData String?  @db.LongText
   createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  
-  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  subject    Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  updatedAt  DateTime
+  student    student  @relation(fields: [studentId], references: [id], map: "TrainingEvidenceSlip_studentId_fkey")
 
-  @@unique([studentId, subjectId, semesterId])
-  @@index([studentId])
-  @@index([semesterId])
+  @@unique([studentId, semesterId], map: "TrainingEvidenceSlip_studentId_semesterId_key")
 }
 
-model Tuition {
+model trainingscore {
+  id              Int      @id @default(autoincrement())
+  student_id      Int
+  y_thuc          Int
+  hoat_dong       Int
+  ky_luat         Int
+  total           Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime
+  details         String?  @db.LongText
+  admin_details   String?  @db.LongText
+  status          String   @default("APPROVED")
+  admin_hoat_dong Int?
+  admin_ky_luat   Int?
+  admin_notes     String?
+  admin_total     Int?
+  admin_y_thuc    Int?
+  semester_id     String
+  semester        semester @relation(fields: [semester_id], references: [name], map: "TrainingScore_semester_id_fkey")
+  student         student  @relation(fields: [student_id], references: [id], map: "TrainingScore_student_id_fkey")
+
+  @@unique([student_id, semester_id], map: "TrainingScore_student_id_semester_id_key")
+  @@index([semester_id], map: "TrainingScore_semester_id_idx")
+  @@index([semester_id, status], map: "TrainingScore_semester_id_status_idx")
+  @@index([status], map: "TrainingScore_status_idx")
+  @@index([student_id, createdAt], map: "TrainingScore_student_id_createdAt_idx")
+}
+
+model tuition {
   id              Int       @id @default(autoincrement())
   studentId       Int
   semesterId      String
   totalAmount     Float
   paidAmount      Float     @default(0)
   remainingAmount Float     @default(0)
-  status          String    @default("UNPAID") // UNPAID, PARTIAL_PAID, PAID
+  status          String    @default("UNPAID")
   notes           String?
   createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  student         Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  payments        Payment[]
+  updatedAt       DateTime
+  payment         payment[]
+  student         student   @relation(fields: [studentId], references: [id], onDelete: Cascade, map: "Tuition_studentId_fkey")
 
-  @@unique([studentId, semesterId])
-  @@index([studentId])
-  @@index([status])
+  @@unique([studentId, semesterId], map: "Tuition_studentId_semesterId_key")
+  @@index([status], map: "Tuition_status_idx")
+  @@index([studentId], map: "Tuition_studentId_idx")
 }
 
-model Payment {
-  id                    Int          @id @default(autoincrement())
-  studentId             Int
-  tuitionId             Int
-  paymentCode           String       @unique // Unique code for VNPay (vnp_TxnRef)
-  amount                Float
-  provider              String       @default("VNPAY")
-  providerTransactionId String?      // vnp_TransactionNo
-  status                String       @default("PENDING") // PENDING, SUCCESS, FAILED, CANCELLED
-  paymentUrl            String?      @db.Text
-  paidAt                DateTime?
-  createdAt             DateTime     @default(now())
-  updatedAt             DateTime     @updatedAt
+model user {
+  id                 Int                  @id @default(autoincrement())
+  username           String               @unique(map: "User_username_key")
+  password           String
+  name               String
+  email              String?              @unique(map: "User_email_key")
+  phone              String?
+  class_id           String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime
+  role               user_role            @default(STUDENT)
+  studentId          Int?                 @unique(map: "User_studentId_key")
+  position           String?
+  auditlog           auditlog[]
+  bchassignment      bchassignment[]
+  course             course[]
+  teachingassignment teachingassignment[]
+  student            student?             @relation(fields: [studentId], references: [id], onDelete: Cascade, map: "User_studentId_fkey")
 
-  tuition               Tuition      @relation(fields: [tuitionId], references: [id])
-  logs                  PaymentLog[]
-
-  @@index([paymentCode])
-  @@index([studentId])
-  @@index([status])
+  @@index([createdAt], map: "User_createdAt_idx")
+  @@index([email], map: "User_email_idx")
+  @@index([role], map: "User_role_idx")
+  @@index([username], map: "User_username_idx")
 }
 
-model PaymentLog {
-  id          Int      @id @default(autoincrement())
-  paymentId   Int
-  provider    String   @default("VNPAY")
-  type        String   // RETURN or IPN
-  payload     Json
-  createdAt   DateTime @default(now())
-
-  payment     Payment  @relation(fields: [paymentId], references: [id])
-
-  @@index([paymentId])
-}
-model Grade {
-  id           Int      @id @default(autoincrement())
-  studentId    Int
-  subject      String
-  semesterId   String
-  processScore Float?   // Điểm quá trình
-  midtermScore Float?   // Điểm giữa kỳ
-  finalScore   Float?   // Điểm cuối kỳ
-  totalScore   Float?   // Điểm tổng kết
-  teacherId    Int?     // Giảng viên nhập điểm
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@unique([studentId, subject, semesterId])
-  @@index([studentId])
-  @@index([semesterId])
-}
-
-model ClassSubject {
-  id         Int      @id @default(autoincrement())
-  classId    String
-  subjectId  Int
-  semesterId String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  
-  subject    Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-
-  @@unique([classId, subjectId, semesterId])
-  @@index([classId])
-  @@index([semesterId])
-}
-model SystemSetting {
-  id                Int      @id @default(1)
-  schoolName        String   @default("Trường Đại học Công nghệ")
-  schoolAddress     String?
-  activeSemester    String?
-  registrationOpen  Boolean  @default(false)
-  maintenanceMode   Boolean  @default(false)
-  contactEmail      String?
-  contactPhone      String?
-  showGpa           Boolean  @default(true)
-  allowEditPhone    Boolean  @default(true)
-  allowEditAddress  Boolean  @default(true)
-  showActivityPoints Boolean @default(true)
-  updatedAt         DateTime @updatedAt
-}
-
-// --- E-LEARNING MODELS ---
-
-model Course {
-  id          Int      @id @default(autoincrement())
-  subjectId   Int
-  teacherId   Int
-  semesterId  String
-  classId     String?
-  name        String
-  description String?
-  image       String?
-  enrollKey   String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  subject     Subject  @relation(fields: [subjectId], references: [id])
-  teacher     User     @relation("TeacherCourses", fields: [teacherId], references: [id])
-  lessons     Lesson[]
-  assignments Assignment[]
-  exams       Exam[]
-
-  @@index([teacherId])
-  @@index([subjectId])
-}
-
-model Lesson {
-  id          Int      @id @default(autoincrement())
-  courseId    Int
-  title       String
-  content     String?  @db.Text
-  fileUrl     String?
-  fileType    String?  // video, pdf, slide, link
-  duration    String?  // e.g., "45:00" or "12 pages"
-  order       Int      @default(0)
-  isVisible   Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-}
-
-model Assignment {
-  id          Int      @id @default(autoincrement())
-  courseId    Int
-  title       String
-  description String?  @db.Text
-  fileUrl     String?
-  dueDate     DateTime
-  maxPoints   Int      @default(10)
-  allowLate   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  submissions AssignmentSubmission[]
-}
-
-model AssignmentSubmission {
-  id           Int      @id @default(autoincrement())
-  assignmentId Int
-  studentId    Int
-  fileUrl      String
-  content      String?  @db.Text
-  grade        Float?
-  feedback     String?  @db.Text
-  submittedAt  DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  student      Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@unique([assignmentId, studentId])
-}
-
-model Exam {
-  id          Int      @id @default(autoincrement())
-  courseId    Int
-  title       String
-  description String?  @db.Text
-  startTime   DateTime
-  endTime     DateTime
-  duration    Int      // in minutes
-  maxPoints   Int      @default(10)
-  shuffle     Boolean  @default(false)
-  status      String   @default("DRAFT") // DRAFT, PUBLISHED, CLOSED
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  questions   ExamQuestion[]
-  results     ExamResult[]
-}
-
-model ExamQuestion {
-  id          Int      @id @default(autoincrement())
-  examId      Int
-  question    String   @db.Text
-  type        String   @default("MULTIPLE_CHOICE") // MULTIPLE_CHOICE, ESSAY, TRUE_FALSE
-  points      Float    @default(1)
-  order       Int      @default(0)
-  
-  exam        Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
-  options     ExamOption[]
-}
-
-model ExamOption {
-  id          Int      @id @default(autoincrement())
-  questionId  Int
-  content     String   @db.Text
-  isCorrect   Boolean  @default(false)
-  
-  question    ExamQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
-}
-
-model ExamResult {
-  id          Int      @id @default(autoincrement())
-  examId      Int
-  studentId   Int
-  score       Float?
-  status      String   @default("STARTED") // STARTED, SUBMITTED, GRADED
-  answers     Json?    // Store student's answers
-  startedAt   DateTime @default(now())
-  finishedAt  DateTime?
-
-  exam        Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
-  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@unique([examId, studentId])
-}
-
-model Notification {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String?  @db.Text
-  tag       String   // e.g., "Học vụ", "Đoàn Hội", "Tài chính"
-  color     String   @default("blue") // blue, rose, amber, emerald
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model StudentAward {
-  id          Int      @id @default(autoincrement())
-  studentId   Int
-  title       String
-  description String?  @db.Text
-  type        String   @default("AWARD") // AWARD, TITLE
-  date        DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@index([studentId])
-}
-
-model ActivityEvidence {
-  id          Int      @id @default(autoincrement())
-  studentId   Int
-  title       String
-  imageUrl    String
-  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
-  adminTitle  String?
-  points      Int?
-  sectionId   String?
-  criterionId String?
-  semesterId  String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@index([studentId])
-  @@index([status])
-}
-
-model TeachingAssignment {
-  id        Int      @id @default(autoincrement())
-  userId    Int      // Giảng viên
-  subjectId Int      // Môn học
-  createdAt DateTime @default(now())
-
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, subjectId])
-  @@index([subjectId])
+enum user_role {
+  QTV
+  LECTURER
+  BCH
+  STUDENT
 }

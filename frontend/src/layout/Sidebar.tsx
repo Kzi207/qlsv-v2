@@ -24,7 +24,9 @@ import {
   DollarSign,
   BookMarked,
   Library,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Bell,
+  DoorOpen
 } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -61,7 +63,7 @@ const Sidebar = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) =>
       label: 'Quản lý Chung',
       items: [
         { name: 'Danh sách sinh viên', path: '/students', icon: Users, roles: ['QTV', 'LECTURER', 'BCH'] },
-        { name: 'Quản lý lớp học', path: '/classes', icon: GraduationCap, roles: ['QTV', 'BCH'] },
+        { name: 'Quản lý lớp học', path: '/classes', icon: GraduationCap, roles: ['QTV'] },
         { name: 'Quản lý điểm số', path: '/grades/manage', icon: FileSpreadsheet, roles: ['QTV', 'LECTURER'] },
         { name: 'Quản lý điểm danh', path: '/attendance/manage', icon: ClipboardCheck, roles: ['QTV', 'LECTURER', 'BCH'] },
         { name: 'Quản lý tài khoản', path: '/accounts', icon: User, roles: ['QTV'] },
@@ -84,6 +86,7 @@ const Sidebar = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) =>
         { name: 'Chương trình đào tạo', path: '/curriculum/manage', icon: Layers, roles: ['QTV'] },
         { name: 'Quản lý môn học', path: '/academic/manage', icon: BookMarked, roles: ['QTV'] },
         { name: 'Thời khóa biểu', path: '/timetable/manage', icon: Calendar, roles: ['QTV'] },
+        { name: 'Quản lý phòng học', path: '/timetable/rooms', icon: DoorOpen, roles: ['QTV'] },
         { name: 'Quản trị E-Learning', path: '/elearning/admin/courses', icon: Monitor, roles: ['QTV'] },
       ]
     },
@@ -106,7 +109,10 @@ const Sidebar = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) =>
       items: [
         { name: 'Thời khóa biểu', path: '/schedule', icon: Calendar, roles: ['STUDENT'] },
         { name: 'Bảng điểm', path: '/grades', icon: Award, roles: ['STUDENT'] },
+        { name: 'Điểm danh', path: '/attendance/scan', icon: ClipboardCheck, roles: ['STUDENT'] },
         { name: 'Hệ thống học tập', path: '/elearning', icon: Monitor, roles: ['STUDENT'] },
+        { name: 'Bộ phận Một cửa', path: '/services', icon: ShieldCheck, roles: ['STUDENT'] },
+        { name: 'Quản lý Một cửa', path: '/admin/services', icon: ShieldCheck, roles: ['QTV'] },
         { name: 'Đăng ký học phần', path: '/registration', icon: BookOpen, roles: ['STUDENT'] },
         { name: 'CT đào tạo cá nhân', path: '/curriculum/my', icon: Layers, roles: ['STUDENT'] },
       ]
@@ -126,7 +132,8 @@ const Sidebar = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) =>
       label: 'Hệ thống',
       items: [
         { name: 'Tài khoản & Bảo mật', path: '/profile', icon: User, roles: ['STUDENT', 'QTV', 'LECTURER', 'BCH'] },
-        { name: 'Thiết lập hệ thống', path: '/bch', icon: Settings, roles: ['QTV'] },
+        { name: 'Thông báo hệ thống', path: '/notifications', icon: Bell, roles: ['STUDENT', 'QTV', 'LECTURER', 'BCH'] },
+        { name: 'Quản lý tài khoản CBNT', path: '/bch', icon: Settings, roles: ['QTV'] },
         { name: 'Lịch sử thay đổi', path: '/system/audit', icon: HistoryIcon, roles: ['STUDENT', 'QTV', 'LECTURER', 'BCH'] },
       ]
     }

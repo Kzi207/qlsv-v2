@@ -29,6 +29,8 @@ const AdminTuitionManager = () => {
     curriculumSemesterNumber: '' 
   });
   const [isGenerating, setIsGenerating] = useState(false);
+  const [globalPrice, setGlobalPrice] = useState(500000);
+  const [isUpdatingPrice, setIsUpdatingPrice] = useState(false);
 
   useEffect(() => {
     fetchInitialData();
@@ -37,19 +39,33 @@ const AdminTuitionManager = () => {
   const fetchInitialData = async () => {
     try {
       setLoading(true);
-      const [tRes, cRes, sRes] = await Promise.all([
+      const [tRes, cRes, sRes, setRes] = await Promise.all([
         axios.get('/finance/all'),
         axios.get('/classes'),
-        axios.get('/semesters')
+        axios.get('/semesters'),
+        axios.get('/settings')
       ]);
       setTuitions(tRes.data);
       setClasses(cRes.data);
       setSemesters(sRes.data);
+      if (setRes.data) setGlobalPrice(setRes.data.tuitionPricePerCredit || 500000);
       if (sRes.data.length > 0) setGenData(prev => ({ ...prev, semesterId: sRes.data[0].name }));
     } catch (error) {
       toast.error('Lỗi tải dữ liệu');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateGlobalPrice = async () => {
+    try {
+      setIsUpdatingPrice(true);
+      await axios.put('/settings', { tuitionPricePerCredit: globalPrice });
+      toast.success('Đã cập nhật đơn giá hệ thống');
+    } catch (error) {
+      toast.error('Lỗi khi cập nhật đơn giá');
+    } finally {
+      setIsUpdatingPrice(false);
     }
   };
 
@@ -103,13 +119,40 @@ const AdminTuitionManager = () => {
           <p className="text-slate-500 font-bold text-sm">Theo dõi trạng thái đóng học phí và xác nhận thanh toán cho sinh viên.</p>
         </div>
 
-        <button 
-          onClick={() => setIsGenerateModalOpen(true)}
-          className="flex items-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20 active:scale-95"
-        >
-           <Plus size={18} />
-           <span>Khởi tạo học phí học kỳ</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-4">
+            <div className="space-y-1">
+               <div className="flex items-center gap-4 bg-white p-2 pl-6 rounded-2xl border border-slate-100 shadow-sm">
+                  <div className="space-y-0.5">
+                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Đơn giá hệ thống</p>
+                     <div className="flex items-center gap-2">
+                        <input 
+                          type="number" 
+                          value={globalPrice} 
+                          onChange={e => setGlobalPrice(Number(e.target.value))} 
+                          className="w-28 bg-transparent border-none text-base font-black text-blue-600 focus:ring-0 p-0" 
+                        />
+                        <span className="text-[10px] font-bold text-slate-400 uppercase">đ/TC</span>
+                     </div>
+                  </div>
+                  <button 
+                    onClick={handleUpdateGlobalPrice}
+                    disabled={isUpdatingPrice}
+                    className="px-6 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all disabled:opacity-50"
+                  >
+                     {isUpdatingPrice ? '...' : 'Cập nhật'}
+                  </button>
+               </div>
+               <p className="text-[9px] font-bold text-slate-400 italic ml-4">* Cập nhật đơn giá cho toàn bộ môn học trong hệ thống</p>
+            </div>
+
+           <button 
+             onClick={() => setIsGenerateModalOpen(true)}
+             className="flex items-center gap-3 px-8 py-4 bg-blue-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 active:scale-95"
+           >
+              <Plus size={18} />
+              <span>Khởi tạo học kỳ</span>
+           </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 shadow-xl shadow-slate-200/20 space-y-8">

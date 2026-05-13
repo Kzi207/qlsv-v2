@@ -143,7 +143,7 @@ const Dashboard = () => {
           <TrendingUp size={12} />
           BẢNG ĐIỀU KHIỂN PHÂN TÍCH
         </p>
-        <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900 md:text-4xl">
+        <h1 className="mt-4 text-xl md:text-3xl font-black tracking-tight text-slate-900 leading-tight">
           Tổng quan vận hành hệ thống
         </h1>
         <p className="mt-2 text-sm font-medium text-slate-500">

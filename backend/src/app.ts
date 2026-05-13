@@ -1,9 +1,15 @@
-import express from 'express';
-import cors from 'cors';
-import compression from 'compression';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
+import express from 'express';
+import cors from 'cors';
+import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.routes';
 import studentRoutes from './routes/student.routes';
@@ -27,14 +33,10 @@ import curriculumRoutes from './routes/curriculum.routes';
 import notificationRoutes from './routes/notification.routes';
 import auditRoutes from './routes/audit.routes';
 import adminRoutes from './routes/admin.routes';
+import serviceRoutes from './routes/service.routes';
 import { getAllowedOrigins } from './utils/security';
 import { securityHeadersMiddleware } from './middleware/security-headers.middleware';
 import { csrfMiddleware } from './middleware/csrf.middleware';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 
@@ -42,6 +44,11 @@ const allowedOrigins = getAllowedOrigins();
 console.log('Allowed Origins:', allowedOrigins);
 
 app.set('trust proxy', 1);
+
+app.use((req, res, next) => {
+  console.log(`[GLOBAL LOG] ${req.method} ${req.url}`);
+  next();
+});
 
 app.use(cors({
   origin: allowedOrigins,
@@ -80,10 +87,14 @@ app.use('/api/curriculum', curriculumRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/services', serviceRoutes);
 
 // Health check
 app.get('/', (req, res) => {
   res.send('Student Management System API is running');
+});
+app.get('/api/verify-server', (req, res) => {
+  res.json({ id: 'SERVER-001', time: new Date().toISOString() });
 });
 
 export default app;

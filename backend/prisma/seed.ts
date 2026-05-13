@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../src/generated/client_final/index';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -13,21 +13,45 @@ async function main() {
       username: 'admin',
       password: hashedPassword,
       name: 'System Admin',
-      role: 'QTV'
+      role: 'QTV',
+      updatedAt: new Date()
     },
   });
 
   console.log({ admin });
 
   // Create Class first and link to major
-  const cdtMajor = await prisma.major.findUnique({ where: { code: 'CDT' } });
+  // Create Faculty first
+  const faculty = await prisma.faculty.upsert({
+    where: { code: 'CK' },
+    update: {},
+    create: {
+      code: 'CK',
+      name: 'Khoa Cơ khí',
+      updatedAt: new Date()
+    }
+  });
+
+  // Create Major and link to faculty
+  const cdtMajor = await prisma.major.upsert({
+    where: { code: 'CDT' },
+    update: { facultyId: faculty.id },
+    create: {
+      code: 'CDT',
+      name: 'Công nghệ kỹ thuật cơ điện tử',
+      facultyId: faculty.id,
+      updatedAt: new Date()
+    }
+  });
+
   const className = 'CNCD2511';
-  await prisma.class.upsert({
+  await (prisma as any).renamedclass.upsert({
     where: { name: className },
-    update: { majorId: cdtMajor?.id },
+    update: { majorId: cdtMajor.id },
     create: { 
       name: className,
-      majorId: cdtMajor?.id
+      majorId: cdtMajor.id,
+      updatedAt: new Date()
     },
   });
 
@@ -39,6 +63,7 @@ async function main() {
       student_code: 'CNCD2511016',
       email: 'lkduycncd2511016@student.ctuet.edu.vn',
       class_id: className,
+      updatedAt: new Date()
     },
   });
 

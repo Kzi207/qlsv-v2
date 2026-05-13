@@ -349,7 +349,34 @@ const AdminActivityManager = () => {
                                   </div>
                                </div>
                                <div className="flex items-center gap-3 pt-4 border-t border-slate-200/50">
-                                  <button onClick={() => { setSelectedEvidence(ev); setFormData({ ...formData, title: ev.title }); setShowReviewModal(true); }} className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-emerald-700 transition-colors"><CheckCircle size={14} /> Duyệt & Cộng điểm</button>
+                                  <button 
+                                    onClick={() => { 
+                                      setSelectedEvidence(ev); 
+                                      // Tìm số điểm gợi ý từ EVALUATION_DATA dựa trên criterionId sinh viên đã chọn
+                                      let suggestedPoints = 0;
+                                      const sectionId = ev.sectionId || '';
+                                      const criterionId = ev.criterionId || '';
+
+                                      if (criterionId) {
+                                        const section = EVALUATION_DATA.find(s => s.criteria.some(c => c.id === criterionId));
+                                        const criterion = section?.criteria.find(c => c.id === criterionId);
+                                        suggestedPoints = criterion?.maxPoints || 0;
+                                      }
+
+                                      setFormData({ 
+                                        ...formData, 
+                                        title: ev.title,
+                                        sectionId: sectionId,
+                                        criterionId: criterionId,
+                                        semesterId: ev.semesterId || semesters[0]?.name || '',
+                                        points: ev.points || suggestedPoints || 0
+                                      }); 
+                                      setShowReviewModal(true); 
+                                    }} 
+                                    className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-emerald-700 transition-colors"
+                                  >
+                                    <CheckCircle size={14} /> Duyệt & Cộng điểm
+                                  </button>
                                   <button onClick={() => handleRejectEvidence(ev.id)} className="p-3 bg-white border border-rose-100 text-rose-500 rounded-xl hover:bg-rose-50 transition-all"><X size={18} /></button>
                                </div>
                             </div>
@@ -540,6 +567,18 @@ const AdminActivityManager = () => {
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Thông tin từ sinh viên</p>
                         <div><p className="text-xs font-bold text-slate-400">Tên hoạt động:</p><p className="text-sm font-black text-slate-900">{selectedEvidence.title}</p></div>
                         <div><p className="text-xs font-bold text-slate-400">Sinh viên:</p><p className="text-sm font-black text-slate-900">{selectedEvidence.student?.name} ({selectedEvidence.student?.student_code})</p></div>
+                        {selectedEvidence.criterionId && (
+                           <div className="pt-2 border-t border-slate-100">
+                             <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest">Mục SV tự chọn:</p>
+                             <p className="text-[11px] font-bold text-slate-600 leading-tight">
+                               {(() => {
+                                 const section = EVALUATION_DATA.find(s => s.criteria.some(c => c.id === selectedEvidence.criterionId));
+                                 const criterion = section?.criteria.find(c => c.id === selectedEvidence.criterionId);
+                                 return `${section?.id} - ${criterion?.content.substring(0, 100)}...`;
+                               })()}
+                             </p>
+                           </div>
+                        )}
                      </div>
 
                      <div className="space-y-4 pt-4">
@@ -548,35 +587,51 @@ const AdminActivityManager = () => {
                            <input type="text" required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500/20 font-bold text-sm" />
                         </div>
                         
-                        <div className="space-y-1.5">
-                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Học kỳ áp dụng</label>
-                           <select required value={formData.semesterId} onChange={e => setFormData({...formData, semesterId: e.target.value})} className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-2xl outline-none font-bold text-xs">
-                              <option value="">-- Chọn --</option>
-                              {semesters.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
-                           </select>
-                        </div>
-
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                           <div className="space-y-1.5">
-                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mục Lớn DRL</label>
-                              <select required value={formData.sectionId} onChange={e => setFormData({...formData, sectionId: e.target.value, criterionId: ''})} className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-2xl outline-none font-bold text-xs">
-                                 <option value="">-- Chọn --</option>
-                                 {EVALUATION_DATA.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}
-                              </select>
-                           </div>
-                           <div className="space-y-1.5">
-                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mục Nhỏ</label>
-                              <select required disabled={!formData.sectionId} value={formData.criterionId} onChange={e => setFormData({...formData, criterionId: e.target.value})} className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-2xl outline-none font-bold text-xs disabled:opacity-50">
-                                 <option value="">-- Chọn --</option>
-                                 {EVALUATION_DATA.find(s => s.id === formData.sectionId)?.criteria.map(c => <option key={c.id} value={c.id}>{c.content.substring(0, 30)}...</option>)}
-                              </select>
-                           </div>
-                        </div>
+                            <div className="space-y-1.5">
+                               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mục Lớn DRL</label>
+                               <select 
+                                 required 
+                                 value={formData.sectionId} 
+                                 onChange={e => setFormData({...formData, sectionId: e.target.value, criterionId: ''})} 
+                                 className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500/20 font-bold text-xs appearance-none"
+                               >
+                                  <option value="">-- Chọn --</option>
+                                  {EVALUATION_DATA.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}
+                               </select>
+                            </div>
+                            
+                            <div className="space-y-1.5">
+                               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mục Nhỏ</label>
+                               <select 
+                                 required 
+                                 value={formData.criterionId} 
+                                 onChange={e => setFormData({...formData, criterionId: e.target.value})} 
+                                 className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500/20 font-bold text-xs appearance-none"
+                               >
+                                  <option value="">-- Chọn --</option>
+                                  {formData.sectionId && EVALUATION_DATA.find(s => s.id === formData.sectionId)?.criteria.map(c => (
+                                     <option key={c.id} value={c.id}>{c.id} - {c.content.substring(0, 50)}...</option>
+                                  ))}
+                               </select>
+                            </div>
+                         </div>
 
-                        <div className="space-y-1.5">
-                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Số điểm cộng</label>
-                           <input type="number" required value={formData.points} onChange={e => setFormData({...formData, points: parseInt(e.target.value)})} className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500/20 font-black text-emerald-600" />
-                        </div>
+                         <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex justify-between">
+                               <span>Số điểm cộng</span>
+                               {selectedEvidence.points && (
+                                  <span className="text-emerald-600">SV tự khai: {selectedEvidence.points}đ</span>
+                               )}
+                            </label>
+                            <input 
+                               type="number" 
+                               required 
+                               value={formData.points} 
+                               onChange={e => setFormData({...formData, points: parseInt(e.target.value) || 0})} 
+                               className="w-full px-6 py-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-500/10 font-black text-xl text-emerald-600 text-center" 
+                            />
+                         </div>
                      </div>
 
                      <div className="pt-6">

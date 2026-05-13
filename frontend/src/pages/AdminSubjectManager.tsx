@@ -28,13 +28,10 @@ const AdminSubjectManager = () => {
     code: '',
     name: '',
     credits: 3,
-    pricePerCredit: 500000,
     theoryPeriods: 30,
     practicePeriods: 0,
     subjectType: 'LECTURE'
   });
-  const [globalPrice, setGlobalPrice] = useState(500000);
-  const [isUpdatingPrice, setIsUpdatingPrice] = useState(false);
 
   // Mapping State
   const [classes, setClasses] = useState<any[]>([]);
@@ -59,9 +56,6 @@ const AdminSubjectManager = () => {
       setClasses(classRes.data);
       setSemesters(semRes.data);
       
-      if (subRes.data.length > 0) {
-        setGlobalPrice(subRes.data[0].pricePerCredit);
-      }
       if (semRes.data.length > 0) {
         setSelectedSemester(semRes.data[0].name);
       }
@@ -91,20 +85,7 @@ const AdminSubjectManager = () => {
   }, [selectedClass, selectedSemester, activeTab]);
 
   // Catalog Actions
-  const handleUpdateGlobalPrice = async () => {
-    if (!window.confirm(`Bạn có chắc muốn cập nhật đơn giá ${globalPrice.toLocaleString()}đ/TC cho TẤT CẢ các môn học?`)) return;
-    try {
-      setIsUpdatingPrice(true);
-      await axios.put('/academic/subjects/bulk-update-price', { pricePerCredit: globalPrice });
-      toast.success('Đã cập nhật đơn giá cho toàn bộ môn học');
-      const res = await axios.get('/academic/subjects');
-      setSubjects(res.data);
-    } catch (error) {
-      toast.error('Lỗi cập nhật đơn giá hàng loạt');
-    } finally {
-      setIsUpdatingPrice(false);
-    }
-  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,8 +112,9 @@ const AdminSubjectManager = () => {
       toast.success('Đã xóa môn học');
       const res = await axios.get('/academic/subjects');
       setSubjects(res.data);
-    } catch (error) {
-      toast.error('Lỗi khi xóa môn học');
+    } catch (error: any) {
+      const message = error.response?.data?.error || 'Lỗi khi xóa môn học';
+      toast.error(message);
     }
   };
 
@@ -143,7 +125,6 @@ const AdminSubjectManager = () => {
         code: subject.code,
         name: subject.name,
         credits: subject.credits,
-        pricePerCredit: subject.pricePerCredit,
         theoryPeriods: subject.theoryPeriods || 0,
         practicePeriods: subject.practicePeriods || 0,
         subjectType: subject.subjectType || 'LECTURE'
@@ -154,7 +135,6 @@ const AdminSubjectManager = () => {
         code: '', 
         name: '', 
         credits: 3, 
-        pricePerCredit: globalPrice,
         theoryPeriods: 30,
         practicePeriods: 0,
         subjectType: 'LECTURE'
@@ -218,19 +198,7 @@ const AdminSubjectManager = () => {
       {activeTab === 'catalog' ? (
         <div className="space-y-8">
            <div className="flex flex-col lg:flex-row gap-4 items-center justify-between bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/20">
-              <div className="flex flex-wrap gap-4 items-center">
-                 <div className="bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100 flex items-center gap-4">
-                    <div className="space-y-1">
-                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Đơn giá chung</p>
-                       <div className="flex items-center gap-2">
-                          <input type="number" value={globalPrice} onChange={e => setGlobalPrice(Number(e.target.value))} className="w-24 bg-transparent border-none text-sm font-black text-blue-600 focus:ring-0 p-0" />
-                          <span className="text-[10px] font-bold text-slate-400">đ/TC</span>
-                       </div>
-                    </div>
-                    <button onClick={handleUpdateGlobalPrice} disabled={isUpdatingPrice} className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 disabled:opacity-50">Cập nhật tất cả</button>
-                 </div>
-                 <button onClick={() => openModal()} className="flex items-center gap-3 px-8 py-4 bg-blue-600 text-white rounded-2xl text-xs font-black uppercase hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"><Plus size={18}/> Thêm môn mới</button>
-              </div>
+              <button onClick={() => openModal()} className="flex items-center gap-3 px-8 py-4 bg-blue-600 text-white rounded-2xl text-xs font-black uppercase hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"><Plus size={18}/> Thêm môn mới</button>
               <div className="relative w-full lg:w-80">
                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                  <input type="text" placeholder="Tìm mã hoặc tên môn..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold outline-none" />
@@ -254,7 +222,7 @@ const AdminSubjectManager = () => {
                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{s.code}</p>
                    <div className="mt-6 pt-4 border-t border-slate-50 flex justify-between text-[9px] font-black uppercase text-slate-400">
                       <span>{s.subjectType}</span>
-                      <span className="text-emerald-600">{s.pricePerCredit.toLocaleString()}đ/TC</span>
+                      <span className="text-blue-600">Môn học đào tạo</span>
                    </div>
                 </motion.div>
               ))}
@@ -325,41 +293,153 @@ const AdminSubjectManager = () => {
         </div>
       )}
 
-      {/* Catalog Modal */}
+      {/* Modern Subject Drawer / Bottom Sheet */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
-             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white rounded-[2.5rem] w-full max-w-md relative z-10 overflow-hidden shadow-2xl">
-                <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                   <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">{editingSubject ? 'Sửa môn học' : 'Thêm môn học'}</h3>
-                   <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={24}/></button>
-                </div>
-                <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                   <div className="space-y-4">
-                      <div>
-                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mã môn học</label>
-                         <input required value={formData.code} onChange={e => setFormData({...formData, code: e.target.value.toUpperCase()})} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none" />
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+             {/* Backdrop */}
+             <motion.div 
+               initial={{ opacity: 0 }} 
+               animate={{ opacity: 1 }} 
+               exit={{ opacity: 0 }} 
+               onClick={() => setIsModalOpen(false)} 
+               className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]" 
+             />
+             
+             {/* Drawer Content */}
+             <motion.div 
+               initial={{ opacity: 0, scale: 0.95, y: 20 }} 
+               animate={{ opacity: 1, scale: 1, y: 0 }} 
+               exit={{ opacity: 0, scale: 0.95, y: 20 }}
+               className="bg-white dark:bg-slate-900 w-full max-w-4xl relative z-10 shadow-2xl flex flex-col h-[85vh] rounded-[2.5rem] overflow-hidden"
+             >
+                {/* Header */}
+                <div className="px-5 py-4 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 shrink-0">
+                   <div className="space-y-0.5">
+                      <div className="flex items-center gap-2 text-[10px] font-black text-blue-500 uppercase tracking-widest">
+                         <BookOpen size={14} /> Hệ thống môn học
                       </div>
-                      <div>
-                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tên môn học</label>
-                         <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none" />
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tín chỉ</label>
-                           <input type="number" required value={formData.credits} onChange={e => setFormData({...formData, credits: Number(e.target.value)})} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none" />
-                        </div>
-                        <div>
-                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Đơn giá/TC</label>
-                           <input type="number" required value={formData.pricePerCredit} onChange={e => setFormData({...formData, pricePerCredit: Number(e.target.value)})} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none" />
-                        </div>
-                      </div>
+                      <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight leading-tight">
+                         {editingSubject ? 'Cập nhật môn' : 'Thêm môn học mới'}
+                      </h3>
                    </div>
-                   <button type="submit" className="w-full py-5 bg-blue-600 text-white rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 flex items-center justify-center gap-3">
-                      <Save size={18} /> {editingSubject ? 'Lưu thay đổi' : 'Xác nhận thêm'}
+                   <button 
+                     onClick={() => setIsModalOpen(false)} 
+                     className="h-10 w-10 flex items-center justify-center bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-xl transition-all hover:rotate-90"
+                   >
+                      <X size={18}/>
                    </button>
-                </form>
+                </div>
+
+                {/* Form Body */}
+                <form 
+                  id="subject-form"
+                  onSubmit={handleSubmit} 
+                  className="p-8 space-y-6 flex-1 overflow-y-auto custom-scrollbar bg-slate-50/30 dark:bg-slate-900/50"
+                >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       <div className="space-y-1.5">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mã môn học</label>
+                          <input 
+                            required 
+                            placeholder="VD: INT1301"
+                            value={formData.code} 
+                            onChange={e => setFormData({...formData, code: e.target.value.toUpperCase()})} 
+                            className="w-full px-5 py-3.5 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 focus:border-blue-500/20 rounded-xl font-bold text-sm outline-none transition-all dark:text-white" 
+                          />
+                       </div>
+
+                       <div className="space-y-1.5">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Số tín chỉ</label>
+                          <input 
+                            type="number" 
+                            required 
+                            value={formData.credits} 
+                            onChange={e => setFormData({...formData, credits: Number(e.target.value)})} 
+                            className="w-full px-5 py-3.5 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 focus:border-blue-500/20 rounded-xl font-bold text-sm outline-none transition-all dark:text-white" 
+                          />
+                       </div>
+
+                       <div className="space-y-1.5 md:col-span-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tên môn học</label>
+                          <input 
+                            required 
+                            placeholder="Nhập tên môn học..."
+                            value={formData.name} 
+                            onChange={e => setFormData({...formData, name: e.target.value})} 
+                            className="w-full px-5 py-3.5 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 focus:border-blue-500/20 rounded-xl font-bold text-sm outline-none transition-all dark:text-white" 
+                          />
+                       </div>
+
+                       <div className="space-y-1.5">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tiết Lý thuyết</label>
+                          <input 
+                            type="number" 
+                            value={formData.theoryPeriods} 
+                            onChange={e => setFormData({...formData, theoryPeriods: Number(e.target.value)})} 
+                            className="w-full px-5 py-3.5 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 focus:border-blue-500/20 rounded-xl font-bold text-sm outline-none transition-all dark:text-white" 
+                          />
+                       </div>
+
+                       <div className="space-y-1.5">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tiết Thực hành</label>
+                          <input 
+                            type="number" 
+                            value={formData.practicePeriods} 
+                            onChange={e => setFormData({...formData, practicePeriods: Number(e.target.value)})} 
+                            className="w-full px-5 py-3.5 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 focus:border-blue-500/20 rounded-xl font-bold text-sm outline-none transition-all dark:text-white" 
+                          />
+                       </div>
+
+                       <div className="space-y-2 md:col-span-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Loại môn học</label>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                             {['LECTURE', 'PRACTICE', 'PROJECT', 'THESIS'].map((type) => (
+                               <button
+                                 key={type}
+                                 type="button"
+                                 onClick={() => setFormData({...formData, subjectType: type})}
+                                 className={`py-3 px-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border-2 ${
+                                   formData.subjectType === type 
+                                   ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20' 
+                                   : 'bg-slate-50 dark:bg-slate-800/50 text-slate-400 border-transparent hover:border-slate-200 dark:hover:border-slate-700'
+                                 }`}
+                               >
+                                 {type === 'LECTURE' ? 'Lý thuyết' : type === 'PRACTICE' ? 'Thực hành' : type === 'PROJECT' ? 'Đồ án' : 'Khóa luận'}
+                               </button>
+                             ))}
+                          </div>
+                       </div>
+                    </div>
+                 </form>
+
+                {/* Footer Actions */}
+                <div className="p-5 sm:p-6 border-t border-slate-50 dark:border-slate-800 bg-white dark:bg-slate-900 grid grid-cols-2 gap-3 shrink-0">
+                   {!editingSubject && (
+                     <button 
+                       type="button"
+                       onClick={async (e) => {
+                         const form = document.getElementById('subject-form') as HTMLFormElement;
+                         if (form?.checkValidity()) {
+                            await handleSubmit(e as any);
+                            openModal(); 
+                         } else {
+                            form?.reportValidity();
+                         }
+                       }}
+                       className="py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
+                     >
+                        Lưu & Tiếp tục
+                     </button>
+                   )}
+                   <button 
+                     form="subject-form"
+                     type="submit" 
+                     className={`py-3.5 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-blue-500/20 flex items-center justify-center gap-3 hover:bg-blue-700 transition-all ${editingSubject ? 'col-span-2' : ''}`}
+                   >
+                      <Save size={18} /> {editingSubject ? 'Lưu thay đổi' : 'Xác nhận'}
+                   </button>
+                </div>
              </motion.div>
           </div>
         )}

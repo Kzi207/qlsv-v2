@@ -60,18 +60,19 @@ const MainLayout = () => {
   const pageTitle = useMemo(() => {
     const path = location.pathname;
 
-    if (path === '/') return 'Trang chu';
+    if (path === '/') return 'Trang chủ';
     if (path.includes('elearning')) return 'E-Learning';
-    if (path.includes('schedule') || path.includes('timetable')) return 'Thoi khoa bieu';
-    if (path.includes('grades')) return 'Bang diem';
-    if (path.includes('profile')) return 'Ca nhan';
-    if (path.includes('notifications')) return 'Thong bao';
-    if (path.includes('tuition') || path.includes('finance')) return 'Hoc phi';
-    if (path.includes('training')) return 'Diem ren luyen';
-    if (path.includes('curriculum')) return 'Chuong trinh hoc';
-    if (path.includes('attendance')) return 'Diem danh';
+    if (path.includes('schedule') || path.includes('timetable')) return 'Thời khóa biểu';
+    if (path.includes('grades')) return 'Bảng điểm';
+    if (path.includes('profile')) return 'Cá nhân';
+    if (path.includes('notifications')) return 'Thông báo';
+    if (path.includes('tuition') || path.includes('finance')) return 'Học phí';
+    if (path.includes('training')) return 'Điểm rèn luyện';
+    if (path.includes('curriculum')) return 'Chương trình học';
+    if (path.includes('attendance')) return 'Điểm danh';
+    if (path.includes('bch')) return 'Quản lý tài khoản CBNT';
 
-    return 'He thong';
+    return 'Hệ thống';
   }, [location.pathname]);
 
   return (
@@ -84,7 +85,7 @@ const MainLayout = () => {
             <button
               onClick={() => setSidebarOpen(true)}
               className="rounded-xl p-2 text-white transition-all active:scale-95 active:bg-white/10"
-              aria-label="Mo menu"
+              aria-label="Mở menu"
             >
               <Menu size={24} strokeWidth={2.5} />
             </button>
@@ -94,7 +95,7 @@ const MainLayout = () => {
           <button
             onClick={() => navigate('/notifications')}
             className="relative rounded-xl p-2 text-white transition-all active:scale-95 active:bg-white/10"
-            aria-label="Mo thong bao"
+            aria-label="Mở thông báo"
           >
             <Bell size={24} />
             {mobileUnreadCount > 0 && (
@@ -109,7 +110,7 @@ const MainLayout = () => {
 
         <AdminTopBar />
 
-        <main className="page-shell flex-1 px-3 pt-4 pb-[calc(6.25rem+env(safe-area-inset-bottom))] sm:px-4 md:px-6 lg:px-8 lg:pt-3 lg:pb-8 xl:px-10">
+        <main className="page-shell flex-1 px-3 pt-1 pb-[calc(6.25rem+env(safe-area-inset-bottom))] sm:px-4 md:px-6 lg:px-8 lg:pt-3 lg:pb-8 xl:px-10">
           <div className="mx-auto w-full max-w-[1760px] min-w-0">
             <Outlet />
           </div>
@@ -122,4 +123,5 @@ const MainLayout = () => {
 };
 
 export default MainLayout;
+
 

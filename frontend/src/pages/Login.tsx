@@ -1,18 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Clock3, Eye, EyeOff, Loader2, Lock, ShieldCheck, User, Users } from 'lucide-react';
+import { Eye, EyeOff, Loader2, User, Lock, ShieldCheck, ArrowRight, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
 import api from '../api/axios';
 import { useAuthStore } from '../store/useAuthStore';
 
 const REMEMBER_USERNAME_KEY = 'qlsv_remembered_username';
-
-const trustBadges = [
-  { icon: ShieldCheck, label: 'Bảo mật nhiều lớp' },
-  { icon: Clock3, label: 'Đăng nhập nhanh' },
-  { icon: Users, label: 'Sinh viên và giảng viên' },
-];
 
 type ApiError = {
   response?: {
@@ -23,9 +17,7 @@ type ApiError = {
 };
 
 const getRememberedUsername = (): string => {
-  if (typeof window === 'undefined') {
-    return '';
-  }
+  if (typeof window === 'undefined') return '';
   try {
     return window.localStorage.getItem(REMEMBER_USERNAME_KEY) ?? '';
   } catch {
@@ -34,268 +26,298 @@ const getRememberedUsername = (): string => {
 };
 
 const Login = () => {
-  const [rememberedUsername] = useState(() => getRememberedUsername());
-  const [username, setUsername] = useState(rememberedUsername);
+  const [username, setUsername] = useState(getRememberedUsername());
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [remember, setRemember] = useState(Boolean(rememberedUsername));
+  const [remember, setRemember] = useState(!!getRememberedUsername());
   const [loading, setLoading] = useState(false);
-
-  const login = useAuthStore((state) => state.login);
+  const [isHovered, setIsHovered] = useState(false);
+  
   const navigate = useNavigate();
+  const { login } = useAuthStore();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const isSubmitDisabled = !username || !password || loading;
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const trimmedUsername = username.trim();
-    if (!trimmedUsername || !password) {
-      toast.error('Vui lòng nhập đầy đủ tài khoản và mật khẩu');
-      return;
-    }
+    if (isSubmitDisabled) return;
 
     setLoading(true);
-
     try {
-      const res = await api.post('/auth/login', {
-        username: trimmedUsername,
-        password,
-      });
-      login(res.data.user);
-
-      try {
-        if (remember) {
-          window.localStorage.setItem(REMEMBER_USERNAME_KEY, trimmedUsername);
-        } else {
-          window.localStorage.removeItem(REMEMBER_USERNAME_KEY);
-        }
-      } catch {
-        // Ignore localStorage issues to avoid blocking login flow.
+      const res = await api.post('/auth/login', { username, password });
+      
+      if (remember) {
+        localStorage.setItem(REMEMBER_USERNAME_KEY, username);
+      } else {
+        localStorage.removeItem(REMEMBER_USERNAME_KEY);
       }
 
-      toast.success('Chào mừng trở lại!');
+      login(res.data.user);
+      localStorage.setItem('token', res.data.token);
+      toast.success('Chào mừng bạn quay trở lại!');
       navigate('/');
-    } catch (error: unknown) {
-      const apiError = error as ApiError;
-      toast.error(apiError.response?.data?.message || 'Đăng nhập thất bại');
+    } catch (error) {
+      const err = error as ApiError;
+      toast.error(err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogleLogin = () => {
-    toast.error('Tính năng đăng nhập bằng Google đang được phát triển');
-  };
-
   const handleForgotPassword = () => {
-    toast('Vui lòng liên hệ quản trị viên để được cấp lại mật khẩu');
-  };
-
-  const isSubmitDisabled = loading || !username.trim() || !password;
-
-  return (
-    <main className="relative min-h-dvh overflow-hidden bg-slate-100 px-3 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-6 sm:py-6 lg:px-10 lg:py-10">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-24 top-4 h-48 w-48 rounded-full bg-cyan-300/35 blur-3xl sm:h-72 sm:w-72" />
-        <div className="absolute -right-24 bottom-0 h-72 w-72 rounded-full bg-blue-500/15 blur-3xl sm:-right-28 sm:h-[26rem] sm:w-[26rem]" />
-        <div className="absolute left-1/2 top-1/3 h-32 w-32 -translate-x-1/2 rounded-full bg-indigo-400/15 blur-2xl sm:h-44 sm:w-44" />
-      </div>
-
-      <motion.section
-        initial={{ opacity: 0, y: 18, scale: 0.985 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.45, ease: 'easeOut' }}
-        className="relative z-10 mx-auto grid w-full max-w-6xl overflow-hidden rounded-[1.4rem] border border-slate-200/80 bg-white/90 shadow-[0_25px_70px_-35px_rgba(15,23,42,0.55)] backdrop-blur lg:rounded-[2rem] lg:grid-cols-[1.05fr,1fr]"
-      >
-        <aside className="hidden lg:order-1 lg:block lg:relative lg:overflow-hidden lg:bg-gradient-to-br lg:from-[#003f91] lg:via-[#0056c7] lg:to-[#1a73d8] lg:px-12 lg:py-12 lg:text-white">
-          <div className="pointer-events-none absolute -right-16 top-8 h-44 w-44 rounded-full border border-white/20" />
-          <div className="pointer-events-none absolute -left-24 bottom-0 h-60 w-60 rounded-full bg-white/10 blur-2xl" />
-
-          <div className="relative flex items-center gap-4">
-            <div className="relative h-16 w-16 overflow-hidden rounded-full border border-white/45 bg-white/10 shadow-[0_18px_40px_-18px_rgba(15,23,42,0.95)]">
-              <img
-                src="/logoctut.png?v=2"
-                alt="CTUT Logo"
-                className="h-full w-full object-cover scale-[1.02]"
-              />
-            </div>
-            <div>
-              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-100/90">Cổng đào tạo</p>
-              <p className="text-sm font-bold text-blue-50">QLSV CTUT</p>
-            </div>
-          </div>
-
-          <div className="relative mt-8 space-y-4 lg:mt-10">
-            <h1 className="font-k2d text-2xl font-black uppercase leading-tight tracking-wide sm:text-[2rem]">
-              Trường Đại học
-              <br />
-              Kỹ thuật - Công nghệ Cần Thơ
-            </h1>
-            <p className="max-w-md text-sm text-blue-50/95 sm:text-base">
-              Truy cập hệ thống quản lý học tập, lịch học, đánh giá rèn luyện và các dịch vụ học vụ tại một nơi duy nhất.
-            </p>
-          </div>
-
-          <div className="relative mt-8 grid gap-3 sm:mt-10">
-            {trustBadges.map((item) => (
-              <div
-                key={item.label}
-                className="flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 px-4 py-3 backdrop-blur"
-              >
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-blue-700">
-                  <item.icon size={18} />
-                </div>
-                <p className="text-sm font-semibold text-blue-50">{item.label}</p>
-              </div>
-            ))}
-          </div>
-        </aside>
-
-        <div className="order-1 px-5 py-6 sm:px-10 sm:py-10 lg:order-2 lg:px-12 lg:py-12">
-          <div className="mx-auto w-full max-w-md">
-            <div className="mb-5 flex items-center gap-3 rounded-2xl border border-blue-100 bg-blue-50/80 px-3 py-3 shadow-sm lg:hidden">
-              <div className="h-11 w-11 overflow-hidden rounded-full border border-blue-200/80 bg-white">
-                <img
-                  src="/logoctut.png?v=2"
-                  alt="CTUT Logo"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <div>
-                <p className="text-sm font-extrabold uppercase tracking-[0.12em] text-blue-900">MY CTUT'S</p>
+    toast.custom((t) => (
+      <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white shadow-2xl rounded-3xl pointer-events-auto flex ring-1 ring-black ring-opacity-5 p-4`}>
+        <div className="flex-1 w-0 p-2">
+          <div className="flex items-start">
+            <div className="flex-shrink-0 pt-0.5">
+              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                <ShieldCheck size={20} />
               </div>
             </div>
-
-            <div className="space-y-3">
-              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-700/80">Đăng nhập hệ thống</p>
-              <h2 className="font-k2d text-2xl font-black leading-tight text-slate-900 sm:text-3xl">Chào mừng trở lại</h2>
-              <p className="text-sm text-slate-500 sm:text-base">
-                Sử dụng tài khoản sinh viên hoặc giảng viên để tiếp tục.
-              </p>
+            <div className="ml-3 flex-1">
+              <p className="text-sm font-black text-slate-900 uppercase">Quên mật khẩu?</p>
+              <p className="mt-1 text-xs font-bold text-slate-500">Vui lòng liên hệ Văn phòng Khoa hoặc Quản trị viên hệ thống để được hỗ trợ cấp lại mật khẩu mới.</p>
             </div>
-
-            <form className="mt-6 space-y-4 sm:mt-8 sm:space-y-6" onSubmit={handleSubmit}>
-              <div className="space-y-2">
-                <label htmlFor="username" className="block text-xs font-black uppercase tracking-wider text-slate-500">
-                  Tài khoản
-                </label>
-                <div className="group relative">
-                  <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 transition-colors group-focus-within:text-blue-600 sm:pl-4">
-                    <User size={18} />
-                  </span>
-                  <input
-                    id="username"
-                    type="text"
-                    autoComplete="username"
-                    required
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Nhập mã số sinh viên hoặc tên đăng nhập"
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-10 pr-4 text-[15px] font-semibold text-slate-900 outline-none transition-all placeholder:font-medium placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 sm:h-14 sm:rounded-2xl sm:pl-11"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="password" className="block text-xs font-black uppercase tracking-wider text-slate-500">
-                  Mật khẩu
-                </label>
-                <div className="group relative">
-                  <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 transition-colors group-focus-within:text-blue-600 sm:pl-4">
-                    <Lock size={18} />
-                  </span>
-                  <input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="current-password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Nhập mật khẩu"
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-10 pr-12 text-[15px] font-semibold text-slate-900 outline-none transition-all placeholder:font-medium placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 sm:h-14 sm:rounded-2xl sm:pl-11"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 transition-colors hover:text-blue-700 sm:pr-4"
-                    aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-                <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-slate-500">
-                  <input
-                    type="checkbox"
-                    checked={remember}
-                    onChange={(e) => setRemember(e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
-                  />
-                  Ghi nhớ tài khoản
-                </label>
-                <button
-                  type="button"
-                  onClick={handleForgotPassword}
-                  className="text-sm font-bold text-blue-700 transition-colors hover:text-blue-900"
-                >
-                  Quên mật khẩu?
-                </button>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmitDisabled}
-                className="group relative flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-[#0046a8] px-4 text-[13px] font-black uppercase tracking-[0.15em] text-white shadow-lg shadow-blue-900/20 transition-all hover:bg-[#003d94] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70 sm:h-14 sm:rounded-2xl sm:text-base sm:tracking-wider"
-              >
-                <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-                {loading ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Đang đăng nhập
-                  </>
-                ) : (
-                  <>
-                    <Lock size={18} />
-                    Đăng nhập hệ thống
-                  </>
-                )}
-              </button>
-
-              <div className="relative py-1">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200" />
-                </div>
-                <div className="relative flex justify-center">
-                  <span className="bg-white px-4 text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Hoặc</span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleGoogleLogin}
-                className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 active:scale-[0.99] sm:h-14 sm:rounded-2xl sm:text-base"
-              >
-                <img
-                  src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                  alt="Google"
-                  className="h-5 w-5"
-                />
-                <span>Đăng nhập bằng Google</span>
-              </button>
-            </form>
           </div>
         </div>
-      </motion.section>
+        <div className="flex border-l border-slate-100">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="w-full border border-transparent rounded-none rounded-r-2xl p-4 flex items-center justify-center text-xs font-black text-blue-600 hover:text-blue-700 uppercase tracking-widest"
+          >
+            Đã hiểu
+          </button>
+        </div>
+      </div>
+    ), { duration: 5000 });
+  };
 
-      <footer className="relative z-10 mx-auto mt-4 hidden max-w-6xl px-2 text-center sm:block">
-        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400 sm:text-[11px]">
-          Bản quyền © 2026 Trung tâm Công nghệ thông tin - Trường Đại học Kỹ thuật - Công nghệ Cần Thơ
-        </p>
-      </footer>
-    </main>
+  return (
+    <div className="h-screen w-full relative flex items-center justify-center overflow-hidden bg-[#0a0f1e] font-sans selection:bg-blue-500/30 selection:text-blue-200 p-2 md:p-4">
+      {/* Dynamic Background Elements */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/10 blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-600/10 blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
+      </div>
+
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="relative z-10 w-full max-w-5xl max-h-full"
+      >
+        <div className="bg-white/5 backdrop-blur-2xl rounded-[2.5rem] border border-white/10 shadow-[0_32px_120px_-15px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col md:flex-row h-auto md:h-[620px]">
+          
+          {/* Left Side: Branding & Info */}
+          <div className="w-full md:w-[45%] relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-950 p-6 md:p-10 flex flex-col justify-center text-white">
+            <div className="relative z-10 flex flex-col items-center text-center">
+              <motion.div 
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="w-24 h-24 md:w-32 md:h-32 flex items-center justify-center mb-6 overflow-hidden"
+              >
+                <img 
+                  src="/logoctut.png" 
+                  alt="CTUT Logo" 
+                  className="w-full h-full object-contain" 
+                  style={{ mixBlendMode: 'screen' }}
+                />
+              </motion.div>
+              
+              <div className="space-y-4">
+                <motion.div
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="space-y-1"
+                >
+                  <h2 className="text-[10px] md:text-[12px] font-black uppercase tracking-[0.1em] text-white/90">
+                    Trường Đại học Kỹ thuật - Công nghệ Cần Thơ
+                  </h2>
+                  <h3 className="text-[9px] md:text-[11px] font-bold uppercase tracking-[0.05em] text-white/60">
+                    Cantho University of Technology
+                  </h3>
+                </motion.div>
+
+                <motion.div
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="py-2"
+                >
+                  <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-white mb-1">
+                    Cổng Quản lý Sinh viên
+                  </h1>
+                  <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-none">
+                    <span className="text-[#ffba2d]">My</span>
+                    <span className="text-white">CTUTs</span>
+                  </h1>
+                </motion.div>
+                
+                <motion.p 
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="text-blue-100/70 text-xs md:text-sm leading-relaxed max-w-[300px] mx-auto font-medium"
+                >
+                  Hệ thống giúp quản lý học tập, lịch học, đánh giá rèn luyện và các dịch vụ học vụ tại một nơi duy nhất
+                </motion.p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side: Login Form */}
+          <div className="flex-1 bg-white dark:bg-slate-900 p-8 md:p-12 flex flex-col justify-center">
+            <div className="w-full max-w-sm mx-auto">
+              <div className="mb-8">
+                <motion.h2 
+                  initial={{ x: 10, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-2xl font-black text-slate-900 dark:text-white tracking-tight"
+                >
+                  Đăng nhập
+                </motion.h2>
+                <motion.p 
+                  initial={{ x: 10, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="mt-1 text-slate-400 dark:text-slate-500 font-bold text-xs"
+                >
+                  Sử dụng tài khoản của bạn để truy cập.
+                </motion.p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <motion.div 
+                  initial={{ y: 5, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="space-y-1.5"
+                >
+                  <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] ml-1">Tài khoản</label>
+                  <div className="relative group">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600 group-focus-within:text-blue-500 transition-colors">
+                      <User size={16} strokeWidth={2.5} />
+                    </div>
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="MSSV hoặc Tên đăng nhập"
+                      className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-[1.25rem] outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all font-bold text-xs dark:text-white"
+                      required
+                    />
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  initial={{ y: 5, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  className="space-y-1.5"
+                >
+                  <div className="flex items-center justify-between px-1">
+                    <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Mật khẩu</label>
+                    <button 
+                      type="button" 
+                      onClick={handleForgotPassword}
+                      className="text-[9px] font-black text-blue-600 uppercase tracking-widest hover:text-blue-700 transition-colors"
+                    >
+                      Quên?
+                    </button>
+                  </div>
+                  <div className="relative group">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600 group-focus-within:text-blue-500 transition-colors">
+                      <Lock size={16} strokeWidth={2.5} />
+                    </div>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full pl-12 pr-12 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-[1.25rem] outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all font-bold text-xs dark:text-white"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600 hover:text-slate-500 transition-colors"
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  initial={{ y: 5, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.7 }}
+                  className="flex items-center"
+                >
+                  <label className="flex items-center cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={remember}
+                      onChange={(e) => setRemember(e.target.checked)}
+                      className="sr-only"
+                    />
+                    <div className={`w-4 h-4 rounded-md border-2 transition-all flex items-center justify-center ${remember ? 'bg-blue-600 border-blue-600 shadow-lg shadow-blue-500/20' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'}`}>
+                      {remember && <ShieldCheck size={10} className="text-white" strokeWidth={3} />}
+                    </div>
+                    <span className="ml-2.5 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest group-hover:text-slate-600 transition-colors">Ghi nhớ đăng nhập</span>
+                  </label>
+                </motion.div>
+
+                <motion.button
+                  initial={{ y: 5, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.8 }}
+                  type="submit"
+                  disabled={isSubmitDisabled}
+                  onMouseEnter={() => setIsHovered(true)}
+                  onMouseLeave={() => setIsHovered(false)}
+                  className="w-full relative group h-14 bg-[#0011ff] rounded-[1.25rem] overflow-hidden shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 transition-transform duration-500 group-hover:scale-105" />
+                  
+                  <div className="relative h-full flex items-center justify-center gap-2.5">
+                    {loading ? (
+                      <Loader2 className="w-5 h-5 animate-spin text-white" />
+                    ) : (
+                      <>
+                        <span className="text-white text-[10px] font-black uppercase tracking-[0.2em]">Đăng nhập ngay</span>
+                        <motion.div
+                          animate={isHovered ? { x: 3 } : { x: 0 }}
+                          className="text-white"
+                        >
+                          <ArrowRight size={16} strokeWidth={3} />
+                        </motion.div>
+                      </>
+                    )}
+                  </div>
+                </motion.button>
+              </form>
+
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1 }}
+                className="mt-6 flex flex-col items-center gap-3"
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles size={12} className="text-yellow-500" />
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Tin cậy • Bảo mật • Tốc độ</p>
+                </div>
+                <p className="text-[8px] font-bold text-slate-500/30 uppercase tracking-[0.2em]">CTUT IT Center © 2026</p>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </div>
   );
 };
 
 export default Login;
-

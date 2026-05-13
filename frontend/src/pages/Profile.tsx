@@ -14,7 +14,12 @@ import {
   Fingerprint,
   Camera,
   MapPin,
-  Calendar
+  Calendar,
+  CheckCircle2,
+  Lock,
+  Eye,
+  EyeOff,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -22,6 +27,17 @@ const Profile = () => {
   const { user, setUser } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [systemSettings, setSystemSettings] = useState<any>(null);
+  
+  // Password Change States
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [passwordFormData, setPasswordFormData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
   
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -133,6 +149,37 @@ const Profile = () => {
     }
   };
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (passwordFormData.newPassword !== passwordFormData.confirmPassword) {
+      return toast.error('Mật khẩu xác nhận không khớp');
+    }
+
+    if (passwordFormData.newPassword.length < 6) {
+      return toast.error('Mật khẩu mới phải từ 6 ký tự trở lên');
+    }
+
+    setPasswordLoading(true);
+    try {
+      await api.patch('/auth/change-password', {
+        currentPassword: passwordFormData.currentPassword,
+        newPassword: passwordFormData.newPassword
+      });
+      toast.success('Đã đổi mật khẩu thành công');
+      setIsChangePasswordOpen(false);
+      setPasswordFormData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Không thể đổi mật khẩu. Vui lòng kiểm tra lại mật khẩu hiện tại.');
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-[1200px] mx-auto space-y-8 md:space-y-12 animate-fade-up pb-24 px-2 md:px-4">
       {/* Header Section */}
@@ -141,7 +188,7 @@ const Profile = () => {
           <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-[10px] font-black text-blue-600 uppercase tracking-widest shadow-sm">
              <User size={12} /> Thông tin cá nhân
           </div>
-          <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter leading-none">Hồ sơ của bạn</h1>
+          <h1 className="text-xl md:text-3xl font-black text-slate-900 tracking-tight leading-tight">Hồ sơ của bạn</h1>
           <p className="text-slate-500 font-bold text-sm md:text-base">Quản lý và cập nhật thông tin học vụ cá nhân.</p>
         </div>
         
@@ -151,7 +198,7 @@ const Profile = () => {
                  {user?.name?.[0]}
               </div>
               <button className="absolute bottom-0 right-0 h-6 w-6 md:h-8 md:w-8 bg-white rounded-full border border-slate-100 flex items-center justify-center text-slate-400 hover:text-blue-600 shadow-sm transition-colors">
-                 <Camera size={14} className="md:size-16" />
+                 <Camera size={14} className="md:w-4 md:h-4" />
               </button>
            </div>
            <div className="min-w-0 pr-4">
@@ -168,35 +215,45 @@ const Profile = () => {
         {/* Left Column: Academic Info */}
         <div className="lg:col-span-2 space-y-6 md:space-y-10">
            {/* Academic Summary Card Grid */}
-           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-5">
-              <div className="p-6 md:p-8 bg-blue-600 rounded-[2rem] md:rounded-[2.5rem] text-white shadow-xl shadow-blue-500/20 space-y-4 relative overflow-hidden group">
-                 <div className="h-10 w-10 md:h-12 md:w-12 bg-white/20 rounded-xl md:rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform"><Fingerprint size={20} className="md:size-24" /></div>
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-4 gap-3 md:gap-5">
+              <div className="p-6 md:p-8 min-h-[220px] bg-blue-600 rounded-[2rem] md:rounded-[2.5rem] text-white shadow-xl shadow-blue-500/20 space-y-4 relative overflow-hidden group">
+                 <div className="h-10 w-10 md:h-12 md:w-12 bg-white/20 rounded-xl md:rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform"><Fingerprint size={20} /></div>
                  <div className="relative z-10">
                     <p className="text-[10px] font-black text-blue-100 uppercase tracking-widest opacity-80">Mã sinh viên</p>
-                    <p className="text-lg md:text-2xl font-black tracking-tight">{user?.student?.mssv || user?.username}</p>
+                    <p className="text-base md:text-xl 2xl:text-2xl font-black tracking-tight leading-tight break-all">{user?.student?.mssv || user?.username}</p>
                  </div>
                  <div className="absolute top-0 right-0 p-4 opacity-10 -mr-6 -mt-6">
                     <Fingerprint size={80} />
                  </div>
               </div>
-              <div className="p-6 md:p-8 bg-slate-900 rounded-[2rem] md:rounded-[2.5rem] text-white shadow-xl shadow-slate-900/20 space-y-4 relative overflow-hidden group">
-                 <div className="h-10 w-10 md:h-12 md:w-12 bg-white/10 rounded-xl md:rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform"><Briefcase size={20} className="md:size-24" /></div>
+              <div className="p-6 md:p-8 min-h-[220px] bg-slate-900 rounded-[2rem] md:rounded-[2.5rem] text-white shadow-xl shadow-slate-900/20 space-y-4 relative overflow-hidden group">
+                 <div className="h-10 w-10 md:h-12 md:w-12 bg-white/10 rounded-xl md:rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform"><Briefcase size={20} /></div>
                  <div className="relative z-10">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest opacity-80">Lớp sinh hoạt</p>
-                    <p className="text-lg md:text-2xl font-black tracking-tight">{user?.student?.class_id || user?.class_id || '---'}</p>
+                    <p className="text-base md:text-xl 2xl:text-2xl font-black tracking-tight leading-tight break-all">{user?.student?.class_id || user?.class_id || '---'}</p>
                  </div>
                  <div className="absolute top-0 right-0 p-4 opacity-10 -mr-6 -mt-6">
                     <Briefcase size={80} />
                  </div>
               </div>
-              <div className="p-6 md:p-8 bg-emerald-600 rounded-[2rem] md:rounded-[2.5rem] text-white shadow-xl shadow-emerald-500/20 space-y-4 relative overflow-hidden group">
-                 <div className="h-10 w-10 md:h-12 md:w-12 bg-white/20 rounded-xl md:rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform"><GraduationCap size={20} className="md:size-24" /></div>
+              <div className="p-6 md:p-8 min-h-[220px] bg-indigo-600 rounded-[2rem] md:rounded-[2.5rem] text-white shadow-xl shadow-indigo-500/20 space-y-4 relative overflow-hidden group">
+                 <div className="h-10 w-10 md:h-12 md:w-12 bg-white/20 rounded-xl md:rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform"><GraduationCap size={20} /></div>
                  <div className="relative z-10">
-                    <p className="text-[10px] font-black text-emerald-100 uppercase tracking-widest opacity-80">Trạng thái</p>
-                    <p className="text-lg md:text-2xl font-black tracking-tight uppercase">Đang học</p>
+                    <p className="text-[10px] font-black text-indigo-100 uppercase tracking-widest opacity-80">Ngành học</p>
+                    <p className="text-base md:text-xl 2xl:text-2xl font-black tracking-tight leading-tight break-words">{user?.major_name || 'Đang cập nhật'}</p>
                  </div>
                  <div className="absolute top-0 right-0 p-4 opacity-10 -mr-6 -mt-6">
                     <GraduationCap size={80} />
+                 </div>
+              </div>
+              <div className="p-6 md:p-8 min-h-[220px] bg-emerald-600 rounded-[2rem] md:rounded-[2.5rem] text-white shadow-xl shadow-emerald-500/20 space-y-4 relative overflow-hidden group">
+                 <div className="h-10 w-10 md:h-12 md:w-12 bg-white/20 rounded-xl md:rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform"><CheckCircle2 size={20} /></div>
+                 <div className="relative z-10">
+                    <p className="text-[10px] font-black text-emerald-100 uppercase tracking-widest opacity-80">Trạng thái</p>
+                    <p className="text-base md:text-xl 2xl:text-2xl font-black tracking-tight uppercase">Đang học</p>
+                 </div>
+                 <div className="absolute top-0 right-0 p-4 opacity-10 -mr-6 -mt-6">
+                    <CheckCircle2 size={80} />
                  </div>
               </div>
            </div>
@@ -399,14 +456,125 @@ const Profile = () => {
            <div className="bg-blue-600 rounded-[2.5rem] p-8 md:p-10 text-white relative overflow-hidden shadow-2xl shadow-blue-500/20">
               <h4 className="text-lg font-black uppercase tracking-tight relative z-10">Bảo mật tài khoản</h4>
               <p className="text-blue-100 text-xs font-bold mt-2 relative z-10">Bạn nên thường xuyên thay đổi mật khẩu để bảo vệ thông tin cá nhân.</p>
-              <button className="mt-6 w-full py-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-white/20 transition-all active:scale-95 relative z-10">
+              <button 
+                onClick={() => setIsChangePasswordOpen(true)}
+                className="mt-6 w-full py-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-white/20 transition-all active:scale-95 relative z-10"
+              >
                  Đổi mật khẩu truy cập
               </button>
               <Fingerprint className="absolute -right-6 -bottom-6 text-white opacity-10" size={140} />
            </div>
         </div>
-
       </div>
+
+      {/* Change Password Modal */}
+      <AnimatePresence>
+        {isChangePasswordOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsChangePasswordOpen(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl overflow-hidden"
+            >
+              <div className="p-8 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-blue-600 rounded-2xl flex items-center justify-center text-white">
+                    <Lock size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Đổi mật khẩu</h3>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Cập nhật bảo mật tài khoản</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setIsChangePasswordOpen(false)}
+                  className="h-10 w-10 flex items-center justify-center rounded-2xl hover:bg-slate-100 text-slate-400 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleChangePassword} className="p-8 space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mật khẩu hiện tại</label>
+                  <div className="relative group">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                    <input 
+                      type={showCurrentPassword ? "text" : "password"}
+                      required
+                      value={passwordFormData.currentPassword}
+                      onChange={e => setPasswordFormData({...passwordFormData, currentPassword: e.target.value})}
+                      className="w-full pl-11 pr-12 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-blue-600/5 focus:bg-white transition-all"
+                      placeholder="••••••••"
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 transition-colors"
+                    >
+                      {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mật khẩu mới</label>
+                  <div className="relative group">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                    <input 
+                      type={showNewPassword ? "text" : "password"}
+                      required
+                      value={passwordFormData.newPassword}
+                      onChange={e => setPasswordFormData({...passwordFormData, newPassword: e.target.value})}
+                      className="w-full pl-11 pr-12 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-blue-600/5 focus:bg-white transition-all"
+                      placeholder="Tối thiểu 6 ký tự"
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-600 transition-colors"
+                    >
+                      {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Xác nhận mật khẩu mới</label>
+                  <div className="relative group">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                    <input 
+                      type={showNewPassword ? "text" : "password"}
+                      required
+                      value={passwordFormData.confirmPassword}
+                      onChange={e => setPasswordFormData({...passwordFormData, confirmPassword: e.target.value})}
+                      className="w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-blue-600/5 focus:bg-white transition-all"
+                      placeholder="Nhập lại mật khẩu mới"
+                    />
+                  </div>
+                </div>
+
+                <button 
+                  type="submit"
+                  disabled={passwordLoading}
+                  className="w-full py-4.5 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {passwordLoading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                  Xác nhận đổi mật khẩu
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

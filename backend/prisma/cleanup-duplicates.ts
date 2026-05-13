@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../src/generated/client_final';
 
 const prisma = new PrismaClient();
 
@@ -11,7 +11,7 @@ async function main() {
   
   for (const student of students) {
     for (const semester of semesters) {
-      const scores = await (prisma.trainingScore as any).findMany({
+      const scores = await (prisma as any).trainingscore.findMany({
         where: {
           student_id: student.id,
           semester_id: semester.name,
@@ -24,7 +24,7 @@ async function main() {
         // Keep the first one (latest), delete the rest
         const toDeleteIds = scores.slice(1).map((s: any) => s.id);
         
-        await (prisma.trainingScore as any).deleteMany({
+        await (prisma as any).trainingscore.deleteMany({
           where: {
             id: { in: toDeleteIds }
           }

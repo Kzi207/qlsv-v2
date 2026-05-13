@@ -92,7 +92,19 @@ body {
   }
 
   .btn-primary {
-    @apply bg-blue-600 text-white font-bold py-2.5 px-5 rounded-xl shadow-lg shadow-blue-500/20 hover:bg-blue-700 active:scale-95 transition-all;
+    @apply bg-blue-600 text-white font-black text-[11px] uppercase tracking-widest py-3.5 px-6 rounded-2xl shadow-xl shadow-blue-500/20 hover:bg-blue-700 hover:shadow-blue-500/40 hover:-translate-y-0.5 active:scale-95 transition-all;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-slate-900 font-black text-[11px] uppercase tracking-widest py-3.5 px-6 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 hover:bg-slate-50 active:scale-95 transition-all;
+  }
+
+  .btn-ghost {
+    @apply text-slate-500 font-black text-[11px] uppercase tracking-widest py-3.5 px-6 rounded-2xl hover:bg-slate-100 active:scale-95 transition-all;
+  }
+
+  .btn-icon {
+    @apply h-11 w-11 flex items-center justify-center rounded-2xl transition-all active:scale-90;
   }
 
   .text-gradient {

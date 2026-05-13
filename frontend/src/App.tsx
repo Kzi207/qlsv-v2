@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
 import { useAuthStore } from './store/useAuthStore';
 import ScrollToTop from './components/ScrollToTop';
 import MainLayout from './layout/MainLayout';
@@ -10,7 +10,7 @@ import Students from './pages/Students';
 import TrainingScore from './pages/TrainingScore';
 import Attendance from './pages/Attendance';
 import EvaluationPage from './pages/Evaluation';
-import StudentDashboard from './pages/StudentDashboard';
+import StudentDashboard from './pages/v2/StudentDashboard';
 import QRAttendanceManager from './pages/QRAttendanceManager';
 import QRScannerCheckIn from './pages/QRScannerCheckIn';
 import RoleRoute from './components/RoleRoute';
@@ -24,7 +24,8 @@ import TrainingScoreDetail from './pages/TrainingScoreDetail';
 import BCHManagement from './pages/BCHManagement';
 import Profile from './pages/Profile';
 import Tuition from './pages/Tuition';
-import Schedule from './pages/Schedule';
+
+import ScheduleV2 from './pages/v2/ScheduleV2';
 import Grades from './pages/Grades';
 import Curriculum from './pages/Curriculum';
 import ProgressPage from './pages/Progress';
@@ -64,7 +65,9 @@ import TakeExam from './pages/elearning/TakeExam';
 import NotFound from './pages/NotFound';
 import StudentAwards from './pages/StudentAwards';
 import StudentTrainingResults from './pages/StudentTrainingResults';
+import AdminServiceManagement from './pages/AdminServiceManagement';
 import SystemAudit from './pages/SystemAudit';
+import Checkout from './pages/Checkout';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, authInitialized } = useAuthStore();
@@ -82,6 +85,17 @@ function App() {
 
   useEffect(() => {
     initializeAuth();
+
+    const handleUnauthorized = () => {
+      // Use set directly if logout() does an API call that might fail again
+      useAuthStore.setState({ user: null, isAuthenticated: false, authInitialized: true });
+      if (window.location.pathname !== '/login') {
+        toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      }
+    };
+
+    window.addEventListener('qlsv-unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('qlsv-unauthorized', handleUnauthorized);
   }, [initializeAuth]);
 
   return (
@@ -129,9 +143,11 @@ function App() {
           <Route path="academic/manage" element={<RoleRoute allowedRoles={['QTV']}><AdminSubjectManager /></RoleRoute>} />
           <Route path="academic/class-subjects" element={<Navigate to="/academic/manage" replace />} />
           <Route path="finance/manage" element={<RoleRoute allowedRoles={['QTV']}><AdminTuitionManager /></RoleRoute>} />
+          <Route path="checkout/:paymentCode" element={<RoleRoute allowedRoles={['STUDENT']}><Checkout /></RoleRoute>} />
 
           {/* QTV ONLY ROUTES */}
-          <Route path="bch" element={<RoleRoute allowedRoles={['QTV']}><BCHManagement /></RoleRoute>} />
+          <Route path="bch" element={<RoleRoute allowedRoles={['QTV', 'BCH']}><BCHManagement /></RoleRoute>} />
+          <Route path="admin/services" element={<RoleRoute allowedRoles={['QTV']}><AdminServiceManagement /></RoleRoute>} />
           <Route path="system/audit" element={<RoleRoute allowedRoles={['QTV', 'BCH', 'LECTURER', 'STUDENT']}><SystemAudit /></RoleRoute>} />
 
           {/* STUDENT ONLY ROUTES */}
@@ -171,16 +187,21 @@ function App() {
           <Route path="attendance/scan" element={<QRScannerCheckIn />} />
           <Route path="qr-scan" element={<QRScannerCheckIn />} />
           <Route path="training" element={<TrainingScore />} />
-          <Route path="schedule" element={<Schedule />} />
+          <Route path="schedule" element={<ScheduleV2 />} />
+          <Route path="lich-hoc" element={<ScheduleV2 />} />
           <Route path="grades" element={<Grades />} />
           <Route path="curriculum" element={<Curriculum />} />
           <Route path="tuition" element={<Tuition />} />
           <Route path="progress" element={<ProgressPage />} />
           <Route path="training-score" element={<TrainingScore />} />
           <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="thong-bao" element={<NotificationsPage />} />
           <Route path="finance" element={<Tuition />} />
           <Route path="services" element={<ServicesPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="tai-khoan" element={<Profile />} />
+          <Route path="diem-danh" element={<Attendance />} />
+          <Route path="huong-dan" element={<div className="p-8">Đang cập nhật hướng dẫn...</div>} />
           
           {/* 404 Catch-all */}
           <Route path="*" element={<NotFound />} />

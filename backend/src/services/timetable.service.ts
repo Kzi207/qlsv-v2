@@ -1,6 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { Prisma } from '../generated/client_final';
+import prisma from '../utils/prisma';
 
 // Các Interface định nghĩa cấu trúc dữ liệu đầu vào cho Thuật toán
 export interface TClass {
@@ -44,6 +43,71 @@ export interface ScheduleResult {
   roomId: number;
   slotId: number;
 }
+
+/**
+ * Kiểm tra xung đột lịch học cho một danh sách các tiết học
+ */
+export const checkConflicts = async (events: any[]) => {
+  const allConflicts: any[] = [];
+
+  for (const event of events) {
+    const { room, teacher, classId, day, startPeriod, endPeriod, id } = event;
+    if (!room || !teacher || !classId || !day || !startPeriod || !endPeriod) continue;
+
+    const standardizedRoom = room.trim().toUpperCase();
+
+    // Truy vấn xung đột từ Database
+    const conflicts: any[] = await prisma.$queryRaw`
+      SELECT id, room, teacher, classId, subject 
+      FROM timetable 
+      WHERE day = ${parseInt(day as any)} 
+      AND (
+        (startPeriod <= ${parseInt(startPeriod as any)} AND endPeriod >= ${parseInt(startPeriod as any)})
+        OR (startPeriod <= ${parseInt(endPeriod as any)} AND endPeriod >= ${parseInt(endPeriod as any)})
+        OR (${parseInt(startPeriod as any)} <= startPeriod AND ${parseInt(endPeriod as any)} >= startPeriod)
+      )
+      ${id ? (Prisma as any).sql`AND id != ${id}` : (Prisma as any).empty}
+    `;
+
+    for (const conflict of conflicts) {
+      if (conflict.room.trim().toUpperCase() === standardizedRoom) {
+        allConflicts.push({ event, type: 'ROOM', message: `Phòng ${conflict.room} đã có lịch dạy môn ${conflict.subject}` });
+      } else if (conflict.teacher.trim().toLowerCase() === teacher.trim().toLowerCase()) {
+        allConflicts.push({ event, type: 'TEACHER', message: `Giảng viên ${conflict.teacher} đã có lịch dạy vào thời gian này` });
+      } else if (conflict.classId === classId) {
+        allConflicts.push({ event, type: 'CLASS', message: `Lớp ${conflict.classId} đã có lịch học vào thời gian này` });
+      }
+    }
+  }
+
+  return allConflicts;
+};
+
+/**
+ * Tạo hàng loạt lịch học sau khi đã kiểm tra xung đột
+ */
+export const bulkCreateSchedules = async (events: any[]) => {
+  const results = [];
+  for (const event of events) {
+    const created = await (prisma as any).timetable.create({
+      data: {
+        subject: event.subject,
+        teacher: event.teacher,
+        room: event.room.trim().toUpperCase(),
+        day: parseInt(event.day as any),
+        startPeriod: parseInt(event.startPeriod as any),
+        endPeriod: parseInt(event.endPeriod as any),
+        classId: event.classId,
+        semesterId: event.semesterId,
+        type: event.type || 'offline',
+        startDate: event.startDate ? new Date(event.startDate) : new Date(),
+        updatedAt: new Date()
+      }
+    });
+    results.push(created);
+  }
+  return results;
+};
 
 export class TimetableSolver {
   private classes: Map<string, TClass> = new Map();

@@ -1,3 +1,5 @@
+import { createPortal } from 'react-dom';
+import { AlertTriangle } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -13,6 +15,7 @@ import {
 import { motion } from 'framer-motion';
 import api from '../../api/axios';
 import CourseCard from '../../components/elearning/CourseCard';
+import { toast } from 'react-hot-toast';
 import ELearningRightPanel from '../../components/elearning/ELearningRightPanel';
 import { useAuthStore } from '../../store/useAuthStore';
 import {
@@ -44,6 +47,8 @@ const TeacherDashboard: React.FC = () => {
   const [courses, setCourses] = useState<ElearningCourse[]>([]);
   const [statsData, setStatsData] = useState<TeacherStats>({});
   const [query, setQuery] = useState('');
+  const [deleteId, setDeleteId] = useState<number | string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [loading, setLoading] = useState(true);
 
   async function fetchData() {
@@ -62,6 +67,84 @@ const TeacherDashboard: React.FC = () => {
       setLoading(false);
     }
   }
+
+  
+
+  const handleDeleteClick = (id: number | string) => {
+    setDeleteId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    setIsDeleting(true);
+    const loadingToast = toast.loading('Đang xử lý xóa khóa học...');
+    try {
+      await api.delete(`/elearning/courses/${deleteId}`);
+      setCourses(prev => prev.filter((c) => c.id !== deleteId));
+      toast.success('Đã xóa khóa học thành công', { id: loadingToast });
+      setDeleteId(null);
+      void fetchData();
+    } catch (error: any) {
+      console.error('Failed to delete course:', error);
+      const msg = error.response?.data?.error || error.response?.data?.message || 'Không thể xóa khóa học';
+      toast.error(msg, { id: loadingToast });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const ConfirmModal = () => {
+    if (!deleteId) return null;
+    return createPortal(
+      <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 overflow-hidden">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
+          onClick={() => !isDeleting && setDeleteId(null)}
+        />
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.9, opacity: 0, y: 20 }}
+          className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/20 bg-white/90 p-8 shadow-2xl backdrop-blur-xl"
+        >
+          <div className="flex flex-col items-center text-center">
+            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-100 text-red-600 shadow-inner">
+              <AlertTriangle size={40} className="animate-pulse" />
+            </div>
+            <h3 className="mb-3 text-2xl font-black text-slate-900 uppercase tracking-tight">Xác nhận xóa?</h3>
+            <p className="mb-8 text-sm font-medium leading-relaxed text-slate-500">
+              Bạn có chắc chắn muốn xóa khóa học này? Mọi dữ liệu liên quan sẽ bị <span className="font-bold text-red-600 underline">xóa vĩnh viễn</span> và không thể khôi phục.
+            </p>
+            <div className="flex w-full gap-3">
+              <button
+                disabled={isDeleting}
+                onClick={() => setDeleteId(null)}
+                className="flex-1 rounded-2xl border border-slate-200 bg-white py-4 text-xs font-black uppercase tracking-widest text-slate-600 transition hover:bg-slate-50 active:scale-95 disabled:opacity-50"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                disabled={isDeleting}
+                onClick={confirmDelete}
+                className="flex-1 rounded-2xl bg-red-600 py-4 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-red-200 transition hover:bg-red-700 hover:shadow-red-300 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                ) : (
+                  'Xác nhận xóa'
+                )}
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </div>,
+      document.body
+    );
+  };
+
 
   useEffect(() => {
     void Promise.resolve().then(fetchData);
@@ -110,6 +193,7 @@ const TeacherDashboard: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-[1600px] pb-20 animate-fade-up">
+      <ConfirmModal />
       <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1fr_360px]">
         <main className="space-y-8">
           <section className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
@@ -191,6 +275,7 @@ const TeacherDashboard: React.FC = () => {
                     course={course}
                     role="LECTURER"
                     onEnter={() => navigate(`/elearning/manage/${course.id}`)}
+                    onDelete={handleDeleteClick}
                   />
                 ))}
               </div>

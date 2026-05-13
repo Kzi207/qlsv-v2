@@ -1,0 +1,35 @@
+        <TimetableFormModal 
+          isOpen={isModalOpen}
+          onClose={() => { setIsModalOpen(false); setSelectedEvent(null); }}
+          onSubmit={async (data) => {
+             try {
+                if (selectedEvent) {
+                   await axios.put(`/timetable/${selectedEvent.id}`, data);
+                   toast.success('Cập nhật thành công');
+                } else {
+                   await axios.post('/timetable', data);
+                   toast.success('Tạo thành công');
+                }
+                setIsModalOpen(false);
+                setSelectedEvent(null);
+                fetchTimetables();
+             } catch (error: any) {
+                toast.error(error.response?.data?.error || 'Lỗi lưu dữ liệu');
+             }
+          }}
+          onDelete={async (id) => {
+             try {
+                await axios.delete(`/timetable/${id}`);
+                toast.success('Đã xóa');
+                fetchTimetables();
+             } catch (error) {}
+          }}
+          initialData={selectedEvent}
+          currentWeekDate={currentWeekDate}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default AdminTimetableManagement;

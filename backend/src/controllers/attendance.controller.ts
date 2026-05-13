@@ -66,19 +66,24 @@ const getManagedClassId = (req: AuthRequest, requestedClassId?: string, required
 
   if (role === 'BCH') {
     const ownClassId = normalizeClassId(req.user?.class_id);
+    
+    // If just listing (not required), don't 403 if class is missing, just return a dummy
     if (!ownClassId) {
-      return { error: { status: 403, message: 'Tai khoan BCH chua duoc gan lop quan ly' } };
+      if (required) {
+        return { error: { status: 403, message: 'Tài khoản BCH chưa được gán lớp quản lý' } };
+      }
+      return { classId: '___NONE___' };
     }
 
     if (normalizedRequested && normalizedRequested !== ownClassId) {
-      return { error: { status: 403, message: 'BCH chi duoc thao tac tren lop duoc phan cong' } };
+      return { error: { status: 403, message: 'BCH chỉ được thao tác trên lớp được phân công' } };
     }
 
     return { classId: ownClassId };
   }
 
   if (required && !normalizedRequested) {
-    return { error: { status: 400, message: 'Vui long chon lop' } };
+    return { error: { status: 400, message: 'Vui lòng chọn lớp' } };
   }
 
   return { classId: normalizedRequested || undefined };
@@ -113,7 +118,7 @@ const logQrRisk = async (params: {
     const userId = Number(req.user?.id || 0);
     const normalizedUserId = Number.isFinite(userId) && userId > 0 ? userId : undefined;
 
-    await prisma.auditLog.create({
+    await (prisma as any).auditlog.create({
       data: {
         userId: normalizedUserId,
         action: 'QR_RISK',
@@ -158,7 +163,7 @@ export const checkAttendance = async (req: Request, res: Response) => {
     if (existingAttendance) {
       const updatedAttendance = await prisma.attendance.update({
         where: { id: existingAttendance.id },
-        data: { status },
+        data: { status, updatedAt: new Date() },
       });
       return res.json(updatedAttendance);
     }
@@ -168,6 +173,7 @@ export const checkAttendance = async (req: Request, res: Response) => {
         student_id: Number(student_id),
         date: new Date(date),
         status,
+        updatedAt: new Date(),
       },
     });
 
@@ -205,7 +211,7 @@ export const getAttendanceByDate = async (req: Request, res: Response) => {
         student: true,
         session: {
           include: {
-            class: true,
+            Renamedclass: true,
           },
         },
       },
@@ -233,7 +239,7 @@ export const getAttendanceByStudent = async (req: Request, res: Response) => {
       include: {
         session: {
           include: {
-            class: true,
+            Renamedclass: true,
           },
         },
       },
@@ -276,7 +282,7 @@ export const createAttendanceSession = async (req: AuthRequest, res: Response) =
   }
 
   try {
-    const targetClass = await prisma.class.findUnique({
+    const targetClass = await (prisma as any).renamedclass.findUnique({
       where: { name: normalizedClassId },
     });
 
@@ -286,8 +292,8 @@ export const createAttendanceSession = async (req: AuthRequest, res: Response) =
 
     const qrToken = crypto.randomBytes(32).toString('hex');
 
-    const session = await prisma.$transaction(async (tx) => {
-      await tx.attendanceSession.updateMany({
+    const session = await prisma.$transaction(async (tx: any) => {
+      await (tx as any).attendancesession.updateMany({
         where: {
           class_id: normalizedClassId,
           isActive: true,
@@ -295,10 +301,11 @@ export const createAttendanceSession = async (req: AuthRequest, res: Response) =
         data: {
           isActive: false,
           endedAt: new Date(),
+          updatedAt: new Date(),
         },
       });
 
-      return tx.attendanceSession.create({
+      return (tx as any).attendancesession.create({
         data: {
           title: String(title).trim(),
           subject: String(subject || '').trim(),
@@ -308,9 +315,10 @@ export const createAttendanceSession = async (req: AuthRequest, res: Response) =
           radius: parsedRadius,
           qrToken,
           class_id: normalizedClassId,
+          updatedAt: new Date(),
         },
         include: {
-          class: true,
+          Renamedclass: true,
         },
       });
     });
@@ -359,13 +367,13 @@ export const getAttendanceSessions = async (req: AuthRequest, res: Response) => 
       where.NOT = { class_id: null };
     }
 
-    const sessions = (await prisma.attendanceSession.findMany({
+    const sessions = (await (prisma as any).attendancesession.findMany({
       where,
       include: {
-        class: true,
+        Renamedclass: true,
         _count: {
           select: {
-            attendances: true,
+            attendance: true,
           },
         },
       },
@@ -376,7 +384,7 @@ export const getAttendanceSessions = async (req: AuthRequest, res: Response) => 
     return res.json(
       sessions.map((session) => ({
         ...session,
-        attendeeCount: session._count.attendances,
+        attendeeCount: session._count.attendance,
       })),
     );
   } catch (error) {
@@ -422,13 +430,13 @@ export const getActiveSessions = async (req: AuthRequest, res: Response) => {
       where.NOT = { class_id: null };
     }
 
-    const sessions = (await prisma.attendanceSession.findMany({
+    const sessions = (await (prisma as any).attendancesession.findMany({
       where,
       include: {
-        class: true,
+        Renamedclass: true,
         _count: {
           select: {
-            attendances: true,
+            attendance: true,
           },
         },
       },
@@ -438,7 +446,7 @@ export const getActiveSessions = async (req: AuthRequest, res: Response) => {
     return res.json(
       sessions.map((session) => ({
         ...session,
-        attendeeCount: session._count.attendances,
+        attendeeCount: session._count.attendance,
       })),
     );
   } catch (error) {
@@ -478,14 +486,14 @@ export const qrCheckIn = async (req: AuthRequest, res: Response) => {
   }
 
   try {
-    const session = await prisma.attendanceSession.findFirst({
+    const session = await (prisma as any).attendancesession.findFirst({
       where: {
         qrToken: qrToken.trim(),
         isActive: true,
         NOT: { class_id: null },
       },
       include: {
-        class: true,
+        Renamedclass: true,
       },
     });
 
@@ -624,7 +632,7 @@ export const qrCheckIn = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    const attendance = await prisma.$transaction(async (tx) => {
+    const attendance = await prisma.$transaction(async (tx: any) => {
       if (!attendanceProfile) {
         await tx.studentAttendanceProfile.create({
           data: {
@@ -668,12 +676,13 @@ export const qrCheckIn = async (req: AuthRequest, res: Response) => {
           verifiedLocation,
           profileDistance,
           sessionDistance,
+          updatedAt: new Date(),
         },
         include: {
           student: true,
           session: {
             include: {
-              class: true,
+              Renamedclass: true,
             },
           },
         },
@@ -705,7 +714,7 @@ export const getSessionAttendees = async (req: AuthRequest, res: Response) => {
   }
 
   try {
-    const session = await prisma.attendanceSession.findUnique({
+    const session = await (prisma as any).attendancesession.findUnique({
       where: { id: numericSessionId },
       select: {
         class_id: true,
@@ -745,10 +754,10 @@ export const getSessionSummary = async (req: AuthRequest, res: Response) => {
   }
 
   try {
-    const session = await prisma.attendanceSession.findUnique({
+    const session = await (prisma as any).attendancesession.findUnique({
       where: { id: numericSessionId },
       include: {
-        class: true,
+        Renamedclass: true,
       },
     });
 
@@ -804,12 +813,12 @@ export const getSessionSummary = async (req: AuthRequest, res: Response) => {
       }),
     ]);
 
-    const attendanceMap = new Map(attendances.map((attendance) => [attendance.student_id, attendance]));
+    const attendanceMap = new Map(attendances.map((attendance: any) => [attendance.student_id, attendance]));
     const checkedIn = attendances.length;
     const totalStudents = students.length;
     const absentCount = Math.max(totalStudents - checkedIn, 0);
     const attendanceRate = totalStudents > 0 ? Number(((checkedIn / totalStudents) * 100).toFixed(2)) : 0;
-    const suspiciousCheckIns = attendances.filter((item) => {
+    const suspiciousCheckIns = attendances.filter((item: any) => {
       if (typeof item.sessionDistance !== 'number') return false;
       return item.sessionDistance >= session.radius * 0.85;
     }).length;
@@ -821,13 +830,13 @@ export const getSessionSummary = async (req: AuthRequest, res: Response) => {
         checkedIn,
         absentCount,
         attendanceRate,
-        baselineCreatedCount: attendances.filter((item) => item.baselineCreated).length,
-        verifiedIpCount: attendances.filter((item) => item.verifiedIp !== false).length,
-        verifiedLocationCount: attendances.filter((item) => item.verifiedLocation !== false).length,
+        baselineCreatedCount: attendances.filter((item: any) => item.baselineCreated).length,
+        verifiedIpCount: attendances.filter((item: any) => item.verifiedIp !== false).length,
+        verifiedLocationCount: attendances.filter((item: any) => item.verifiedLocation !== false).length,
         suspiciousCheckIns,
         riskAttempts: riskLogs.length,
       },
-      riskWarnings: riskLogs.map((item) => ({
+      riskWarnings: riskLogs.map((item: any) => ({
         id: item.id,
         createdAt: item.createdAt,
         actor: item.user
@@ -839,7 +848,7 @@ export const getSessionSummary = async (req: AuthRequest, res: Response) => {
           : null,
         details: item.details,
       })),
-      students: students.map((student) => {
+      students: students.map((student: any) => {
         const attendance = attendanceMap.get(student.id);
         return {
           id: student.id,
@@ -849,17 +858,17 @@ export const getSessionSummary = async (req: AuthRequest, res: Response) => {
           order_number: student.order_number,
           attendance: attendance
             ? {
-                id: attendance.id,
-                status: attendance.status,
-                checkedInAt: attendance.date,
-                ipAddress: attendance.ipAddress,
-                latitude: attendance.latitude,
-                longitude: attendance.longitude,
-                baselineCreated: attendance.baselineCreated,
-                verifiedIp: attendance.verifiedIp,
-                verifiedLocation: attendance.verifiedLocation,
-                profileDistance: attendance.profileDistance,
-                sessionDistance: attendance.sessionDistance,
+                id: (attendance as any).id,
+                status: (attendance as any).status,
+                checkedInAt: (attendance as any).date,
+                ipAddress: (attendance as any).ipAddress,
+                latitude: (attendance as any).latitude,
+                longitude: (attendance as any).longitude,
+                baselineCreated: (attendance as any).baselineCreated,
+                verifiedIp: (attendance as any).verifiedIp,
+                verifiedLocation: (attendance as any).verifiedLocation,
+                profileDistance: (attendance as any).profileDistance,
+                sessionDistance: (attendance as any).sessionDistance,
               }
             : null,
           profile: student.attendanceProfile
@@ -890,7 +899,7 @@ export const endAttendanceSession = async (req: AuthRequest, res: Response) => {
   }
 
   try {
-    const session = await prisma.attendanceSession.findUnique({
+    const session = await (prisma as any).attendancesession.findUnique({
       where: { id: numericSessionId },
       select: {
         class_id: true,
@@ -906,14 +915,15 @@ export const endAttendanceSession = async (req: AuthRequest, res: Response) => {
       return res.status(accessError.status).json({ message: accessError.message });
     }
 
-    const updatedSession = await prisma.attendanceSession.update({
+    const updatedSession = await (prisma as any).attendancesession.update({
       where: { id: numericSessionId },
       data: {
         isActive: false,
         endedAt: new Date(),
+        updatedAt: new Date(),
       },
       include: {
-        class: true,
+        Renamedclass: true,
       },
     });
 

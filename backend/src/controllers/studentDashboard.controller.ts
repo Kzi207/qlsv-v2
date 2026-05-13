@@ -11,8 +11,9 @@ export const getStudentDashboardStats = async (req: AuthRequest, res: Response) 
     const student = await prisma.student.findUnique({
       where: { id: Number(studentId) },
       include: {
-        grades: true,
-        trainingScores: {
+        grade: true,
+        Renamedclass: true,
+        trainingscore: {
           orderBy: { semester_id: 'desc' } as any,
           take: 1
         }
@@ -21,13 +22,33 @@ export const getStudentDashboardStats = async (req: AuthRequest, res: Response) 
 
     if (!student) return res.status(404).json({ error: 'Student not found' });
 
+    // 0. Fetch Current Semester Info
+    const activeSemesterName = student.Renamedclass?.active_semester_id;
+    let daysRemaining = 0;
+    if (activeSemesterName) {
+      const semester = await prisma.semester.findUnique({ where: { name: activeSemesterName } });
+      if (semester?.endDate) {
+        const diff = semester.endDate.getTime() - new Date().getTime();
+        daysRemaining = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+      }
+    }
+
+    // 0.1 Calculate Attendance Rate
+    const totalSessions = await (prisma as any).attendancesession.count({
+      where: { class_id: student.class_id, isActive: false } // Only finished sessions
+    });
+    const presentCount = await prisma.attendance.count({
+      where: { student_id: Number(studentId), status: 'PRESENT' }
+    });
+    const attendanceRate = totalSessions > 0 ? Math.round((presentCount / totalSessions) * 100) : 100;
+
     // 1. Calculate Earned Credits (out of 160)
-    const passedGrades = student.grades.filter((g: any) => (g.totalScore || 0) >= 5);
+    const passedGrades = student.grade.filter((g: any) => (g.totalScore || 0) >= 5);
     const subjects = await prisma.subject.findMany();
     
     let earnedCredits = 0;
     passedGrades.forEach((grade: any) => {
-      const subject = subjects.find(s => s.code === grade.subject || s.name === grade.subject);
+      const subject = subjects.find((s: any) => s.code === grade.subject || s.name === grade.subject);
       if (subject) {
         earnedCredits += subject.credits;
       }
@@ -37,8 +58,8 @@ export const getStudentDashboardStats = async (req: AuthRequest, res: Response) 
     let totalGradePoints = 0;
     let totalCreditsForGpa = 0;
     
-    student.grades.forEach((grade: any) => {
-      const subject = subjects.find(s => s.code === grade.subject || s.name === grade.subject);
+    student.grade.forEach((grade: any) => {
+      const subject = subjects.find((s: any) => s.code === grade.subject || s.name === grade.subject);
       if (subject && grade.totalScore !== null) {
         const score = grade.totalScore;
         let gpa4 = 0;
@@ -56,7 +77,7 @@ export const getStudentDashboardStats = async (req: AuthRequest, res: Response) 
     const gpa = totalCreditsForGpa > 0 ? (totalGradePoints / totalCreditsForGpa) : 0;
 
     // 3. Training Score (Latest)
-    const latestTrainingScore = student.trainingScores[0]?.total || 0;
+    const latestTrainingScore = student.trainingscore[0]?.total || 0;
 
     // 4. Today's Schedule
     const today = new Date();
@@ -78,8 +99,6 @@ export const getStudentDashboardStats = async (req: AuthRequest, res: Response) 
     });
 
     // 6. Timeline (Next 7 days)
-    // - Assignments from e-learning courses student is registered in
-    // - ActivityAttendanceSession (upcoming)
     const sevenDaysFromNow = new Date();
     sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
 
@@ -91,7 +110,7 @@ export const getStudentDashboardStats = async (req: AuthRequest, res: Response) 
         },
         course: {
           subject: {
-            registrations: {
+            courseregistration: {
               some: { studentId: Number(studentId) }
             }
           }
@@ -102,10 +121,10 @@ export const getStudentDashboardStats = async (req: AuthRequest, res: Response) 
       }
     });
 
-    const activities = await prisma.activityAttendanceSession.findMany({
+    const activities = await (prisma as any).activityattendancesession.findMany({
       where: {
         isActive: true,
-        createdAt: { // Assuming createdAt or some startDate for activities
+        createdAt: { 
           gte: today,
           lte: sevenDaysFromNow
         }
@@ -113,13 +132,13 @@ export const getStudentDashboardStats = async (req: AuthRequest, res: Response) 
     });
 
     const timeline = [
-      ...assignments.map(a => ({
+      ...assignments.map((a: any) => ({
         day: getDayShortName(a.dueDate),
         date: formatDate(a.dueDate),
         title: `Deadline: ${a.title} (${a.course.name})`,
         type: 'assignment'
       })),
-      ...activities.map(act => ({
+      ...activities.map((act: any) => ({
         day: getDayShortName(act.createdAt),
         date: formatDate(act.createdAt),
         title: act.title,
@@ -148,7 +167,9 @@ export const getStudentDashboardStats = async (req: AuthRequest, res: Response) 
         time: getTimeAgo(n.createdAt),
         color: n.color
       })),
-      timeline: timeline.slice(0, 5)
+      timeline: timeline.slice(0, 5),
+      daysRemaining,
+      attendanceRate
     });
 
   } catch (error: any) {

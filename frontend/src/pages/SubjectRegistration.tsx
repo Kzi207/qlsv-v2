@@ -38,6 +38,7 @@ const SubjectRegistration = () => {
   const [selectedSemester, setSelectedSemester] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [cancelTarget, setCancelTarget] = useState<RegistrationItem | null>(null);
+  const [globalPrice, setGlobalPrice] = useState(500000);
 
   useEffect(() => {
     fetchInitialData();
@@ -51,12 +52,14 @@ const SubjectRegistration = () => {
 
   const fetchInitialData = async () => {
     try {
-      const [regRes, semRes] = await Promise.all([
+      const [regRes, semRes, setRes] = await Promise.all([
         axios.get('/academic/registrations/my'),
-        axios.get('/semesters')
+        axios.get('/semesters'),
+        axios.get('/settings')
       ]);
       setMyRegistrations(regRes.data);
       setSemesters(semRes.data);
+      if (setRes.data) setGlobalPrice(setRes.data.tuitionPricePerCredit || globalPrice);
       if (semRes.data.length > 0) setSelectedSemester(semRes.data[0].name);
     } catch (error) {
       toast.error('Lỗi tải dữ liệu cơ bản');
@@ -118,12 +121,7 @@ const SubjectRegistration = () => {
     const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           s.code.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Extract number from selectedSemester (e.g. "HỌC KÌ 3" -> 3)
-    const semNumMatch = selectedSemester.match(/\d+/);
-    const targetSemNum = semNumMatch ? parseInt(semNumMatch[0]) : null;
-    
-    // Only show subjects belonging to the selected curriculum semester number
-    return matchesSearch && (targetSemNum ? s.curriculumSemester === targetSemNum : true);
+    return matchesSearch;
   });
 
   const totalCredits = myRegistrations
@@ -132,7 +130,7 @@ const SubjectRegistration = () => {
 
   const totalTuition = myRegistrations
     .filter(r => r.semesterId === selectedSemester)
-    .reduce((sum, r) => sum + (r.subject.credits * (r.subject.pricePerCredit || 500000)), 0);
+    .reduce((sum, r) => sum + (r.subject.credits * (r.subject.pricePerCredit || globalPrice)), 0);
 
   return (
     <>
@@ -142,7 +140,7 @@ const SubjectRegistration = () => {
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[10px] font-black text-blue-600 uppercase tracking-widest">
              <Calendar size={12} /> Đăng ký học phần - {user?.class_id}
           </div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">Đăng ký môn học</h1>
+          <h1 className="text-xl md:text-3xl font-black text-slate-900 tracking-tight leading-tight">Đăng ký môn học</h1>
           <p className="text-slate-500 font-bold text-sm">Đăng ký học phần dựa trên Chương trình khung của ngành học.</p>
         </div>
 
@@ -205,7 +203,7 @@ const SubjectRegistration = () => {
                                         <p className="text-sm font-black text-slate-900">{s.name}</p>
                                         <div className="flex items-center gap-2 mt-1">
                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{s.code}</p>
-                                           <span className="text-[9px] font-bold text-emerald-600 italic">{(s.pricePerCredit || 500000).toLocaleString()}đ/TC</span>
+                                           <span className="text-[9px] font-bold text-emerald-600 italic">{(s.pricePerCredit || globalPrice).toLocaleString()}đ/TC</span>
                                         </div>
                                      </div>
                                  </div>

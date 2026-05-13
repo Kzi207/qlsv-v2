@@ -2,16 +2,35 @@ import type { NextFunction, Request, Response } from 'express';
 import { CSRF_COOKIE_NAME, getCookieValue } from '../utils/security';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
-const EXCLUDED_PATHS = new Set(['/api/auth/login']);
+const EXCLUDED_PATHS = new Set(['/api/auth/login', '/api/payments/sepay/webhook']);
+
+const normalizePath = (req: Request) => {
+  const fullPath = (req.originalUrl || req.url || req.path || '').split('?')[0];
+  return (fullPath || '/').replace(/\/$/, '') || '/';
+};
+
+const isExcludedPath = (path: string) => {
+  return EXCLUDED_PATHS.has(path) || path.startsWith('/api/payments/sepay/webhook') || path.includes('/payments/sepay/webhook');
+};
 
 export const csrfMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  const path = normalizePath(req);
+  console.log(`[CSRF Check] Method: ${req.method}, Path: ${req.path}, OriginalUrl: ${req.originalUrl}`);
+
   if (SAFE_METHODS.has(req.method)) {
     return next();
   }
 
-  // Normalize path by removing trailing slash for comparison
-  const path = req.path.replace(/\/$/, '') || '/';
-  if (EXCLUDED_PATHS.has(path)) {
+  const authHeader = req.headers.authorization?.toString().toLowerCase() || '';
+  const hasWebhookAuth = authHeader.includes('apikey') || authHeader.includes('bearer');
+  
+  const isPaymentPath = path.includes('/payments/sepay/webhook');
+  const excluded = isExcludedPath(path);
+  
+  console.log(`[CSRF DEBUG] Path: ${path}, Excluded: ${excluded}, WebhookAuth: ${hasWebhookAuth}, isPaymentPath: ${isPaymentPath}`);
+  
+  if (excluded || (isPaymentPath && hasWebhookAuth)) {
+    console.log(`[CSRF Bypass] Bypassing for path: ${path}`);
     return next();
   }
 
@@ -21,19 +40,19 @@ export const csrfMiddleware = (req: Request, res: Response, next: NextFunction) 
 
   if (!csrfCookie || !csrfHeader || csrfCookie !== csrfHeader) {
     const reason = !csrfCookie ? 'Cookie missing' : (!csrfHeader ? 'Header missing' : 'Token mismatch');
-    console.warn(`CSRF Validation Failed for ${req.method} ${req.path}: ${reason}`);
-    
-    return res.status(403).json({ 
+    console.warn(`[CSRF Failed] Path: ${path}, Method: ${req.method}, Reason: ${reason}`);
+
+    return res.status(403).json({
       message: 'CSRF token is missing or invalid',
-      debug: process.env.NODE_ENV === 'development' ? {
+      debug: {
         reason,
-        hasCookie: !!csrfCookie,
-        hasHeader: !!csrfHeader,
-        path: req.path,
+        hasCookie: Boolean(csrfCookie),
+        hasHeader: Boolean(csrfHeader),
+        path,
         method: req.method,
         receivedCookies: Object.keys(req.cookies || {}),
-        hasAuthHeader: !!req.header('Authorization')
-      } : undefined
+        hasAuthHeader: Boolean(req.headers.authorization)
+      }
     });
   }
 

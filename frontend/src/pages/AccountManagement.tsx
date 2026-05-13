@@ -268,33 +268,53 @@ const AccountManagement = () => {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-center">
-                       <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-                          <UserCheck size={10} /> Hoạt động
-                       </span>
+                       {s.user ? (
+                         <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                            <UserCheck size={10} /> Hoạt động
+                         </span>
+                       ) : (
+                         <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">
+                            <UserX size={10} /> Chưa cấp
+                         </span>
+                       )}
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1.5 text-slate-600">
-                      <Shield size={12} className="text-blue-500" />
-                      <span className="text-xs font-bold uppercase tracking-widest">{s.user?.role === 'ADMIN' ? 'Quản trị' : 'Sinh viên'}</span>
+                      <Shield size={12} className={s.user ? "text-blue-500" : "text-slate-300"} />
+                      <span className="text-xs font-bold uppercase tracking-widest">
+                        {s.user ? (s.user.role === 'ADMIN' ? 'Quản trị' : 'Sinh viên') : '—'}
+                      </span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => handleResetPassword(s)}
-                        className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-all active:scale-90 border border-indigo-100"
-                        title="Đặt lại mật khẩu"
-                      >
-                        <Key size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteAccount(s)}
-                        className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 transition-all active:scale-90 border border-rose-100"
-                        title="Xóa tài khoản"
-                      >
-                        <UserX size={14} />
-                      </button>
+                      {s.user ? (
+                        <>
+                          <button
+                            onClick={() => handleResetPassword(s)}
+                            className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-all active:scale-90 border border-indigo-100"
+                            title="Đặt lại mật khẩu"
+                          >
+                            <Key size={14} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteAccount(s)}
+                            className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 transition-all active:scale-90 border border-rose-100"
+                            title="Xóa tài khoản"
+                          >
+                            <UserX size={14} />
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => handleResetPassword(s)}
+                          className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all active:scale-95 shadow-md shadow-blue-500/20 text-xs font-bold uppercase tracking-widest"
+                        >
+                          <UserCheck size={14} />
+                          Cấp tài khoản
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -325,23 +345,37 @@ const AccountManagement = () => {
                           <p className="text-[10px] font-black text-blue-600 tracking-widest uppercase">{s.student_code}</p>
                        </div>
                     </div>
-                    <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
-                       Hoạt động
-                    </span>
+                    {s.user ? (
+                      <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                         Hoạt động
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
+                         Chưa cấp
+                      </span>
+                    )}
                  </div>
                  
                  <div className="flex items-center justify-between pt-2 border-t border-slate-50">
                     <div className="flex items-center gap-1.5 text-slate-500">
-                       <Shield size={12} className="text-blue-500" />
-                       <span className="text-[10px] font-bold uppercase tracking-widest">{s.user?.role === 'ADMIN' ? 'Quản trị' : 'Sinh viên'}</span>
+                       <Shield size={12} className={s.user ? "text-blue-500" : "text-slate-300"} />
+                       <span className="text-[10px] font-bold uppercase tracking-widest">{s.user ? (s.user.role === 'ADMIN' ? 'Quản trị' : 'Sinh viên') : '—'}</span>
                     </div>
                     <div className="flex gap-2">
-                       <button onClick={() => handleResetPassword(s)} className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-widest">
-                          <Key size={12} /> MK
-                       </button>
-                       <button onClick={() => handleDeleteAccount(s)} className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 text-rose-600 rounded-lg text-[10px] font-black uppercase tracking-widest">
-                          <UserX size={12} /> XÓA
-                       </button>
+                       {s.user ? (
+                         <>
+                           <button onClick={() => handleResetPassword(s)} className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-widest">
+                              <Key size={12} /> MK
+                           </button>
+                           <button onClick={() => handleDeleteAccount(s)} className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 text-rose-600 rounded-lg text-[10px] font-black uppercase tracking-widest">
+                              <UserX size={12} /> XÓA
+                           </button>
+                         </>
+                       ) : (
+                         <button onClick={() => handleResetPassword(s)} className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-md">
+                            <UserCheck size={12} /> CẤP TÀI KHOẢN
+                         </button>
+                       )}
                     </div>
                  </div>
               </div>

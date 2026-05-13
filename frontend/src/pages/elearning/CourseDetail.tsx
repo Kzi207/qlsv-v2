@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   BookOpen, 
@@ -99,7 +100,7 @@ const CourseDetail: React.FC = () => {
   const fetchStudents = async () => {
     try {
       const res = await api.get('/students');
-      setAllStudents(res.data);
+      setAllStudents(Array.isArray(res.data) ? res.data : (res.data.items || []));
     } catch (error) {
       console.error('Failed to fetch students', error);
     }
@@ -110,8 +111,8 @@ const CourseDetail: React.FC = () => {
       await api.post('/elearning/enroll', { courseId: id, studentId });
       toast.success('Đã ghi danh sinh viên');
       fetchRegistrations();
-    } catch (error) {
-      toast.error('Không thể ghi danh sinh viên');
+    } catch (error: any) {
+      const msg = error.response?.data?.error || error.response?.data?.message || 'Không thể ghi danh sinh viên'; toast.error(msg);
     }
   };
 
@@ -360,7 +361,7 @@ const CourseDetail: React.FC = () => {
       {/* Navigation & Header Section */}
       <div className="sticky top-0 z-20 bg-[#f8fafc]/80 backdrop-blur-md pt-4 pb-2 px-4 -mx-4 md:static md:bg-transparent md:p-0 md:m-0">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-3">
+          <div className="space-y-3 min-h-[200px]">
              <button 
                onClick={() => navigate(-1)}
                className="group flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-indigo-600 transition-all active:scale-95"
@@ -468,7 +469,7 @@ const CourseDetail: React.FC = () => {
                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                            <input 
                              type="password" 
-                             placeholder="Nhập mật khẩu..." 
+                             placeholder="Nhập mã ghi danh để vào lớp..." 
                              value={enrollPassword}
                              onChange={e => setEnrollPassword(e.target.value)}
                              className="w-full bg-slate-50 border border-slate-100 focus:border-indigo-500 focus:bg-white rounded-2xl px-12 py-4 font-bold text-sm outline-none transition-all shadow-sm"
@@ -537,7 +538,7 @@ const CourseDetail: React.FC = () => {
                       )}
                    </div>
                    
-                   <div className="space-y-3">
+                   <div className="space-y-3 min-h-[200px]">
                       {course.lessons?.length > 0 ? course.lessons.map((lesson: any, index: number) => (
                         <div 
                           key={lesson.id} 
@@ -824,7 +825,7 @@ const CourseDetail: React.FC = () => {
                        />
                     </div>
                  </div>
-                 <p className="text-[10px] font-bold text-slate-500 text-center italic">Bạn cần hoàn thành thêm {100 - course.progress}% để nhận chứng chỉ.</p>
+                 <p className="text-[10px] font-bold text-slate-500 text-center italic">Bạn cần hoàn thành thêm {100 - (course.progress || 0)}% để nhận chứng chỉ.</p>
               </div>
 
               <div className="space-y-5 pt-6 border-t border-slate-50">
@@ -863,22 +864,16 @@ const CourseDetail: React.FC = () => {
                  </button>
               </div>
            </div>
-
-           <div className="bg-indigo-600 rounded-[3rem] p-8 text-white space-y-6 shadow-2xl shadow-indigo-600/20 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-4 opacity-10"><MessageSquare size={100} /></div>
-              <h3 className="text-sm font-black uppercase tracking-widest relative z-10">Hỗ trợ học tập</h3>
-              <p className="text-xs font-medium text-indigo-100 relative z-10 leading-relaxed">Bạn gặp khó khăn trong quá trình học tập? Hãy đặt câu hỏi trong mục thảo luận nhé!</p>
-              <button className="w-full py-3 bg-white text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest relative z-10 hover:bg-indigo-50 transition-all">Đặt câu hỏi ngay</button>
-           </div>
         </div>
       </div>
 
       {/* Lesson Modal */}
-      <AnimatePresence>
+      {createPortal(
+        <AnimatePresence>
         {isLessonModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsLessonModalOpen(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="relative bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsLessonModalOpen(false)} className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" />
+            <motion.div initial={{ scale: 0.9, opacity: 0, y: 40 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 40 }} className="relative bg-white shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden">
               <div className="bg-blue-600 p-8 text-white flex items-center justify-between">
                 <h2 className="text-2xl font-black tracking-tight">Thêm bài giảng mới</h2>
                 <button onClick={() => setIsLessonModalOpen(false)} className="p-2 hover:bg-white/10 rounded-xl transition-colors"><X size={24} /></button>
@@ -928,13 +923,15 @@ const CourseDetail: React.FC = () => {
           </div>
         )}
       </AnimatePresence>
+      , document.body)}
 
       {/* Assignment Modal */}
-      <AnimatePresence>
+      {createPortal(
+        <AnimatePresence>
         {isAssignmentModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsAssignmentModalOpen(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="relative bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsAssignmentModalOpen(false)} className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" />
+            <motion.div initial={{ scale: 0.9, opacity: 0, y: 40 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 40 }} className="relative bg-white shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden">
               <div className="bg-indigo-600 p-8 text-white flex items-center justify-between">
                 <h2 className="text-2xl font-black tracking-tight">Tạo bài tập mới</h2>
                 <button onClick={() => setIsAssignmentModalOpen(false)} className="p-2 hover:bg-white/10 rounded-xl transition-colors"><X size={24} /></button>
@@ -964,13 +961,15 @@ const CourseDetail: React.FC = () => {
           </div>
         )}
       </AnimatePresence>
+      , document.body)}
 
       {/* Exam Modal */}
-      <AnimatePresence>
+      {createPortal(
+        <AnimatePresence>
         {isExamModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsExamModalOpen(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="relative bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsExamModalOpen(false)} className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" />
+            <motion.div initial={{ scale: 0.9, opacity: 0, y: 40 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 40 }} className="relative bg-white shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden">
               <div className="bg-rose-600 p-8 text-white">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-black tracking-tight">Thiết lập kỳ thi mới</h2>
@@ -1109,13 +1108,15 @@ const CourseDetail: React.FC = () => {
           </div>
         )}
       </AnimatePresence>
+      , document.body)}
 
       {/* Assignment Submit Modal */}
-      <AnimatePresence>
+      {createPortal(
+        <AnimatePresence>
         {isSubmitModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsSubmitModalOpen(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="relative bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsSubmitModalOpen(false)} className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" />
+            <motion.div initial={{ scale: 0.9, opacity: 0, y: 40 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 40 }} className="relative bg-white shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden">
               <div className="bg-slate-900 p-8 text-white flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-black tracking-tight">Nộp bài tập</h2>
@@ -1160,13 +1161,15 @@ const CourseDetail: React.FC = () => {
           </div>
         )}
       </AnimatePresence>
+      , document.body)}
 
       {/* Submission List Modal (For Teachers) */}
-      <AnimatePresence>
+      {createPortal(
+        <AnimatePresence>
         {isSubmissionListModalOpen && selectedAssignmentForSubmissions && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsSubmissionListModalOpen(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="relative bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsSubmissionListModalOpen(false)} className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" />
+            <motion.div initial={{ scale: 0.9, opacity: 0, y: 40 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 40 }} className="relative bg-white shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
               <div className="bg-indigo-600 p-8 text-white flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-black tracking-tight">Quản lý bài nộp</h2>
@@ -1230,13 +1233,26 @@ const CourseDetail: React.FC = () => {
           </div>
         )}
       </AnimatePresence>
+      , document.body)}
 
       {/* Enroll Student Modal */}
-      <AnimatePresence>
+      {createPortal(
+        <AnimatePresence>
         {isEnrollModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsEnrollModalOpen(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setIsEnrollModalOpen(false)} 
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" 
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 40 }} 
+              animate={{ scale: 1, opacity: 1, y: 0 }} 
+              exit={{ scale: 0.9, opacity: 0, y: 40 }} 
+              className="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col max-h-[90vh]"
+            >
               <div className="bg-emerald-600 p-8 text-white flex items-center justify-between shrink-0">
                 <h2 className="text-2xl font-black tracking-tight">Ghi danh sinh viên</h2>
                 <button onClick={() => setIsEnrollModalOpen(false)} className="p-2 hover:bg-white/10 rounded-xl transition-colors"><X size={24} /></button>
@@ -1253,33 +1269,52 @@ const CourseDetail: React.FC = () => {
                   />
                 </div>
                 
-                <div className="space-y-3">
-                  {allStudents
-                    .filter(s => 
-                      !registrations.some(r => r.studentId === s.id) &&
-                      (s.name.toLowerCase().includes(studentSearchQuery.toLowerCase()) || s.student_code.includes(studentSearchQuery))
-                    )
-                    .slice(0, 10)
-                    .map(student => (
-                      <div key={student.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
-                        <div>
-                          <p className="text-sm font-black text-slate-900">{student.name}</p>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{student.student_code}</p>
+                <div className="space-y-3 min-h-[200px]">
+                  {(() => {
+                    const filtered = (allStudents || []).filter(s => 
+                      s && !registrations.some(r => r.studentId === s.id) &&
+                      (String(s.name || '').toLowerCase().includes(studentSearchQuery.toLowerCase()) || 
+                       (s.student_code && String(s.student_code).includes(studentSearchQuery)))
+                    );
+                    
+                    if (filtered.length === 0) {
+                      return (
+                        <div className="py-12 text-center space-y-3 opacity-50">
+                           <Users size={40} className="mx-auto text-slate-300" />
+                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                              {studentSearchQuery ? 'Không tìm thấy sinh viên phù hợp' : 'Tất cả sinh viên đã được ghi danh'}
+                           </p>
+                        </div>
+                      );
+                    }
+
+                    return filtered.slice(0, 10).map(student => (
+                      <div key={student.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-emerald-200 transition-all group">
+                        <div className="flex items-center gap-4">
+                           <div className="h-12 w-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-emerald-600 font-black group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                              {String(student.name || 'S').charAt(0)}
+                           </div>
+                           <div>
+                             <p className="text-sm font-black text-slate-900">{student.name}</p>
+                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{student.student_code}</p>
+                           </div>
                         </div>
                         <button 
                           onClick={() => enrollStudent(student.id)}
-                          className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all"
+                          className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 shadow-lg shadow-emerald-100 active:scale-95 transition-all"
                         >
                           Ghi danh
                         </button>
                       </div>
-                    ))}
+                    ));
+                  })()}
                 </div>
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+      , document.body)}
     </div>
   );
 };

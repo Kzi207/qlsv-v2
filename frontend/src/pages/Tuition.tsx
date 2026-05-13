@@ -5,7 +5,7 @@ const Tuition = () => {
   return (
     <div className="max-w-4xl space-y-8 animate-fade-up">
       <div className="space-y-2">
-        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Học phí & Lệ phí</h1>
+        <h1 className="text-xl md:text-3xl font-black text-slate-900 tracking-tight leading-tight">Học phí & Lệ phí</h1>
         <p className="text-slate-500 font-medium">Quản lý các khoản phí và thực hiện thanh toán trực tuyến.</p>
       </div>
 

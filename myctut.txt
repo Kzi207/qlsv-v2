@@ -1,0 +1,744 @@
+﻿PHAN TICH KY THUAT TOAN BO DU AN QLSV (MY CTUT)
+Ngay phan tich: 2026-05-08
+Pham vi: Frontend + Backend + Prisma schema + deployment configs + mobile wrapper (Capacitor)
+
+============================================================
+1) TONG QUAN DU AN
+============================================================
+
+1.1 Muc dich he thong
+- Day la he thong quan tri sinh vien tong hop, ket hop:
+	+ Quan ly ho so sinh vien, lop, hoc ky, mon hoc.
+	+ Quan ly chuong trinh dao tao (curriculum) theo khoa/nganh/hoc ky.
+	+ Quan ly diem, hoc phi, thanh toan VNPay.
+	+ Diem danh QR (co quy trinh session + check-in).
+	+ Danh gia diem ren luyen (DRL) + minh chung + quy trinh duyet.
+	+ He thong e-learning (course, lesson, assignment, exam, registration).
+	+ Bo phan "Mot cua" cho thu tuc hanh chinh sinh vien.
+
+1.2 Doi tuong su dung
+- QTV (quan tri vien): full admin.
+- LECTURER (giang vien): quan ly day hoc, diem, lich day.
+- BCH: role can bo lop/ho tro DRL va van hanh mot so phan he.
+- STUDENT: tu phuc vu hoc vu, hoc phi, DRL, e-learning, thong bao.
+
+1.3 Flow hoat dong chinh (macro)
+- User login -> nhan cookie session + csrf token.
+- Frontend goi /auth/me de khoi tao state xac thuc.
+- Dieu huong route theo role (RoleRoute + Sidebar role-based menu).
+- Moi phan he goi API /api/* theo nganh doc lap:
+	+ /students, /classes, /semesters, /academic, /curriculum
+	+ /attendance, /training, /evidence
+	+ /elearning
+	+ /finance, /payments
+	+ /services
+- DB MySQL duoc truy cap qua Prisma (co layer proxy de map naming).
+
+1.4 Kien truc tong the
+- Kieu kien truc: Monorepo 2 app chinh.
+	+ frontend/: React + Vite + Tailwind + Zustand.
+	+ backend/: Express + Prisma + MySQL.
+- Pattern: REST API, role-based authorization, cookie-based auth + CSRF.
+- Khong co microservices, khong co message broker; logic tap trung trong 1 API server.
+
+So do text (tong quan):
+
+[Browser/Capacitor App]
+		-> Axios (withCredentials + CSRF header)
+		-> /api/* (Express)
+		-> Middleware: CORS -> security headers -> compression -> JSON -> cookies -> CSRF
+		-> Route -> Controller -> Prisma Client Proxy -> MySQL
+		-> Response JSON / file stream
+
+============================================================
+2) PHAN TICH FRONTEND
+============================================================
+
+2.1 Framework/library su dung
+- React 19.2.5 (function component + hooks).
+- React Router DOM 7.14.1.
+- Zustand 5.0.12 (global auth state).
+- Axios 1.15.x (interceptor auth/csrf/network handling).
+- Tailwind CSS 3.4.x.
+- Framer Motion 12.x (animation/transitions).
+- React Hot Toast (UX feedback).
+- Lucide React (icon system).
+- Capacitor (Android wrapper + cookie/http plugin).
+
+2.2 Cau truc thu muc frontend
+- src/main.tsx: React entry.
+- src/App.tsx: route map chinh.
+- src/layout/: MainLayout, Sidebar, BottomNav.
+- src/pages/: man hinh theo domain.
+- src/pages/elearning/{admin,teacher}: phan he e-learning tach role.
+- src/components/: reusable component theo domain con
+	+ curriculum, timetable, drl, elearning, bulk-timetable...
+- src/api/axios.ts: HTTP client + csrf/auth retry policy.
+- src/store/useAuthStore.ts: auth lifecycle.
+- index.css + tailwind.config.js: design tokens va utility layer.
+
+2.3 Routing
+- PrivateRoute gate theo isAuthenticated + authInitialized.
+- RoleRoute gate theo allowedRoles cho tung route.
+- Router layout:
+	+ /login (public)
+	+ / (private, wrap MainLayout) -> nested pages.
+- Route namespace ro rang:
+	+ student: /training/evaluation/self, /curriculum/my, /services/requests...
+	+ admin: /academic/manage, /finance/manage, /elearning/admin/*...
+	+ lecturer: /elearning/manage/*.
+
+Nhan xet routing:
+- Co duplicate route key trong App.tsx:
+	+ /registration xuat hien 2 lan.
+	+ /tuition va /settings cung xuat hien o nhieu context.
+	=> Nguy co ghi de route declaration, kho maintain.
+
+2.4 State management
+- Global state: `useAuthStore`.
+	+ user, isAuthenticated, authInitialized.
+	+ initializeAuth() goi /auth/me.
+	+ logout() clear local/session + goi /auth/logout.
+- Local state: useState/useEffect tai tung page (heavy client state).
+- Khong dung Redux Query/TanStack Query; fetch + cache thu cong.
+
+2.5 Component tree (muc core)
+- Root: StrictMode -> App.
+- App:
+	+ Router
+	+ Toaster
+	+ Routes
+- Private route:
+	+ MainLayout
+		- Sidebar (role menu)
+		- AdminTopBar
+		- Outlet (page content)
+		- BottomNav (mobile)
+- Domain pages phan tach theo module: students, curriculum, timetable, elearning...
+
+2.6 UI patterns
+- Pattern chung:
+	+ Dashboard card grid (rounded-large, shadow subtle).
+	+ Table/list + action icons edit/delete.
+	+ Modal panel CRUD.
+	+ Filter/search bar + tab switch.
+	+ Toast for success/failure feedback.
+- Motion:
+	+ animate-fade-up class.
+	+ Framer motion cho page transition, modal, hover lift.
+
+2.7 Responsive design
+- Co pattern mobile-first muc do trung binh-kha:
+	+ Sidebar overlay + mobile header + BottomNav.
+	+ Breakpoints: md/lg/xl su dung ro trong className.
+	+ bang su dung overflow-x-auto.
+- Tuy nhien con mot so anti-pattern:
+	+ Kiem tra `window.innerWidth` trong render/component logic (`SemesterGrid`) -> khong SSR-safe, de mismatch.
+
+2.8 Animation/effect
+- Framer Motion duoc dung rong:
+	+ button hover/tap.
+	+ modal open/close.
+	+ list item reveal theo delay.
+- CSS custom keyframe:
+	+ fade-in-up.
+
+2.9 Theme/color/font system
+- Tailwind extend primary palette.
+- Font: Inter + K2D cho heading.
+- Tong the mau:
+	+ Nen sang (slate-50/white), accent blue/emerald/amber/rose.
+	+ Sidebar xanh dam #0046a8.
+- Co utility component class: card-premium, btn-primary, glass-modern.
+
+2.10 Cach render du lieu
+- Dang hoc: fetch on mount bằng useEffect + setState.
+- Khong co normalized cache toan app.
+- Nhiều chỗ filter/map trực tiếp trong render (co the tang re-render cost).
+- Nhiều state du lieu dang `any[]`, `any` (typing yeu).
+
+2.11 API integration
+- Base URL logic:
+	+ Web: '/api' hoac env absolute.
+	+ Capacitor: ep URL absolute (VITE_API_TARGET).
+- Request interceptor:
+	+ Auto attach CSRF header cho method mutate.
+- Response interceptor:
+	+ refresh token CSRF khi co response.csrfToken.
+	+ Retry 1 lan khi 403 csrf.
+	+ 401 => dispatch event qlsv-unauthorized de global logout.
+
+2.12 Nhung component quan trong
+- Layout/Auth:
+	+ MainLayout, Sidebar, RoleRoute, useAuthStore.
+- Academic:
+	+ AdminSubjectManager, CurriculumManagement, SemesterGrid.
+- Timetable:
+	+ AdminTimetableManagement, TimetableFormModal, TimetableCalendar/Table.
+- DRL:
+	+ AdminDRLManagement, DetailedEvaluationForm, evidence components.
+- E-learning:
+	+ AdminCourses/TeacherCourses/CourseDetail + related modules.
+
+============================================================
+3) PHAN TICH UI/UX
+============================================================
+
+3.1 Layout tung man hinh (mau so)
+- Dashboard admin:
+	+ Hero summary + stat cards + charts + warning feed.
+- Dashboard student:
+	+ Hero welcome + quick actions + progress/gpa + lich + notifications.
+- Curriculum management:
+	+ Sidebar khoa/nganh + main content hoc ky + modal CRUD.
+- Timetable management:
+	+ split left filter + right calendar/table + modal create/edit.
+
+3.2 Khoang cach / padding / margin
+- Xu huong consistent rounded large (2rem+), padding 4-8.
+- Visual spacing tot tren desktop.
+- Mobile co thu gon, nhung mot so page van day thong tin -> cognitive load cao.
+
+3.3 Typography
+- Heading thuong dung font black, uppercase, tracking-widest.
+- Body text dung small-bold kha nhieu (co luc qua dam cho text dai).
+- Co su phan cap, nhung ty le uppercase day dac de gay met doc.
+
+3.4 Mau sac
+- Core xanh duong + slate neutral.
+- Semantic color ro rang:
+	+ success: emerald, warning: amber, error: rose.
+- Sidebar contrast tot, nhung saturation cao lien tuc co the gay fatigue.
+
+3.5 UX flow
+- Cac flow co xac nhan xoa bang confirm native.
+- Toast feedback phu hop cho action CRUD.
+- Empty state da duoc quan tam o nhieu page.
+- Flow role gating ro, nguoi dung khong role se bi redirect.
+
+3.6 Trai nghiem nguoi dung
+Diem manh:
+- UI hien dai, nhat quan phong cach card-based.
+- Navigation theo role ro rang.
+- Modal/feedback nhanh, animation muot.
+
+Diem yeu:
+- Qua nhieu chu hoa + font dam -> giam readability.
+- Nhieu trang co khoi luong thong tin lon, can progressive disclosure.
+- Co nut thao tac truoc day bi "khong co handler" (da gap o AdminCourses).
+
+3.7 Design system
+- Chua co design system formal (token + component contracts + docs).
+- Thuc te dang la "utility convention" + reusable components.
+- Nen chuan hoa:
+	+ spacing scale, typography scale, button variants, form field states.
+
+3.8 Diem manh/yeu giao dien
+- Manh:
+	+ Hinh anh premium, visual hierarchy tuong doi tot.
+	+ Responsive da co huong ro.
+- Yeu:
+	+ Inconsistency nho giua pages (size, spacing, text style).
+	+ Overuse badge/text tiny uppercase.
+
+============================================================
+4) PHAN TICH BACKEND
+============================================================
+
+4.1 Ngon ngu / framework
+- TypeScript + Node.js + Express 5.x.
+- Prisma ORM (generated client output custom).
+
+4.2 Cau truc server
+- Entry: src/index.ts -> app.listen.
+- app.ts tap trung middleware + route mount.
+- Controllers theo domain.
+- Utils cho security, crypto, logger, r2, prisma.
+
+4.3 API architecture
+- REST namespace theo module:
+	+ /api/auth
+	+ /api/students, /api/classes, /api/semesters
+	+ /api/attendance, /api/training, /api/evidence
+	+ /api/academic, /api/curriculum, /api/grades
+	+ /api/elearning
+	+ /api/finance, /api/payments
+	+ /api/notifications, /api/audit
+	+ /api/services
+- Controller-driven architecture, service layer moi dung ro o timetable/payment.
+
+4.4 Middleware
+- cors (allowed origins from env).
+- securityHeadersMiddleware.
+- compression.
+- express.json.
+- cookieParser.
+- csrfMiddleware.
+- authMiddleware + roleMiddleware per route.
+
+4.5 Authentication
+- JWT signed token.
+- Token luu trong HTTP-only cookie (`qlsv_session`).
+- Endpoint /auth/me check cookie/header/query token.
+- logout clear cookie domain-host variants.
+
+4.6 Authorization
+- roleMiddleware(['QTV', ...]).
+- Role names uppercase.
+- Pattern per route, khong co policy engine trung tam.
+
+4.7 Database design
+- MySQL provider trong Prisma datasource.
+- Schema quan he lon (30+ model), bao gom:
+	+ hoc vu, DRL, attendance, e-learning, payment, curriculum.
+
+4.8 ORM/ODM
+- Prisma Client with custom output `src/generated/client_final`.
+- Proxy wrapper (`utils/prisma.ts`) de map naming:
+	+ prop 'class' -> renamedclass.
+	+ fallback lowercase property.
+
+4.9 Caching
+- Chua thay Redis/application cache layer.
+- Frontend polling + fetch truc tiep.
+
+4.10 Queue/job
+- Khong thay queue worker (Bull/Rabbit/Kafka).
+- Xu ly sync trong request lifecycle.
+
+4.11 Logging
+- Dung console.* rat nhieu controller.
+- Audit log co model `auditlog` + helper `logAudit`.
+- Chua co structured logger framework (winston/pino).
+
+4.12 Error handling
+- Chu yeu try/catch local trong controller.
+- Chua co global error middleware chuan hoa.
+- Response error chua dong nhat (message/error/details).
+
+============================================================
+5) DATABASE
+============================================================
+
+5.1 Danh sach bang/model chinh
+- user, student, class (Renamedclass), semester, subject.
+- classsubject, curriculumsemester, curriculumsubject, major, faculty.
+- grade, timetable, room, roomborrowing.
+- attendance, attendancesession, studentattendanceprofile.
+- trainingscore, trainingevidenceslip, activityevidence, activityattendancesession/record.
+- course, lesson, assignment, assignmentsubmission, exam/examquestion/examoption/examresult, courseregistration.
+- tuition, payment, paymentlog.
+- notification, auditlog, servicerequest, systemsetting, teachingassignment, studentaward, bchassignment.
+
+5.2 Quan he du lieu
+- 1 user co the link 1 student (studentId unique).
+- student thuoc class (class_id -> class.name).
+- class co major, major thuoc faculty.
+- curriculum major -> curriculumsemester -> curriculumsubject -> subject.
+- e-learning:
+	+ course -> lesson/assignment/exam.
+	+ assignment -> submission.
+	+ exam -> question -> option; examresult theo student.
+- payment:
+	+ tuition 1-n payment; payment 1-n paymentlog.
+
+5.3 Schema chi tiet (notable)
+- Nhiều unique composite index:
+	+ Grade(studentId, subject, semesterId)
+	+ CourseRegistration(studentId, subjectId, semesterId)
+	+ TrainingScore(student_id, semester_id)
+	+ Tuition(studentId, semesterId)
+- service request details luu LongText JSON-string.
+
+5.4 Index
+- He thong co index kha day dac tren cột truy van:
+	+ status, createdAt, class_id, semesterId, userId, paymentCode...
+- Tot cho query filter operational.
+
+5.5 Data flow
+- Frontend -> controller -> prisma query.
+- Co mot so chỗ raw SQL (`$queryRawUnsafe`, `$executeRaw`) trong timetable.
+- Evidence upload: file metadata -> details JSON trong trainingscore.
+
+5.6 Toi uu hieu nang DB
+Da co:
+- index co ban day du.
+- relation include co chu dich o nhiem vu tong hop.
+
+Can cai thien:
+- giam $queryRawUnsafe, chuyen sang Prisma query builder khi co the.
+- tach evidence metadata thanh bang rieng thay vi dong trong JSON details.
+- can nhac materialized summary table cho dashboard nặng.
+
+============================================================
+6) THUAT TOAN VA LOGIC
+============================================================
+
+6.1 Thuật toán lap thoi khoa bieu
+- Co `TimetableSolver` (greedy heuristic):
+	+ Input: class, course, room, slot, requirements.
+	+ Constraint cứng:
+		* khong trung lop cung slot
+		* khong trung giang vien cung slot
+		* khong trung phong cung slot
+		* capacity room >= size class
+	+ Ket qua: schedules + unscheduled reasons.
+
+6.2 Conflict detection runtime
+- checkConflicts(events): loop event, query DB theo day + overlap period.
+- Kiem tra xung dot room/teacher/class.
+- bulk create chi save neu khong con xung dot.
+
+6.3 Business logic tieu bieu
+- DRL:
+	+ student nop minh chung + draft/submit + admin/BCH duyet.
+- Attendance:
+	+ tao session -> student check-in -> tong hop summary.
+- E-learning:
+	+ tao course -> lesson/assignment/exam -> registration/submission.
+- Services:
+	+ student request -> admin approve/reject.
+
+6.4 Validation
+- Co validation o controller muc co ban (required fields, role checks).
+- Chua thay schema validation framework dong bo (zod/joi).
+
+6.5 Filtering/searching
+- Backend: query params theo class/semester/subject/status...
+- Frontend: filter client-side nhieu noi (includes lowercase).
+
+6.6 Recommendation/ranking
+- Dashboard admin co top classes theo attendance rate.
+- Khong co recommendation engine hoc may.
+
+6.7 AI logic neu co
+- Khong thay module AI/ML inference.
+
+6.8 Ky thuat toi uu
+- Batch APIs: bulk timetable create, grade upsert.
+- Promise.all cho fetch parallel o frontend/backend.
+- Compression middleware backend.
+
+============================================================
+7) REALTIME VA NETWORKING
+============================================================
+
+7.1 WebSocket/socket.io
+- Khong phat hien socket.io/WebSocket implementation.
+
+7.2 SSE
+- Khong phat hien EventSource/SSE endpoint.
+
+7.3 Polling
+- Co polling theo interval:
+	+ Notification center trong MainLayout/AdminTopBar (30s).
+	+ AdminActivityManager co polling 3s khi session active.
+
+7.4 Event flow
+- Auth unauthorized event su dung CustomEvent `qlsv-unauthorized` o frontend.
+- Khong co event bus distributed backend.
+
+7.5 Sync realtime
+- Hien tai la pseudo-realtime qua polling + refresh API.
+
+============================================================
+8) SECURITY
+============================================================
+
+8.1 JWT/session
+- JWT cookie session (`qlsv_session`) + token fallback header/query.
+- Cookie options co sameSite, secure, domain handling.
+
+8.2 Encrypt/hash
+- Password: bcrypt.
+- Du lieu nhay cam student (birthday, gender, id_card, hometown, address): AES-256-CBC trong `utils/crypto.ts`.
+
+8.3 Rate limit
+- Chua thay middleware rate limit (express-rate-limit).
+
+8.4 CSRF/XSS/SQL injection protection
+- CSRF:
+	+ cookie token + header x-csrf-token + middleware.
+- XSS:
+	+ chua thay explicit sanitizer layer server-side.
+- SQLi:
+	+ Prisma an toan phan lon.
+	+ co `queryRawUnsafe` trong timetable => can review nguy co injection (du dang dung params array, nhung van la diem can than trong).
+
+8.5 Permission system
+- roleMiddleware per route, role set: QTV/LECTURER/BCH/STUDENT.
+- Frontend RoleRoute chi la UX guard, backend moi la enforcement that su.
+
+8.6 Security best practices
+Diem tot:
+- Cookie httpOnly/secure/sameSite handling ky.
+- CSRF implementation co retry token flow.
+- Co audit log cho hanh vi quan trong.
+
+Rui ro:
+- JWT_SECRET fallback 'secret' neu env thieu.
+- ENCRYPTION_KEY fallback hardcoded.
+- Console log nhieu (co the lo thong tin).
+- Chua co rate limit + brute-force protection.
+
+============================================================
+9) PERFORMANCE
+============================================================
+
+9.1 Lazy loading
+- Chua thay React.lazy route-level splitting ro rang (App import tat ca page truc tiep).
+
+9.2 Code splitting
+- Vite se tao chunks theo dependency, nhung route-level split chua toi uu.
+
+9.3 Memoization
+- Co dung useMemo o mot so cho (MainLayout pageTitle, Dashboard trendMax), nhung khong phu day.
+
+9.4 Query optimization
+- DB co index kha nhieu.
+- Tuy nhien co heavy includes va loop map/filter lon tren frontend.
+
+9.5 Cache strategy
+- Chua co server cache/distributed cache.
+- Client cache thu cong qua state local.
+
+9.6 CDN/static assets
+- Backend serve /uploads static.
+- Co ho tro Cloudflare R2 cho evidence.
+- Frontend image assets co dung nhung chua thay pipeline optimize image ro rang.
+
+9.7 Bottleneck tiem nang
+- Frontend:
+	+ nhiều component any + render filter inline.
+	+ table/list lon khong virtualization.
+- Backend:
+	+ raw SQL + thao tac sync trong request.
+	+ xoa course cascade lon co the timeout.
+
+============================================================
+10) DEVOPS VA DEPLOYMENT
+============================================================
+
+10.1 Docker
+- backend/Dockerfile:
+	+ node:20-alpine
+	+ npm ci, prisma generate, build ts, expose 5000, npm start.
+
+10.2 CI/CD
+- Khong thay pipeline config ro rang (GitHub Actions/GitLab CI).
+
+10.3 Environment variables
+- quan trong:
+	+ DATABASE_URL, JWT_SECRET, ENCRYPTION_KEY
+	+ FRONTEND_ORIGIN
+	+ COOKIE_* (domain, secure, samesite)
+	+ R2_*
+	+ VNPAY_* (payment)
+	+ VITE_API_URL, VITE_API_TARGET
+
+10.4 Hosting architecture
+- Backend co vercel.json (node serverless style) + docker support.
+- Frontend Vite static + co the deploy site rieng.
+
+10.5 Reverse proxy / Cloudflare / nginx
+- Vite dev proxy config host myctut.kzii.site.
+- Backend cors origin tu config.
+- R2 dung endpoint Cloudflare S3-compatible.
+
+10.6 Monitoring/logging
+- Chua co APM/metrics stack (Prometheus/Grafana/Sentry) trong code.
+- Logging chu yeu console + audit DB.
+
+============================================================
+11) REVERSE ENGINEERING PROJECT
+============================================================
+
+11.1 Luong hoat dong thuc te (runtime)
+1) App start -> initializeAuth -> GET /auth/me.
+2) Router route theo role.
+3) User thao tac CRUD -> axios -> /api/*.
+4) Backend auth + role check -> controller -> prisma.
+5) Toast feedback + state refresh list.
+
+11.2 Cac dependency quan trong
+- Frontend: react, react-router-dom, axios, framer-motion, zustand, tailwind.
+- Backend: express, prisma, bcryptjs, jsonwebtoken, multer, exceljs, aws-sdk s3.
+
+11.3 Cach he thong giao tiep
+- 100% HTTP REST + cookies.
+- File upload qua multipart/form-data.
+- Thanh toan callback qua VNPay return/ipn.
+
+11.4 Hidden logic (quan sat tu code)
+- Prisma proxy mapping model names lower-case/reserved keyword.
+- Notification read status su dung auditLog thay vi bang read_status rieng.
+- student dashboard GPA map tu thang 10 sang thang 4 custom.
+
+11.5 Core modules
+- Auth + security
+- Academic/curriculum
+- Timetable
+- Training/attendance
+- E-learning
+- Finance/payment
+
+============================================================
+12) PHAN TICH SOURCE CODE (KEY FILES)
+============================================================
+
+12.1 File quan trong nhat
+- backend/src/app.ts: composition middleware + route mount.
+- backend/src/controllers/*: business logic by domain.
+- backend/prisma/schema.prisma: source of truth data model.
+- backend/src/utils/security.ts: cookie/csrf/security base.
+- frontend/src/App.tsx: full routing matrix.
+- frontend/src/api/axios.ts: all network behaviors.
+- frontend/src/store/useAuthStore.ts: auth lifecycle.
+- frontend/src/layout/MainLayout.tsx + Sidebar.tsx: UX skeleton.
+
+12.2 Dependency graph (rut gon)
+- App.tsx -> pages/* -> components/* -> api/axios + useAuthStore.
+- backend app.ts -> routes/* -> controllers/* -> utils/prisma -> DB.
+
+12.3 Module interaction
+- `academic` lien ket `subject`, `classsubject`, `registration`, `grade`.
+- `curriculum` lien ket faculty-major-semester-subject.
+- `elearning` lien ket course-lesson-assignment-exam-registration.
+- `training/evidence/activity` lien ket DRL scoring + minh chung.
+
+12.4 Function call flow (vi du create service request)
+Services page submit
+-> POST /api/services/request
+-> service.controller.createServiceRequest
+-> validate + find student
+-> create servicerequest row
+-> response success/error
+
+12.5 Entry point toan he thong
+- Frontend: src/main.tsx -> App.tsx.
+- Backend: src/index.ts -> app.ts.
+
+============================================================
+13) TAI TAO DU AN (REBUILD)
+============================================================
+
+13.1 Danh sach cong nghe can dung
+- Node.js 20+ (hoac phu hop package lock).
+- npm.
+- MySQL 8+.
+- Prisma CLI.
+- Optional: Android SDK (neu build Capacitor).
+
+13.2 Quy trinh chay local
+Backend:
+1) cd backend
+2) npm install
+3) tao .env (DATABASE_URL, JWT_SECRET, ENCRYPTION_KEY...)
+4) npx prisma generate
+5) npx prisma db push
+6) npm run dev
+
+Frontend:
+1) cd frontend
+2) npm install
+3) tao .env (VITE_API_URL, VITE_API_TARGET)
+4) npm run dev
+
+13.3 Deploy production (goi y)
+- Build backend: npm run build, run node dist or tsx runtime.
+- Build frontend: npm run build, serve static dist.
+- Dat reverse proxy:
+	+ frontend domain
+	+ backend /api
+- Bat HTTPS va cookie secure.
+- Cau hinh CORS origin khop domain production.
+
+13.4 Uoc luong do kho tai tao
+- Muc do: Trung binh -> Cao.
+Ly do:
+- Domain nghiep vu rong, module nhieu.
+- Security/cookie/csrf can setup chuan domain.
+- Payment + R2 + mobile wrapper tang complexity.
+
+============================================================
+14) KET LUAN KY THUAT
+============================================================
+
+14.1 Diem manh he thong
+- Do phu nghiep vu rong, module hoa theo domain hop ly.
+- Data model day du, index kha tot.
+- Role-based access va CSRF cookie flow kha tot.
+- UI hien dai, nhat quan visual style o nhieu man hinh.
+
+14.2 Diem yeu
+- Typing frontend con yeu (`any` rat nhieu).
+- Chua co validation framework dong bo backend.
+- Chua co rate limit, chua co monitoring/APM.
+- Chua code-split route-level, nguy co bundle lon.
+- Khong co cache layer hoac queue cho tac vu nang.
+- Co anti-pattern kỹ thuật:
+	+ queryRawUnsafe
+	+ logic window.innerWidth trong render
+	+ duplicate route declarations
+	+ logging console nhieu.
+
+14.3 De xuat cai thien (uu tien)
+P0 (bao mat/on dinh):
+- Bat buoc env secrets (khong fallback default).
+- Them rate limit cho auth va endpoint nhay cam.
+- Chuan hoa error schema + global error middleware.
+- Giam console log nhay cam, dung structured logger.
+
+P1 (chat luong code/hieu nang):
+- Refactor typing frontend (giam `any`, tao DTO/types theo API).
+- Them schema validation (zod/joi) cho request body/query.
+- Route-level lazy loading + splitting frontend.
+- Tich hop cache (Redis) cho dashboard/query nang.
+
+P2 (quan sat va mo rong):
+- Them monitoring (Sentry + metrics + health checks).
+- Tach read-model cho analytics.
+- Thiet lap CI/CD voi lint + test + build + prisma check.
+
+14.4 De xuat nang cap kien truc
+- Chuyen sang architecture co service layer nhat quan:
+	controller -> service -> repository(prisma)
+- Tao API contracts (OpenAPI/Swagger) + generated types frontend.
+- Chuan hoa design system (tokens + component spec).
+- Danh gia event-driven cho module attendance/training notifications neu can near-realtime that su.
+
+============================================================
+PHU LUC A - DANH MUC API CHINH (RUT GON)
+============================================================
+- Auth: /api/auth/login, /me, /logout, /profile, /change-password
+- Student: /api/students/* (stats, list, CRUD, import, account)
+- Class/Semester: /api/classes/*, /api/semesters/*
+- Training: /api/training/*, /api/evidence/*
+- Attendance: /api/attendance/* (sessions, qr-check-in, summary)
+- Academic: /api/academic/subjects, /registrations, /class-subjects
+- Grade: /api/grades/my, /class, /bulk
+- Curriculum: /api/curriculum/faculties, /majors, /subjects, /my-curriculum
+- Timetable: /api/timetable/* (check-conflicts, bulk, import/export)
+- E-learning: /api/elearning/courses/lessons/assignments/exams/registrations
+- Finance/Payment: /api/finance/*, /api/payments/vnpay/*
+- Notification/Audit: /api/notifications/*, /api/audit
+- Service one-stop: /api/services/request, /all, /approve/:id
+
+============================================================
+PHU LUC B - NHAN DINH VE REALTIME
+============================================================
+- Khong tim thay WebSocket/SSE implementation.
+- He thong dang su dung polling (3s-30s) cho mot so use-case.
+- Neu can realtime thuc su:
+	+ de xuat websocket gateway cho attendance/activity stats.
+
+============================================================
+PHU LUC C - RUI RO CHINH KHI VAN HANH
+============================================================
+1) CORS/Cookie domain mismatch gay loi dang nhap tren mobile/web.
+2) Raw SQL va migration schema mismatch co the gay runtime bug.
+3) Khong co throttling auth -> rui ro brute force.
+4) Module lon nhieu route, de bi side effect khi refactor neu thieu test.
+
+Ket luan tong quat:
+Du an co nen tang tot, phong phu nghiep vu, va da dat muc ung dung thuc te cao. Tuy nhien de len cap enterprise-grade can uu tien hardening bao mat, chuan hoa typing/validation, toi uu performance, va bo sung monitoring + CI/CD ky luat.

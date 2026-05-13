@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../../generated/client_final';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -17,6 +17,7 @@ async function main() {
       password: passwordHash,
       name: 'ThS. Nguyễn Văn A',
       role: 'LECTURER',
+      updatedAt: new Date(),
     },
   });
 
@@ -28,6 +29,7 @@ async function main() {
       password: passwordHash,
       name: 'TS. Trần Thị B',
       role: 'LECTURER',
+      updatedAt: new Date(),
     },
   });
 
@@ -39,6 +41,7 @@ async function main() {
       password: passwordHash,
       name: 'PGS. TS. Lê C',
       role: 'LECTURER',
+      updatedAt: new Date(),
     },
   });
   console.log('✅ Đã tạo Giảng viên.');
@@ -52,7 +55,8 @@ async function main() {
       name: 'Lập trình C++',
       credits: 3,
       practicePeriods: 1, // đại diện cho lab
-      subjectType: 'PRACTICE'
+      subjectType: 'PRACTICE',
+      updatedAt: new Date(),
     },
   });
 
@@ -64,7 +68,8 @@ async function main() {
       name: 'Toán Rời Rạc',
       credits: 2,
       theoryPeriods: 2,
-      subjectType: 'LECTURE'
+      subjectType: 'LECTURE',
+      updatedAt: new Date(),
     },
   });
 
@@ -76,7 +81,8 @@ async function main() {
       name: 'Cấu trúc dữ liệu',
       credits: 3,
       theoryPeriods: 3,
-      subjectType: 'LECTURE'
+      subjectType: 'LECTURE',
+      updatedAt: new Date(),
     },
   });
 
@@ -88,7 +94,8 @@ async function main() {
       name: 'Trí tuệ nhân tạo',
       credits: 3,
       theoryPeriods: 3,
-      subjectType: 'LECTURE'
+      subjectType: 'LECTURE',
+      updatedAt: new Date(),
     },
   });
   console.log('✅ Đã tạo Môn học.');
@@ -103,7 +110,7 @@ async function main() {
   ];
 
   for (const asg of assignments) {
-    await prisma.teachingAssignment.upsert({
+    await (prisma as any).teachingassignment.upsert({
       where: {
         userId_subjectId: {
           userId: asg.userId,
@@ -111,22 +118,22 @@ async function main() {
         }
       },
       update: {},
-      create: asg
+      create: { ...asg, updatedAt: new Date() }
     });
   }
   console.log('✅ Đã phân công Giảng viên dạy các môn.');
 
   // 4. Tạo một vài Lớp Sinh Viên (Classes)
-  const classIT1 = await prisma.class.upsert({
+  const classIT1 = await (prisma as any).renamedclass.upsert({
     where: { name: 'IT01' },
     update: {},
-    create: { name: 'IT01' }
+    create: { name: 'IT01', updatedAt: new Date() }
   });
 
-  const classIT2 = await prisma.class.upsert({
+  const classIT2 = await (prisma as any).renamedclass.upsert({
     where: { name: 'IT02' },
     update: {},
-    create: { name: 'IT02' }
+    create: { name: 'IT02', updatedAt: new Date() }
   });
 
   console.log('✅ Đã tạo các Lớp sinh viên IT01, IT02.');
@@ -135,13 +142,13 @@ async function main() {
   await prisma.room.upsert({
     where: { name: 'Lab 1' },
     update: {},
-    create: { name: 'Lab 1', capacity: 40, type: 'lab' }
+    create: { name: 'Lab 1', capacity: 40, type: 'LAB', updatedAt: new Date() }
   });
 
   await prisma.room.upsert({
     where: { name: 'A1-101' },
     update: {},
-    create: { name: 'A1-101', capacity: 100, type: 'lecture' }
+    create: { name: 'A1-101', capacity: 100, type: 'LECTURE', updatedAt: new Date() }
   });
 
   console.log('✅ Đã tạo Phòng học.');

@@ -5,7 +5,7 @@ export type SemesterScope = {
   startDate: Date | null;
   endDate: Date | null;
   isGlobal: boolean;
-  scopeClasses: Array<{ name: string }>;
+  Renamedclass_semesterscope: Array<{ name: string }>;
 };
 
 export type SemesterSubmissionStatus = {
@@ -55,14 +55,14 @@ export const parseSemesterDateInput = (value: unknown, mode: 'start' | 'end'): D
 export const getSemesterWithScope = async (semesterName: string): Promise<SemesterScope | null> => {
   return (prisma as any).semester.findUnique({
     where: { name: semesterName },
-    include: { scopeClasses: { select: { name: true } } },
+    include: { Renamedclass_semesterscope: { select: { name: true } } },
   });
 };
 
 export const canSemesterApplyToClass = (semester: SemesterScope, classId?: string | null) => {
   if (semester.isGlobal) return true;
   if (!classId) return false;
-  return semester.scopeClasses.some((item) => item.name === classId);
+  return semester.Renamedclass_semesterscope.some((item) => item.name === classId);
 };
 
 export const getSemesterSubmissionStatus = ({

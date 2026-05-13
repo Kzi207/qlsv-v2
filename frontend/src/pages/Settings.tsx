@@ -75,7 +75,7 @@ const SettingsPage = () => {
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-black text-slate-400 uppercase tracking-widest">
              <SettingsIcon size={12} /> System Administration
           </div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight text-gradient">Cài đặt hệ thống</h1>
+          <h1 className="text-xl md:text-3xl font-black text-slate-900 tracking-tight leading-tight text-gradient">Cài đặt hệ thống</h1>
           <p className="text-slate-500 font-bold text-sm">Cấu hình các tham số vận hành và thông tin tổ chức.</p>
         </div>
 

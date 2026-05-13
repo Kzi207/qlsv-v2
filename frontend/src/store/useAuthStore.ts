@@ -23,6 +23,7 @@ interface User {
   studentId?: number | null;
   class_id?: string | null;
   phone?: string | null;
+  major_name?: string | null;
   student?: Student | null;
 }
 
@@ -41,11 +42,18 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   authInitialized: false,
   initializeAuth: async () => {
-    // Alternative strategy: if we just logged out, don't even try to re-fetch auth
+    // 1. Check if we already handled a logout in this session
     const justLoggedOut = localStorage.getItem('qlsv_just_logged_out');
     if (justLoggedOut === 'true') {
       localStorage.removeItem('qlsv_just_logged_out');
       set({ user: null, isAuthenticated: false, authInitialized: true });
+      return;
+    }
+
+    // 2. If already initialized and not authenticated, don't re-fetch unless forced
+    // This helps prevent loops if multiple components trigger initializeAuth
+    const state = useAuthStore.getState();
+    if (state.authInitialized && !state.isAuthenticated) {
       return;
     }
 
@@ -56,8 +64,13 @@ export const useAuthStore = create<AuthState>((set) => ({
       } else {
         set({ user: null, isAuthenticated: false, authInitialized: true });
       }
-    } catch (_error) {
+    } catch (_error: any) {
       set({ user: null, isAuthenticated: false, authInitialized: true });
+      
+      // If it's a 401, we definitely aren't logged in
+      if (_error.response?.status === 401) {
+        // No extra action needed, the state update above will trigger the UI change
+      }
     }
   },
   login: (user) => {

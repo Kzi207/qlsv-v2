@@ -108,7 +108,6 @@ const GradeManagement = () => {
     try {
       const gradesData = students.map(s => ({
         studentId: s.id,
-        processScore: s.processScore === '' ? 0 : parseFloat(s.processScore),
         midtermScore: s.midtermScore === '' ? 0 : parseFloat(s.midtermScore),
         finalScore: s.finalScore === '' ? 0 : parseFloat(s.finalScore)
       }));
@@ -128,11 +127,10 @@ const GradeManagement = () => {
     }
   };
 
-  const calculateTotal = (p: any, m: any, f: any) => {
-    const pVal = parseFloat(p) || 0;
+  const calculateTotal = (m: any, f: any) => {
     const mVal = parseFloat(m) || 0;
     const fVal = parseFloat(f) || 0;
-    const total = (pVal * 0.2) + (mVal * 0.3) + (fVal * 0.5);
+    const total = (mVal * 0.4) + (fVal * 0.6);
     return Math.round(total * 100) / 100;
   };
 
@@ -155,14 +153,12 @@ const GradeManagement = () => {
         jsonData.forEach((row: any) => {
           // Normalize keys (handle Vietnamese or English headers)
           const mssv = row['MSSV'] || row['student_code'] || row['Mã sinh viên'];
-          const process = row['Quá trình'] || row['Process'] || row['GK1'];
           const midterm = row['Giữa kỳ'] || row['Midterm'] || row['GK2'];
           const final = row['Cuối kỳ'] || row['Final'] || row['CK'];
 
           if (mssv) {
             const studentIdx = newStudents.findIndex(s => s.student_code === String(mssv));
             if (studentIdx !== -1) {
-              if (process !== undefined) newStudents[studentIdx].processScore = process;
               if (midterm !== undefined) newStudents[studentIdx].midtermScore = midterm;
               if (final !== undefined) newStudents[studentIdx].finalScore = final;
               updatedCount++;
@@ -189,7 +185,6 @@ const GradeManagement = () => {
     const templateData = students.map(s => ({
       'MSSV': s.student_code,
       'Họ và tên': s.name,
-      'Quá trình': s.processScore,
       'Giữa kỳ': s.midtermScore,
       'Cuối kỳ': s.finalScore
     }));
@@ -208,7 +203,7 @@ const GradeManagement = () => {
              <Calculator size={12} /> Hệ thống quản lý điểm số
           </div>
           <h1 className="text-4xl font-black text-slate-900 tracking-tight text-gradient">Nhập điểm học phần</h1>
-          <p className="text-slate-500 font-bold text-sm">Chọn học phần được phân công để bắt đầu nhập điểm.</p>
+          <p className="text-slate-500 font-bold text-sm">Hệ thống tính điểm theo tỷ lệ: Giữa kỳ (40%) và Cuối kỳ (60%).</p>
         </div>
       </div>
 
@@ -311,10 +306,9 @@ const GradeManagement = () => {
                       <tr className="bg-slate-50/50">
                         <th className="p-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 w-16 text-center">STT</th>
                         <th className="p-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Sinh viên</th>
-                        <th className="p-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 w-32">Quá trình (20%)</th>
-                        <th className="p-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 w-32">Giữa kỳ (30%)</th>
-                        <th className="p-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 w-32">Cuối kỳ (50%)</th>
-                        <th className="p-6 text-center text-[10px] font-black text-blue-600 uppercase tracking-widest border-b border-slate-100 w-32 bg-blue-50/30">Tổng kết</th>
+                        <th className="p-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 w-40">Giữa kỳ (40%)</th>
+                        <th className="p-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 w-40">Cuối kỳ (60%)</th>
+                        <th className="p-6 text-center text-[10px] font-black text-blue-600 uppercase tracking-widest border-b border-slate-100 w-40 bg-blue-50/30">Tổng kết</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
@@ -331,17 +325,6 @@ const GradeManagement = () => {
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{s.student_code}</p>
                               </div>
                             </div>
-                          </td>
-                          <td className="p-4">
-                            <input 
-                              type="number"
-                              min="0"
-                              max="10"
-                              step="0.1"
-                              value={s.processScore}
-                              onChange={e => handleScoreChange(s.id, 'processScore', e.target.value)}
-                              className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-center text-sm outline-none focus:ring-2 focus:ring-blue-500/10 focus:bg-white transition-all"
-                            />
                           </td>
                           <td className="p-4">
                             <input 
@@ -367,7 +350,7 @@ const GradeManagement = () => {
                           </td>
                           <td className="p-4 bg-blue-50/20">
                             <div className="text-center font-black text-blue-600 text-sm">
-                              {calculateTotal(s.processScore, s.midtermScore, s.finalScore).toFixed(2)}
+                              {calculateTotal(s.midtermScore, s.finalScore).toFixed(2)}
                             </div>
                           </td>
                         </tr>

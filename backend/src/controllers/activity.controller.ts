@@ -11,14 +11,14 @@ export const createSession = async (req: AuthRequest, res: Response) => {
     const pointsInt = parseInt(String(points)) || 0;
 
     await prisma.$executeRaw`
-      INSERT INTO "ActivityAttendanceSession" 
-      (title, category, points, "qrToken", "isActive", "createdAt", "sectionId", "criterionId", "semesterId", "classId")
+      INSERT INTO activityattendancesession 
+      (title, category, points, qrToken, isActive, createdAt, sectionId, criterionId, semesterId, classId)
       VALUES 
       (${title}, ${category}, ${pointsInt}, ${qrToken}, true, NOW(), ${sectionId}, ${criterionId}, ${semesterId || null}, ${classId || null})
     `;
 
     const sessions: any[] = await prisma.$queryRaw`
-      SELECT * FROM "ActivityAttendanceSession" WHERE "qrToken" = ${qrToken} LIMIT 1
+      SELECT * FROM activityattendancesession WHERE qrToken = ${qrToken} LIMIT 1
     `;
 
     await logAudit({
@@ -49,7 +49,7 @@ export const scanQR = async (req: AuthRequest, res: Response) => {
     const studentIdInt = parseInt(String(user.studentId));
 
     const students: any[] = await prisma.$queryRaw`
-      SELECT id, class_id FROM "Student" WHERE id = ${studentIdInt} LIMIT 1
+      SELECT id, class_id FROM student WHERE id = ${studentIdInt} LIMIT 1
     `;
     const student = students[0];
 
@@ -58,7 +58,7 @@ export const scanQR = async (req: AuthRequest, res: Response) => {
     }
 
     const sessions: any[] = await prisma.$queryRaw`
-      SELECT * FROM "ActivityAttendanceSession" WHERE "qrToken" = ${qrToken} LIMIT 1
+      SELECT * FROM activityattendancesession WHERE qrToken = ${qrToken} LIMIT 1
     `;
     const session = sessions[0];
 
@@ -71,8 +71,8 @@ export const scanQR = async (req: AuthRequest, res: Response) => {
     }
 
     const existing: any[] = await prisma.$queryRaw`
-      SELECT * FROM "ActivityAttendanceRecord" 
-      WHERE "sessionId" = ${session.id} AND "studentId" = ${student.id}
+      SELECT * FROM activityattendancerecord 
+      WHERE sessionId = ${session.id} AND studentId = ${student.id}
       LIMIT 1
     `;
 
@@ -81,9 +81,14 @@ export const scanQR = async (req: AuthRequest, res: Response) => {
     }
 
     await prisma.$executeRaw`
-      INSERT INTO "ActivityAttendanceRecord" ("sessionId", "studentId", points, "scannedAt")
+      INSERT INTO activityattendancerecord (sessionId, studentId, points, scannedAt)
       VALUES (${session.id}, ${student.id}, ${session.points}, NOW())
     `;
+
+    // Tự động cộng điểm vào phiếu DRL nếu session có đủ thông tin
+    if (session.criterionId && session.semesterId) {
+      await syncActivityToTrainingScore(student.id, session.semesterId, session.criterionId, session.points);
+    }
 
     await logAudit({
       userId: Number(user.id),
@@ -101,43 +106,124 @@ export const scanQR = async (req: AuthRequest, res: Response) => {
   }
 };
 
+/**
+ * Helper để đồng bộ điểm từ hoạt động vào phiếu DRL
+ */
+async function syncActivityToTrainingScore(studentId: number, semesterId: string, criterionId: string, points: number) {
+  try {
+    const scoreRecord = await (prisma as any).trainingScore.findFirst({
+      where: { student_id: studentId, semester_id: semesterId }
+    });
+
+    let details: Record<string, number> = {};
+    if (scoreRecord && scoreRecord.details) {
+      try {
+        details = typeof scoreRecord.details === 'string' ? JSON.parse(scoreRecord.details) : scoreRecord.details;
+      } catch {
+        details = {};
+      }
+    }
+
+    // Cộng điểm vào mục tiêu chí tương ứng (không vượt quá giới hạn nếu có, nhưng ở đây ta cứ cộng vào)
+    // Lưu ý: Logic này giả định details lưu trữ điểm theo criterionId
+    const currentPoints = Number(details[criterionId] || 0);
+    details[criterionId] = currentPoints + points;
+
+    // Tính toán lại các phần y_thuc, hoat_dong, ky_luat
+    // Cấu trúc criterionId thường là X.Y (VD: 1.1, 2.1, 3.1...)
+    let y_thuc = 0, hoat_dong = 0, ky_luat = 0;
+    
+    Object.entries(details).forEach(([cid, val]) => {
+      const p = Number(val) || 0;
+      if (cid.startsWith('1.')) y_thuc += p;
+      else if (cid.startsWith('2.')) ky_luat += p;
+      else if (cid.startsWith('3.') || cid.startsWith('4.') || cid.startsWith('5.')) hoat_dong += p;
+    });
+
+    // Giới hạn điểm tối đa theo quy định (Tham khảo từ training.controller)
+    const secMaxPoints: number[] = [20, 25, 20, 25, 10]; // I: 20, II: 25, III: 20, IV: 25, V: 10
+    const sec0 = secMaxPoints[0] ?? 20;
+    const sec1 = secMaxPoints[1] ?? 25;
+    const sec2 = secMaxPoints[2] ?? 20;
+    const sec3 = secMaxPoints[3] ?? 25;
+    const sec4 = secMaxPoints[4] ?? 10;
+
+    y_thuc = Math.min(y_thuc, sec0);
+    const hoat_dong_max = sec1 + sec2; // Phần III + IV
+    hoat_dong = Math.min(hoat_dong, hoat_dong_max);
+    const ky_luat_max = sec3 + sec4; // Phần II + V
+    ky_luat = Math.min(ky_luat, ky_luat_max);
+    
+    const total = Math.min(y_thuc + hoat_dong + ky_luat, 100);
+
+    if (scoreRecord) {
+      // Update sử dụng raw SQL để tránh lỗi jsonb/string mismatch nếu có
+      await prisma.$executeRaw`
+        UPDATE trainingscore 
+        SET details = ${JSON.stringify(details)},
+            y_thuc = ${y_thuc},
+            hoat_dong = ${hoat_dong},
+            ky_luat = ${ky_luat},
+            total = ${total},
+            updatedAt = NOW()
+        WHERE id = ${scoreRecord.id}
+      `;
+    } else {
+      // Create new draft score
+      await prisma.$executeRaw`
+        INSERT INTO trainingscore (student_id, semester_id, y_thuc, hoat_dong, ky_luat, total, details, status, createdAt, updatedAt)
+        VALUES (${studentId}, ${semesterId}, ${y_thuc}, ${hoat_dong}, ${ky_luat}, ${total}, ${JSON.stringify(details)}, 'DRAFT', NOW(), NOW())
+      `;
+    }
+  } catch (err) {
+    console.error('Error in syncActivityToTrainingScore:', err);
+  }
+}
+
 export const getMyRecords = async (req: AuthRequest, res: Response) => {
   try {
     const user = (req as any).user;
     if (!user || !user.studentId) return res.status(403).json({ error: 'Forbidden' });
     const studentIdInt = parseInt(String(user.studentId));
 
-    // Get QR scanned records
-    const qrRecords: any[] = await prisma.$queryRaw`
-      SELECT r.id, r.points, r."scannedAt", row_to_json(s) as session
-      FROM "ActivityAttendanceRecord" r
-      JOIN "ActivityAttendanceSession" s ON r."sessionId" = s.id
-      WHERE r."studentId" = ${studentIdInt}
-    `;
+    // Get QR scanned records using Prisma Client
+    const qrRecords = await prisma.activityattendancerecord.findMany({
+      where: { studentId: studentIdInt },
+      include: {
+        activityattendancesession: true
+      }
+    });
 
-    // Get Approved manual evidence
-    const manualRecords: any[] = await prisma.$queryRaw`
-      SELECT id, points, "updatedAt" as "scannedAt", 
-             "adminTitle" as title, "sectionId", "criterionId", "semesterId"
-      FROM "ActivityEvidence"
-      WHERE "studentId" = ${studentIdInt} AND status = 'APPROVED'
-    `;
+    const formattedQrRecords = qrRecords.map((r: any) => ({
+      id: r.id,
+      points: r.points,
+      scannedAt: r.scannedAt,
+      session: r.activityattendancesession
+    }));
+
+    // Get Approved manual evidence using Prisma Client
+    const manualRecords = await prisma.activityevidence.findMany({
+      where: { 
+        studentId: studentIdInt,
+        status: 'APPROVED'
+      }
+    });
 
     // Transform manual records to match QR record structure for frontend
-    const transformedManual = manualRecords.map(m => ({
+    const transformedManual = manualRecords.map((m: any) => ({
       id: `manual-${m.id}`,
       points: m.points,
-      scannedAt: m.scannedAt,
+      scannedAt: m.updatedAt, 
       session: {
         id: `manual-session-${m.id}`,
-        title: m.title,
+        title: m.adminTitle || m.title,
         sectionId: m.sectionId,
         criterionId: m.criterionId,
         semesterId: m.semesterId
       }
     }));
 
-    const allRecords = [...qrRecords, ...transformedManual].sort((a, b) => 
+    const allRecords = [...formattedQrRecords, ...transformedManual].sort((a, b) => 
       new Date(b.scannedAt).getTime() - new Date(a.scannedAt).getTime()
     );
 
@@ -153,9 +239,9 @@ export const getSessionStats = async (req: AuthRequest, res: Response) => {
     const { sessionId } = req.params;
     const stats: any[] = await prisma.$queryRaw`
       SELECT r.*, row_to_json(st) as student
-      FROM "ActivityAttendanceRecord" r
-      JOIN "Student" st ON r."studentId" = st.id
-      WHERE r."sessionId" = ${parseInt(String(sessionId), 10)}
+      FROM activityattendancerecord r
+      JOIN student st ON r.studentId = st.id
+      WHERE r.sessionId = ${parseInt(String(sessionId), 10)}
     `;
     res.json(stats);
   } catch (error: any) {
@@ -169,7 +255,7 @@ export const updateRecord = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const { points } = req.body;
     await prisma.$executeRaw`
-      UPDATE "ActivityAttendanceRecord" SET points = ${parseInt(String(points), 10) || 0} WHERE id = ${parseInt(String(id), 10)}
+      UPDATE activityattendancerecord SET points = ${parseInt(String(points), 10) || 0} WHERE id = ${parseInt(String(id), 10)}
     `;
     res.json({ message: 'Cập nhật thành công' });
   } catch (error: any) {
@@ -182,7 +268,7 @@ export const deleteRecord = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     await prisma.$executeRaw`
-      DELETE FROM "ActivityAttendanceRecord" WHERE id = ${parseInt(String(id), 10)}
+      DELETE FROM activityattendancerecord WHERE id = ${parseInt(String(id), 10)}
     `;
     res.json({ message: 'Xóa bản ghi thành công' });
   } catch (error: any) {
@@ -196,8 +282,8 @@ export const deleteSession = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const sessionId = parseInt(String(id), 10);
 
-    await prisma.$executeRaw`DELETE FROM "ActivityAttendanceRecord" WHERE "sessionId" = ${sessionId}`;
-    await prisma.$executeRaw`DELETE FROM "ActivityAttendanceSession" WHERE id = ${sessionId}`;
+    await prisma.$executeRaw`DELETE FROM activityattendancerecord WHERE sessionId = ${sessionId}`;
+    await prisma.$executeRaw`DELETE FROM activityattendancesession WHERE id = ${sessionId}`;
 
     res.json({ message: 'Xóa hoạt động thành công' });
   } catch (error: any) {
@@ -211,7 +297,7 @@ export const toggleSessionStatus = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const { isActive } = req.body;
     await prisma.$executeRaw`
-      UPDATE "ActivityAttendanceSession" SET "isActive" = ${isActive} WHERE id = ${parseInt(String(id), 10)}
+      UPDATE activityattendancesession SET isActive = ${isActive} WHERE id = ${parseInt(String(id), 10)}
     `;
     res.json({ message: 'Cập nhật trạng thái thành công' });
   } catch (error: any) {
@@ -229,14 +315,14 @@ export const getAllSessions = async (req: AuthRequest, res: Response) => {
     let query: any;
     if (isQtv) {
       query = prisma.$queryRaw`
-        SELECT * FROM "ActivityAttendanceSession" ORDER BY "createdAt" DESC
+        SELECT * FROM activityattendancesession ORDER BY createdAt DESC
       `;
     } else {
       // BCH only see sessions for their class OR global sessions (where classId is null)
       query = prisma.$queryRaw`
-        SELECT * FROM "ActivityAttendanceSession" 
-        WHERE "classId" = ${userClassId} OR "classId" IS NULL
-        ORDER BY "createdAt" DESC
+        SELECT * FROM activityattendancesession 
+        WHERE classId = ${userClassId} OR classId IS NULL
+        ORDER BY createdAt DESC
       `;
     }
 
@@ -252,7 +338,7 @@ export const getAllSessions = async (req: AuthRequest, res: Response) => {
 
 export const uploadEvidence = async (req: AuthRequest, res: Response) => {
   try {
-    const { title } = req.body;
+    const { title, sectionId, criterionId, semesterId, points } = req.body;
     const user = (req as any).user;
     
     if (!user || !user.studentId) return res.status(403).json({ error: 'Forbidden' });
@@ -260,10 +346,11 @@ export const uploadEvidence = async (req: AuthRequest, res: Response) => {
 
     const studentIdInt = parseInt(String(user.studentId));
     const imageUrl = `/uploads/evidence/${req.file.filename}`;
+    const pointsInt = points ? parseInt(String(points)) : null;
 
     await prisma.$executeRaw`
-      INSERT INTO "ActivityEvidence" (title, "imageUrl", "studentId", status, "createdAt", "updatedAt")
-      VALUES (${title}, ${imageUrl}, ${studentIdInt}, 'PENDING', NOW(), NOW())
+      INSERT INTO activityevidence (title, imageUrl, studentId, status, createdAt, updatedAt, sectionId, criterionId, semesterId, points)
+      VALUES (${title}, ${imageUrl}, ${studentIdInt}, 'PENDING', NOW(), NOW(), ${sectionId || null}, ${criterionId || null}, ${semesterId || null}, ${pointsInt})
     `;
 
     await logAudit({
@@ -289,9 +376,9 @@ export const getMyEvidenceRequests = async (req: AuthRequest, res: Response) => 
     const studentIdInt = parseInt(String(user.studentId));
 
     const evidence = await prisma.$queryRaw`
-      SELECT * FROM "ActivityEvidence" 
-      WHERE "studentId" = ${studentIdInt} 
-      ORDER BY "createdAt" DESC
+      SELECT * FROM activityevidence 
+      WHERE studentId = ${studentIdInt} 
+      ORDER BY createdAt DESC
     `;
 
     res.json(evidence);
@@ -369,16 +456,25 @@ export const reviewEvidence = async (req: AuthRequest, res: Response) => {
     const { status, adminTitle, points, sectionId, criterionId, semesterId } = req.body;
 
     await prisma.$executeRaw`
-      UPDATE "ActivityEvidence" 
+      UPDATE activityevidence 
       SET status = ${status}, 
-          "adminTitle" = ${adminTitle || null}, 
+          adminTitle = ${adminTitle || null}, 
           points = ${points ? parseInt(String(points)) : null}, 
-          "sectionId" = ${sectionId || null}, 
-          "criterionId" = ${criterionId || null},
-          "semesterId" = ${semesterId || null},
-          "updatedAt" = NOW()
+          sectionId = ${sectionId || null}, 
+          criterionId = ${criterionId || null},
+          semesterId = ${semesterId || null},
+          updatedAt = NOW()
       WHERE id = ${parseInt(String(id))}
     `;
+
+    // Nếu duyệt minh chứng thành công, tự động cộng điểm vào phiếu DRL
+    if (status === 'APPROVED' && criterionId && semesterId && points) {
+      // Lấy studentId từ bản ghi minh chứng
+      const evidence: any[] = await prisma.$queryRaw`SELECT studentId FROM activityevidence WHERE id = ${parseInt(String(id))} LIMIT 1`;
+      if (evidence.length > 0) {
+        await syncActivityToTrainingScore(evidence[0].studentId, semesterId, criterionId, parseInt(String(points)));
+      }
+    }
 
     await logAudit({
       userId: Number((req as any).user?.id),
@@ -407,8 +503,8 @@ export const deleteEvidence = async (req: AuthRequest, res: Response) => {
 
     // Check ownership
     const evidence: any[] = await prisma.$queryRaw`
-      SELECT id FROM "ActivityEvidence" 
-      WHERE id = ${evidenceId} AND "studentId" = ${studentIdInt}
+      SELECT id FROM activityevidence 
+      WHERE id = ${evidenceId} AND studentId = ${studentIdInt}
       LIMIT 1
     `;
 
@@ -417,7 +513,7 @@ export const deleteEvidence = async (req: AuthRequest, res: Response) => {
     }
 
     await prisma.$executeRaw`
-      DELETE FROM "ActivityEvidence" WHERE id = ${evidenceId}
+      DELETE FROM activityevidence WHERE id = ${evidenceId}
     `;
 
     await logAudit({

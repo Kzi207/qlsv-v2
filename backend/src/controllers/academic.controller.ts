@@ -8,14 +8,20 @@ export const getSubjects = async (req: AuthRequest, res: Response) => {
   try {
     const subjects = await prisma.subject.findMany({ orderBy: { code: 'asc' } });
     res.json(subjects);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Server error' });
   }
 };
 
 export const createSubject = async (req: AuthRequest, res: Response) => {
   const { code, name, credits, pricePerCredit, theoryPeriods, practicePeriods, subjectType } = req.body;
   try {
+    // Check if code exists
+    const existing = await prisma.subject.findUnique({ where: { code } });
+    if (existing) {
+      return res.status(400).json({ error: `Mã môn học ${code} đã tồn tại trong hệ thống` });
+    }
+
     const subject = await prisma.subject.create({
       data: { 
         code, 
@@ -24,21 +30,28 @@ export const createSubject = async (req: AuthRequest, res: Response) => {
         pricePerCredit: Number(pricePerCredit || 500000),
         theoryPeriods: Number(theoryPeriods || 0),
         practicePeriods: Number(practicePeriods || 0),
-        subjectType: subjectType || 'LECTURE'
+        subjectType: subjectType || 'LECTURE',
+        updatedAt: new Date()
       }
     });
-    await logAudit({
-      userId: Number(req.user?.id),
-      action: 'CREATE_SUBJECT',
-      targetType: 'Subject',
-      targetId: String(subject.id),
-      details: { code, name },
-      req
-    });
+
+    try {
+      await logAudit({
+        userId: req.user?.id ? Number(req.user.id) : undefined,
+        action: 'CREATE_SUBJECT',
+        targetType: 'Subject',
+        targetId: String(subject.id),
+        details: { code, name },
+        req
+      });
+    } catch (auditError) {
+      console.error('Audit log failed:', auditError);
+    }
 
     res.status(201).json(subject);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (error: any) {
+    console.error('Create subject error:', error);
+    res.status(500).json({ error: error.message || 'Server error' });
   }
 };
 
@@ -55,22 +68,27 @@ export const updateSubject = async (req: AuthRequest, res: Response) => {
         pricePerCredit: Number(pricePerCredit),
         theoryPeriods: Number(theoryPeriods),
         practicePeriods: Number(practicePeriods),
-        subjectType
+        subjectType,
+        updatedAt: new Date()
       }
     });
 
-    await logAudit({
-      userId: Number(req.user?.id),
-      action: 'UPDATE_SUBJECT',
-      targetType: 'Subject',
-      targetId: String(id),
-      details: { code, name },
-      req
-    });
+    try {
+      await logAudit({
+        userId: req.user?.id ? Number(req.user.id) : undefined,
+        action: 'UPDATE_SUBJECT',
+        targetType: 'Subject',
+        targetId: String(id),
+        details: { code, name },
+        req
+      });
+    } catch (auditError) {
+      console.error('Audit log failed:', auditError);
+    }
 
     res.json(subject);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Server error' });
   }
 };
 
@@ -81,29 +99,62 @@ export const bulkUpdateSubjectPrice = async (req: AuthRequest, res: Response) =>
       data: { pricePerCredit: Number(pricePerCredit) }
     });
     res.json({ message: 'Updated all subjects' });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Server error' });
   }
 };
 
 export const deleteSubject = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
+  const subjectId = Number(id);
   try {
-    const subject = await prisma.subject.findUnique({ where: { id: Number(id) } });
-    await prisma.subject.delete({ where: { id: Number(id) } });
+    const subject = await prisma.subject.findUnique({ where: { id: subjectId } });
+    if (!subject) return res.status(404).json({ error: 'Không tìm thấy môn học' });
 
-    await logAudit({
-      userId: Number(req.user?.id),
-      action: 'DELETE_SUBJECT',
-      targetType: 'Subject',
-      targetId: String(id),
-      details: { code: subject?.code, name: subject?.name },
-      req
+    // Check for blocking relations with details
+    const course = await prisma.course.findFirst({ 
+      where: { subjectId },
+      select: { name: true }
     });
+    if (course) {
+      return res.status(400).json({ error: `Không thể xóa vì đã có khóa học LMS "${course.name}" sử dụng môn này` });
+    }
 
-    res.json({ message: 'Deleted' });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    const curriculumSub = await prisma.curriculumsubject.findFirst({
+      where: { subjectId },
+      include: { major: { select: { name: true } } }
+    });
+    if (curriculumSub) {
+      return res.status(400).json({ error: `Không thể xóa vì môn học đang nằm trong chương trình khung của ngành: ${curriculumSub.major.name}` });
+    }
+
+    const prerequisiteFor = await prisma.curriculumsubject.findFirst({
+      where: { prerequisiteSubjectId: subjectId },
+      include: { subject_curriculumsubject_subjectIdTosubject: { select: { name: true } } }
+    });
+    if (prerequisiteFor) {
+      return res.status(400).json({ error: `Không thể xóa vì đây là môn tiên quyết của môn "${prerequisiteFor.subject_curriculumsubject_subjectIdTosubject.name}"` });
+    }
+
+    await prisma.subject.delete({ where: { id: subjectId } });
+
+    try {
+      await logAudit({
+        userId: req.user?.id ? Number(req.user.id) : undefined,
+        action: 'DELETE_SUBJECT',
+        targetType: 'Subject',
+        targetId: String(id),
+        details: { code: subject?.code, name: subject?.name },
+        req
+      });
+    } catch (auditError) {
+      console.error('Audit log failed:', auditError);
+    }
+
+    res.json({ message: 'Đã xóa môn học thành công' });
+  } catch (error: any) {
+    console.error('Delete subject error:', error);
+    res.status(500).json({ error: error.message || 'Lỗi server khi xóa môn học' });
   }
 };
 
@@ -119,8 +170,8 @@ export const getMyRegistrations = async (req: AuthRequest, res: Response) => {
       orderBy: { createdAt: 'desc' }
     });
     res.json(regs);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Server error' });
   }
 };
 
@@ -148,7 +199,8 @@ export const registerSubject = async (req: AuthRequest, res: Response) => {
       data: {
         studentId: Number(studentId),
         subjectId: Number(subjectId),
-        semesterId: String(semesterId)
+        semesterId: String(semesterId),
+        updatedAt: new Date()
       }
     });
 
@@ -156,9 +208,9 @@ export const registerSubject = async (req: AuthRequest, res: Response) => {
     await updateTuition(Number(studentId), String(semesterId));
 
     res.status(201).json(reg);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: error.message || 'Server error' });
   }
 };
 
@@ -179,8 +231,8 @@ export const cancelRegistration = async (req: AuthRequest, res: Response) => {
     await updateTuition(reg.studentId, reg.semesterId);
 
     res.json({ message: 'Cancelled' });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Server error' });
   }
 };
 
@@ -189,11 +241,11 @@ export const assignSubjectToClass = async (req: AuthRequest, res: Response) => {
   const { classId, subjectId, semesterId } = req.body;
   try {
     const cs = await prisma.classSubject.create({
-      data: { classId, subjectId: Number(subjectId), semesterId }
+      data: { classId, subjectId: Number(subjectId), semesterId, updatedAt: new Date() }
     });
     res.status(201).json(cs);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Server error' });
   }
 };
 
@@ -202,8 +254,8 @@ export const unassignSubjectFromClass = async (req: AuthRequest, res: Response) 
   try {
     await prisma.classSubject.delete({ where: { id: Number(id) } });
     res.json({ message: 'Unassigned' });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Server error' });
   }
 };
 
@@ -218,8 +270,8 @@ export const getSubjectsByClass = async (req: AuthRequest, res: Response) => {
       include: { subject: true }
     });
     res.json(assignments);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Server error' });
   }
 };
 
@@ -229,11 +281,14 @@ const updateTuition = async (studentId: number, semesterId: string) => {
     include: { subject: true }
   });
 
-  const totalAmount = regs.reduce((sum, reg) => sum + (reg.subject.credits * reg.subject.pricePerCredit), 0);
+  const settings = await (prisma as any).systemSetting.findFirst();
+  const globalPrice = settings?.tuitionPricePerCredit || 500000;
+
+  const totalAmount = regs.reduce((sum: number, reg: any) => sum + (reg.subject.credits * globalPrice), 0);
 
   await prisma.tuition.upsert({
     where: { studentId_semesterId: { studentId, semesterId } },
-    update: { totalAmount },
-    create: { studentId, semesterId, totalAmount }
+    update: { totalAmount, updatedAt: new Date() },
+    create: { studentId, semesterId, totalAmount, updatedAt: new Date() }
   });
 };

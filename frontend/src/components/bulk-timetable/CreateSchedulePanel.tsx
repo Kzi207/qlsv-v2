@@ -53,7 +53,11 @@ const CreateSchedulePanel = ({
               className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-blue-500/10 transition-all appearance-none cursor-pointer"
             >
               <option value="">--- Chọn giảng viên ---</option>
-              {teachers.map(t => <option key={t} value={t}>{t}</option>)}
+              {teachers.map(t => (
+                <option key={t.username || t.id} value={t.name}>
+                  {t.name} {t.username ? `(${t.username})` : ''}
+                </option>
+              ))}
             </select>
           </div>
 

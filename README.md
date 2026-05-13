@@ -1,4 +1,4 @@
-# 🎓 Hệ thống Quản trị Sinh viên Thông minh & Đánh giá Điểm rèn luyện Toàn diện
+﻿# 🎓 Hệ thống Quản trị Sinh viên Thông minh & Đánh giá Điểm rèn luyện Toàn diện
 
 ![Version](https://img.shields.io/badge/version-2.0.0--stable-blue?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-Copyrighted-red?style=for-the-badge)
@@ -152,3 +152,20 @@ Mọi thắc mắc về bản quyền, hỗ trợ kỹ thuật hoặc yêu cầu
 -   **Vai trò**: 
 -   **Email**: [toi05022020@gmail.com]
 -   **Dự án**: Hệ thống QLSV v1.0
+
+## 🔧 API quản lý tài khoản CBNT
+- `GET /api/bch`:
+  - `QTV`: xem toàn bộ tài khoản `QTV` / `LECTURER` / `BCH`.
+  - `BCH`: chỉ xem tài khoản `BCH` trong lớp mình.
+- `POST /api/bch`:
+  - `QTV`: tạo `QTV`, giảng viên hoặc `BCH`.
+  - `BCH`: chỉ tạo tài khoản `BCH` trong lớp của mình.
+  - Payload chính: `username`, `password?`, `name`, `email?`, `phone?`, `role`, `position?`, `class_id?`, `teachingSubjectId?`.
+- `PUT /api/bch/:id`:
+  - Hỗ trợ cập nhật `name`, `email`, `phone`, `position`, `class_id`, `role`, `password`, `teachingSubjectId`.
+- `DELETE /api/bch/:id`:
+  - Xóa tài khoản và dọn các phân công liên quan.
+- `POST /api/bch/assign`:
+  - Gán dải STT sinh viên cho BCH theo lớp.
+- `GET /api/bch/export-assignments`:
+  - Xuất file phân công theo lớp.

@@ -3,40 +3,31 @@ import prisma from '../utils/prisma';
 
 export const getClasses = async (req: Request, res: Response) => {
   try {
-    const classes = await (prisma as any).class.findMany({
+    const classes = await (prisma as any).renamedclass.findMany({
       include: {
         major: { include: { faculty: true } },
+        student: true  // Matches schema: student student[]
       },
       orderBy: { name: 'asc' }
     });
-    
-    // Use raw query to ensure we count correctly despite whitespace/case issues
-    const studentCounts: any[] = await prisma.$queryRaw`
-      SELECT UPPER(TRIM(class_id)) as "classId", COUNT(*)::int as count 
-      FROM "Student" 
-      GROUP BY UPPER(TRIM(class_id))
-    `;
 
-    const countMap = studentCounts.reduce((acc, curr) => {
-      // Handle both classId and classid (PG can be case sensitive with aliases)
-      const cid = curr.classId || curr.classid || '';
-      acc[cid] = curr.count;
-      return acc;
-    }, {} as Record<string, number>);
-
-    // Map to a friendlier format
+    // Map to a friendlier format with student count
     const result = classes.map((c: any) => ({
       name: c.name,
-      studentCount: countMap[c.name.trim().toUpperCase()] || 0,
+      studentCount: c.student ? c.student.length : 0,
       active_semester_id: c.active_semester_id,
       major: c.major,
       majorId: c.majorId
     }));
     
     res.json(result);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Lỗi khi lấy danh sách lớp:', error);
-    res.status(500).json({ message: 'Lỗi máy chủ' });
+    res.status(500).json({ 
+      message: 'Lỗi máy chủ khi lấy danh sách lớp',
+      details: error.message,
+      prisma_class_exists: !!(prisma as any).class
+    });
   }
 };
 
@@ -50,7 +41,7 @@ export const createClass = async (req: Request, res: Response) => {
     const normalizedName = name.trim().toUpperCase();
     
     try {
-      const existing = await (prisma as any).class.findUnique({
+      const existing = await (prisma as any).renamedclass.findUnique({
         where: { name: normalizedName }
       });
       
@@ -58,10 +49,11 @@ export const createClass = async (req: Request, res: Response) => {
         return res.status(400).json({ message: 'Lớp này đã tồn tại' });
       }
       
-      const newClass = await (prisma as any).class.create({
+      const newClass = await (prisma as any).renamedclass.create({
         data: { 
           name: normalizedName,
-          majorId: majorId ? Number(majorId) : undefined
+          majorId: majorId ? Number(majorId) : undefined,
+          updatedAt: new Date()
         }
       });
       
@@ -82,7 +74,7 @@ export const deleteClass = async (req: Request, res: Response) => {
       select: { id: true }
     });
     
-    const studentIds = students.map(s => s.id);
+    const studentIds = students.map((s: any) => s.id);
     
     // 2. Thực hiện xóa trong một giao dịch
     await prisma.$transaction([
@@ -103,7 +95,7 @@ export const deleteClass = async (req: Request, res: Response) => {
         where: { id: { in: studentIds } }
       }),
       // Cuối cùng xóa lớp
-      (prisma as any).class.delete({
+      (prisma as any).renamedclass.delete({
         where: { name: name as string }
       })
     ]);
@@ -120,11 +112,12 @@ export const updateClass = async (req: Request, res: Response) => {
   const { active_semester_id, majorId } = req.body;
   
   try {
-    const updated = await (prisma as any).class.update({
+    const updated = await (prisma as any).renamedclass.update({
       where: { name },
       data: { 
         active_semester_id,
-        majorId: majorId ? Number(majorId) : undefined
+        majorId: majorId ? Number(majorId) : undefined,
+        updatedAt: new Date()
       }
     });
     

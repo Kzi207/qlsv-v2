@@ -122,7 +122,7 @@ const Attendance = () => {
             <CalendarCheck size={12} />
             Hồ sơ điểm danh cá nhân
           </div>
-          <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">Chuyên cần</h1>
+          <h1 className="text-xl md:text-3xl font-black text-slate-900 tracking-tight leading-tight">Chuyên cần</h1>
           <p className="text-slate-500 font-medium text-xs md:text-base max-w-2xl">
             Lịch sử tham gia lớp học và các hoạt động ngoại khóa của bạn.
           </p>
@@ -223,7 +223,7 @@ const Attendance = () => {
             <UserCheck size={12} />
             Quản trị chuyên cần
           </div>
-          <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">Điểm danh lớp</h1>
+          <h1 className="text-xl md:text-3xl font-black text-slate-900 tracking-tight leading-tight">Điểm danh lớp</h1>
           <p className="text-slate-500 font-bold text-xs md:text-lg">
             {new Date(date).toLocaleDateString('vi-VN', { dateStyle: 'full' })}
           </p>

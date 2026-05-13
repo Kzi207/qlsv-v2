@@ -92,7 +92,7 @@ const NotificationsPage: React.FC = () => {
           <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-blue-600 shadow-sm">
             <Bell size={12} className="animate-pulse" /> Trung tâm thông báo
           </div>
-          <h1 className="text-3xl font-black tracking-tighter text-slate-900 md:text-5xl leading-none italic">
+          <h1 className="text-xl md:text-3xl font-black tracking-tight text-slate-900 leading-tight italic">
             Thông báo <span className="text-blue-600">mới nhất</span>
           </h1>
           <p className="text-sm font-bold text-slate-400">Cập nhật tin tức quan trọng từ nhà trường và các phòng ban.</p>

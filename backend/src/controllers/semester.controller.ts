@@ -8,7 +8,7 @@ const mapSemesterPayload = (semester: any) => ({
   startDate: semester.startDate,
   endDate: semester.endDate,
   isGlobal: semester.isGlobal,
-  scopeClasses: semester.scopeClasses || [],
+  scopeClasses: semester.Renamedclass_semesterscope || [],
   createdAt: semester.createdAt,
   updatedAt: semester.updatedAt,
 });
@@ -45,7 +45,7 @@ export const getSemesters = async (req: AuthRequest, res: Response) => {
         ? {
             OR: [
               { isGlobal: true },
-              { scopeClasses: { some: { name: classId } } },
+              { Renamedclass_semesterscope: { some: { name: classId } } },
             ],
           }
         : undefined;
@@ -53,7 +53,7 @@ export const getSemesters = async (req: AuthRequest, res: Response) => {
     const semesters = await (prisma as any).semester.findMany({
       where,
       include: {
-        scopeClasses: { select: { name: true } },
+        Renamedclass_semesterscope: { select: { name: true } },
       },
       orderBy: [{ startDate: 'desc' }, { name: 'desc' }],
     });
@@ -106,14 +106,15 @@ export const createSemester = async (req: AuthRequest, res: Response) => {
         startDate,
         endDate,
         isGlobal,
-        scopeClasses: !isGlobal
+        Renamedclass_semesterscope: !isGlobal
           ? {
               connect: classNames.map((name) => ({ name })),
             }
           : undefined,
+        updatedAt: new Date(),
       },
       include: {
-        scopeClasses: { select: { name: true } },
+        Renamedclass_semesterscope: { select: { name: true } },
       },
     });
 
@@ -192,12 +193,13 @@ export const updateSemester = async (req: AuthRequest, res: Response) => {
         startDate,
         endDate,
         isGlobal,
-        scopeClasses: {
+        Renamedclass_semesterscope: {
           set: !isGlobal ? classNames.map((name) => ({ name })) : [],
         },
+        updatedAt: new Date(),
       },
       include: {
-        scopeClasses: { select: { name: true } },
+        Renamedclass_semesterscope: { select: { name: true } },
       },
     });
 

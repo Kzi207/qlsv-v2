@@ -12,7 +12,7 @@ export const getMyTuition = async (req: AuthRequest, res: Response) => {
       include: { 
         student: {
           include: {
-            class: {
+            Renamedclass: {
               include: { major: true }
             }
           }
@@ -56,7 +56,8 @@ export const payTuition = async (req: AuthRequest, res: Response) => {
       data: { 
         paidAmount: newPaidAmount,
         remainingAmount: newRemainingAmount,
-        status
+        status,
+        updatedAt: new Date()
       }
     });
 
@@ -74,9 +75,9 @@ export const generateTuition = async (req: AuthRequest, res: Response) => {
     // 1. Get students
     const where: any = {};
     if (classId) where.class_id = classId;
-    const students = await prisma.student.findMany({ 
+    const students = await (prisma as any).student.findMany({ 
       where,
-      include: { class: { include: { major: true } } }
+      include: { Renamedclass: { include: { major: true } } }
     });
 
     let count = 0;
@@ -85,18 +86,18 @@ export const generateTuition = async (req: AuthRequest, res: Response) => {
       const subjectMap = new Map();
 
       // OPTION A: If curriculumSemesterNumber is provided, pull from Curriculum
-      if (curriculumSemesterNumber && student.class?.majorId) {
-        const curriculumSem = await prisma.curriculumSemester.findFirst({
+      if (curriculumSemesterNumber && (student as any).Renamedclass?.majorId) {
+        const curriculumSem = await (prisma as any).curriculumsemester.findFirst({
           where: { 
-            majorId: student.class.majorId, 
+            majorId: (student as any).Renamedclass.majorId, 
             semesterNumber: Number(curriculumSemesterNumber) 
           },
-          include: { subjects: { include: { subject: true } } }
+          include: { curriculumsubject: { include: { subject_curriculumsubject_subjectIdTosubject: true } } }
         });
         
         if (curriculumSem) {
-          curriculumSem.subjects.forEach(cs => {
-            if (cs.subject) subjectMap.set(cs.subjectId, cs.subject);
+          (curriculumSem as any).curriculumsubject.forEach((cs: any) => {
+            if (cs.subject_curriculumsubject_subjectIdTosubject) subjectMap.set(cs.subjectId, cs.subject_curriculumsubject_subjectIdTosubject);
           });
         }
       }
@@ -106,17 +107,21 @@ export const generateTuition = async (req: AuthRequest, res: Response) => {
         where: { classId: student.class_id, semesterId },
         include: { subject: true }
       });
-      classSubjects.forEach(cs => subjectMap.set(cs.subjectId, cs.subject));
+      classSubjects.forEach((cs: any) => subjectMap.set(cs.subjectId, cs.subject));
 
       // OPTION C: Include individual registrations
       const registrations = await prisma.courseRegistration.findMany({
         where: { studentId: student.id, semesterId },
         include: { subject: true }
       });
-      registrations.forEach(r => subjectMap.set(r.subjectId, r.subject));
+      registrations.forEach((r: any) => subjectMap.set(r.subjectId, r.subject));
+
+      // Fetch global price per credit from settings
+      const settings = await (prisma as any).systemSetting.findFirst();
+      const globalPrice = settings?.tuitionPricePerCredit || 500000;
 
       const totalAmount = Array.from(subjectMap.values()).reduce(
-        (sum, sub) => sum + (sub.credits * sub.pricePerCredit), 
+        (sum: number, sub: any) => sum + (sub.credits * globalPrice), 
         0
       );
 
@@ -134,7 +139,8 @@ export const generateTuition = async (req: AuthRequest, res: Response) => {
         update: { 
           totalAmount,
           remainingAmount,
-          status
+          status,
+          updatedAt: new Date()
         },
         create: { 
           studentId: student.id, 
@@ -142,7 +148,8 @@ export const generateTuition = async (req: AuthRequest, res: Response) => {
           totalAmount,
           paidAmount: 0,
           remainingAmount: totalAmount,
-          status: totalAmount === 0 ? 'PAID' : 'UNPAID'
+          status: totalAmount === 0 ? 'PAID' : 'UNPAID',
+          updatedAt: new Date()
         }
       });
       count++;

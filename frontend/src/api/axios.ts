@@ -155,9 +155,8 @@ api.interceptors.response.use(
       toast.error('Không thể kết nối tới máy chủ. Vui lòng kiểm tra mạng!');
     } else if (error.response?.status === 401) {
       writeStoredCsrfToken('');
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
+      // Dispatch a custom event so the App can handle logout globally without circular imports
+      window.dispatchEvent(new CustomEvent('qlsv-unauthorized'));
     }
 
     return Promise.reject(error);

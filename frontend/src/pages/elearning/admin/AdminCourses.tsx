@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import React, { useState, useEffect } from 'react';
 import { 
   Search, 
@@ -9,7 +10,8 @@ import {
   X,
   UserCheck,
   Users,
-  UserPlus
+  UserPlus,
+  AlertTriangle,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../../api/axios';
@@ -21,11 +23,14 @@ const AdminCourses: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+   const [editingCourse, setEditingCourse] = useState<any>(null);
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [registrations, setRegistrations] = useState<any[]>([]);
   const [allStudents, setAllStudents] = useState<any[]>([]);
   const [studentSearch, setStudentSearch] = useState('');
+  const [deleteItem, setDeleteItem] = useState<{id: any, name: string, type: 'course' | 'registration'} | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const [subjects, setSubjects] = useState<any[]>([]);
   const [teachers, setTeachers] = useState<any[]>([]);
@@ -94,6 +99,37 @@ const AdminCourses: React.FC = () => {
     }
   };
 
+   const openCourseModal = (course: any = null) => {
+      if (course) {
+         setEditingCourse(course);
+         setNewCourse({
+            subjectId: String(course.subjectId || ''),
+            teacherId: String(course.teacherId || ''),
+            name: course.name || '',
+            description: course.description || '',
+            image: course.image || '',
+            semesterId: course.semesterId || '2023-2024.2'
+         });
+      } else {
+         setEditingCourse(null);
+         setNewCourse({
+            subjectId: '',
+            teacherId: '',
+            name: '',
+            description: '',
+            image: '',
+            semesterId: '2023-2024.2'
+         });
+      }
+
+      setIsModalOpen(true);
+   };
+
+   const closeCourseModal = () => {
+      setIsModalOpen(false);
+      setEditingCourse(null);
+   };
+
   const enrollStudent = async (studentId: number) => {
     try {
       await api.post('/elearning/enroll', { courseId: selectedCourse.id, studentId });
@@ -106,7 +142,7 @@ const AdminCourses: React.FC = () => {
   };
 
   const removeRegistration = async (regId: number) => {
-    if (!window.confirm('Xóa sinh viên này khỏi khóa học?')) return;
+    setDeleteItem({ id: regId, name: '', type: 'registration' }); return;
     try {
       await api.delete(`/elearning/registrations/${regId}`);
       setRegistrations(prev => prev.filter(r => r.id !== regId));
@@ -124,22 +160,47 @@ const AdminCourses: React.FC = () => {
     }
 
     try {
-      const res = await api.post('/elearning/courses', newCourse);
-      setCourses([res.data, ...courses]);
-      setIsModalOpen(false);
-      setNewCourse({
-        subjectId: '',
-        teacherId: '',
-        name: '',
-        description: '',
-        image: '',
-        semesterId: '2023-2024.2'
-      });
-      toast.success('Tạo khóa học thành công!');
+         if (editingCourse) {
+            const res = await api.put(`/elearning/courses/${editingCourse.id}`, {
+               name: newCourse.name,
+               description: newCourse.description,
+               image: newCourse.image,
+               enrollKey: editingCourse.enrollKey,
+               isActive: editingCourse.isActive
+            });
+            setCourses(prev => prev.map(course => (course.id === editingCourse.id ? res.data : course)));
+            toast.success('Cập nhật khóa học thành công!');
+         } else {
+            const res = await api.post('/elearning/courses', newCourse);
+            setCourses([res.data, ...courses]);
+            toast.success('Tạo khóa học thành công!');
+         }
+
+         closeCourseModal();
+         setNewCourse({
+            subjectId: '',
+            teacherId: '',
+            name: '',
+            description: '',
+            image: '',
+            semesterId: '2023-2024.2'
+         });
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Không thể tạo khóa học');
+         toast.error(error.response?.data?.error || error.response?.data?.message || 'Không thể lưu khóa học');
     }
   };
+
+   const handleDeleteCourse = async (course: any) => {
+      setDeleteItem({ id: course.id, name: course.name, type: 'course' }); return;
+
+      try {
+         await api.delete(`/elearning/courses/${course.id}`);
+         setCourses(prev => prev.filter(item => item.id !== course.id));
+         toast.success('Đã xóa khóa học');
+      } catch (error: any) {
+         toast.error(error.response?.data?.error || error.response?.data?.message || 'Không thể xóa khóa học');
+      }
+   };
 
   const filteredCourses = courses.filter(course => 
     course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -151,8 +212,85 @@ const AdminCourses: React.FC = () => {
     s.student_code.toLowerCase().includes(studentSearch.toLowerCase())
   ).slice(0, 5);
 
+
+  const handleConfirmDelete = async () => {
+    if (!deleteItem) return;
+    setIsDeleting(true);
+    const loadingToast = toast.loading('Đang xử lý...');
+    try {
+      if (deleteItem.type === 'course') {
+        await api.delete(`/elearning/courses/${deleteItem.id}`);
+        setCourses(prev => prev.filter(item => item.id !== deleteItem.id));
+        toast.success('Đã xóa khóa học thành công', { id: loadingToast });
+      } else {
+        await api.delete(`/elearning/registrations/${deleteItem.id}`);
+        setRegistrations(prev => prev.filter(r => r.id !== deleteItem.id));
+        toast.success('Đã xóa sinh viên khỏi lớp', { id: loadingToast });
+      }
+      setDeleteItem(null);
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Thao tác thất bại', { id: loadingToast });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const ConfirmModal = () => {
+    if (!deleteItem) return null;
+    return createPortal(
+      <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 overflow-hidden">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
+          onClick={() => !isDeleting && setDeleteItem(null)}
+        />
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.9, opacity: 0, y: 20 }}
+          className="relative w-full max-w-md overflow-hidden rounded-[2.5rem] border border-white/20 bg-white/90 p-8 shadow-2xl backdrop-blur-xl"
+        >
+          <div className="flex flex-col items-center text-center">
+            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-red-50 text-red-600 shadow-inner rotate-3">
+              <AlertTriangle size={40} className="animate-pulse" />
+            </div>
+            <h3 className="mb-3 text-2xl font-black text-slate-900 uppercase tracking-tight">Xác nhận xóa?</h3>
+            <p className="mb-8 text-sm font-medium leading-relaxed text-slate-500">
+              Bạn có chắc chắn muốn xóa {deleteItem.type === 'course' ? `khóa học "${deleteItem.name}"` : 'sinh viên này'}? 
+              Hành động này sẽ <span className="font-bold text-red-600">vĩnh viễn</span> loại bỏ dữ liệu liên quan.
+            </p>
+            <div className="flex w-full gap-3">
+              <button
+                disabled={isDeleting}
+                onClick={() => setDeleteItem(null)}
+                className="flex-1 rounded-2xl border border-slate-200 bg-white py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 transition hover:bg-slate-50 active:scale-95 disabled:opacity-50"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                disabled={isDeleting}
+                onClick={handleConfirmDelete}
+                className="flex-1 rounded-2xl bg-red-600 py-4 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-red-200 transition hover:bg-red-700 hover:shadow-red-300 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                ) : (
+                  'Xác nhận xóa'
+                )}
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </div>,
+      document.body
+    );
+  };
   return (
-    <div className="max-w-[1600px] mx-auto pb-20 animate-fade-up">
+    <>
+      <ConfirmModal />
+      <div className="max-w-[1600px] mx-auto pb-20 animate-fade-up">
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10">
         
         <div className="space-y-10">
@@ -167,7 +305,7 @@ const AdminCourses: React.FC = () => {
 
             <div className="flex items-center gap-3">
                <button 
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => openCourseModal()}
                 className="flex items-center gap-3 px-6 py-3.5 bg-blue-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 active:scale-95"
                >
                   <Plus size={18} /> Thêm khóa học
@@ -245,10 +383,16 @@ const AdminCourses: React.FC = () => {
                                  >
                                     <Eye size={20} />
                                  </button>
-                                 <button className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all" title="Chỉnh sửa">
+                                 <button 
+                                   onClick={() => openCourseModal(course)}
+                                   className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all" title="Chỉnh sửa"
+                                 >
                                     <Edit2 size={20} />
                                  </button>
-                                 <button className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="Xóa">
+                                 <button 
+                                   onClick={() => handleDeleteCourse(course)}
+                                   className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="Xóa"
+                                 >
                                     <Trash2 size={20} />
                                  </button>
                               </div>
@@ -269,6 +413,7 @@ const AdminCourses: React.FC = () => {
            </div>
         </div>
       </div>
+      </div>
 
       {/* Create Course Modal */}
       <AnimatePresence>
@@ -278,7 +423,7 @@ const AdminCourses: React.FC = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                onClick={() => setIsModalOpen(false)}
+                        onClick={closeCourseModal}
                 className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
               />
               <motion.div 
@@ -293,12 +438,12 @@ const AdminCourses: React.FC = () => {
                           <Plus size={24} />
                        </div>
                        <div>
-                          <h2 className="text-xl font-black tracking-tight">Thêm khóa học hệ thống</h2>
-                          <p className="text-blue-100 text-[10px] font-bold uppercase tracking-widest">Khởi tạo dữ liệu E-Learning</p>
+                          <h2 className="text-xl font-black tracking-tight">{editingCourse ? 'Sửa khóa học hệ thống' : 'Thêm khóa học hệ thống'}</h2>
+                          <p className="text-blue-100 text-[10px] font-bold uppercase tracking-widest">{editingCourse ? 'Cập nhật dữ liệu E-Learning' : 'Khởi tạo dữ liệu E-Learning'}</p>
                        </div>
                     </div>
                     <button 
-                      onClick={() => setIsModalOpen(false)}
+                      onClick={closeCourseModal}
                       className="p-3 hover:bg-white/10 rounded-2xl transition-all"
                     >
                        <X size={24} />
@@ -372,7 +517,7 @@ const AdminCourses: React.FC = () => {
                       type="submit"
                       className="w-full py-5 bg-blue-600 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-2xl shadow-blue-500/30"
                     >
-                       Tạo khóa học ngay
+                       {editingCourse ? 'Lưu thay đổi' : 'Tạo khóa học ngay'}
                     </button>
                  </form>
               </motion.div>
@@ -504,8 +649,7 @@ const AdminCourses: React.FC = () => {
            </div>
          )}
       </AnimatePresence>
-
-    </div>
+    </>
   );
 };
 

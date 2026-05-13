@@ -116,7 +116,7 @@ const StudentTrainingResults = () => {
             <Award size={12} />
             Academic Achievement
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-none">
+          <h1 className="text-xl md:text-3xl font-black text-slate-900 tracking-tight leading-tight">
             Kết quả <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Rèn luyện</span>
           </h1>
           <p className="text-slate-500 font-medium text-lg max-w-xl">
