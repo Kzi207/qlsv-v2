@@ -124,13 +124,13 @@ const logQrRisk = async (params: {
         action: 'QR_RISK',
         targetType: 'AttendanceSession',
         targetId: sessionId ? String(sessionId) : undefined,
-        details: {
+        details: JSON.stringify({
           reason,
           severity,
           studentId: studentId || undefined,
           path: req.path,
           ...(details || {}),
-        },
+        }),
         ipAddress: extractClientIp(req),
         userAgent: String(req.headers['user-agent'] || ''),
       },
@@ -211,7 +211,7 @@ export const getAttendanceByDate = async (req: Request, res: Response) => {
         student: true,
         session: {
           include: {
-            Renamedclass: true,
+            class: true,
           },
         },
       },
@@ -239,7 +239,7 @@ export const getAttendanceByStudent = async (req: Request, res: Response) => {
       include: {
         session: {
           include: {
-            Renamedclass: true,
+            class: true,
           },
         },
       },
@@ -318,7 +318,7 @@ export const createAttendanceSession = async (req: AuthRequest, res: Response) =
           updatedAt: new Date(),
         },
         include: {
-          Renamedclass: true,
+          class: true,
         },
       });
     });
@@ -370,7 +370,7 @@ export const getAttendanceSessions = async (req: AuthRequest, res: Response) => 
     const sessions = (await (prisma as any).attendancesession.findMany({
       where,
       include: {
-        Renamedclass: true,
+        class: true,
         _count: {
           select: {
             attendance: true,
@@ -433,7 +433,7 @@ export const getActiveSessions = async (req: AuthRequest, res: Response) => {
     const sessions = (await (prisma as any).attendancesession.findMany({
       where,
       include: {
-        Renamedclass: true,
+        class: true,
         _count: {
           select: {
             attendance: true,
@@ -493,7 +493,7 @@ export const qrCheckIn = async (req: AuthRequest, res: Response) => {
         NOT: { class_id: null },
       },
       include: {
-        Renamedclass: true,
+        class: true,
       },
     });
 
@@ -513,7 +513,7 @@ export const qrCheckIn = async (req: AuthRequest, res: Response) => {
     const student = await prisma.student.findUnique({
       where: { id: studentId },
       include: {
-        attendanceProfile: true,
+        studentattendanceprofile: true,
       },
     });
 
@@ -578,7 +578,7 @@ export const qrCheckIn = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const attendanceProfile = student.attendanceProfile;
+    const attendanceProfile = student.studentattendanceprofile;
     const baselineCreated = !attendanceProfile;
     let verifiedIp = true;
     let verifiedLocation = true;
@@ -633,34 +633,29 @@ export const qrCheckIn = async (req: AuthRequest, res: Response) => {
     }
 
     const attendance = await prisma.$transaction(async (tx: any) => {
-      if (!attendanceProfile) {
-        await tx.studentAttendanceProfile.create({
-          data: {
-            student_id: studentId,
-            firstIpAddress: clientIp,
-            firstLatitude: parsedLat,
-            firstLongitude: parsedLng,
-            lastIpAddress: clientIp,
-            lastLatitude: parsedLat,
-            lastLongitude: parsedLng,
-            lastCheckInAt: new Date(),
-            totalVerifiedCheckIns: 1,
+      await tx.studentattendanceprofile.upsert({
+        where: { student_id: studentId },
+        create: {
+          student_id: studentId,
+          firstIpAddress: clientIp,
+          firstLatitude: parsedLat,
+          firstLongitude: parsedLng,
+          lastIpAddress: clientIp,
+          lastLatitude: parsedLat,
+          lastLongitude: parsedLng,
+          lastCheckInAt: new Date(),
+          totalVerifiedCheckIns: 1,
+        },
+        update: {
+          lastIpAddress: clientIp,
+          lastLatitude: parsedLat,
+          lastLongitude: parsedLng,
+          lastCheckInAt: new Date(),
+          totalVerifiedCheckIns: {
+            increment: 1,
           },
-        });
-      } else {
-        await tx.studentAttendanceProfile.update({
-          where: { student_id: studentId },
-          data: {
-            lastIpAddress: clientIp,
-            lastLatitude: parsedLat,
-            lastLongitude: parsedLng,
-            lastCheckInAt: new Date(),
-            totalVerifiedCheckIns: {
-              increment: 1,
-            },
-          },
-        });
-      }
+        },
+      });
 
       return tx.attendance.create({
         data: {
@@ -682,7 +677,7 @@ export const qrCheckIn = async (req: AuthRequest, res: Response) => {
           student: true,
           session: {
             include: {
-              Renamedclass: true,
+              class: true,
             },
           },
         },
@@ -757,7 +752,7 @@ export const getSessionSummary = async (req: AuthRequest, res: Response) => {
     const session = await (prisma as any).attendancesession.findUnique({
       where: { id: numericSessionId },
       include: {
-        Renamedclass: true,
+        class: true,
       },
     });
 
@@ -780,7 +775,7 @@ export const getSessionSummary = async (req: AuthRequest, res: Response) => {
           class_id: session.class_id,
         },
         include: {
-          attendanceProfile: true,
+          studentattendanceprofile: true,
         },
         orderBy: [{ order_number: 'asc' }, { name: 'asc' }],
       }),
@@ -793,7 +788,7 @@ export const getSessionSummary = async (req: AuthRequest, res: Response) => {
         },
         orderBy: [{ date: 'asc' }],
       }),
-      prisma.auditLog.findMany({
+      (prisma as any).auditlog.findMany({
         where: {
           action: 'QR_RISK',
           targetType: 'AttendanceSession',
@@ -846,10 +841,22 @@ export const getSessionSummary = async (req: AuthRequest, res: Response) => {
               username: item.user.username,
             }
           : null,
-        details: item.details,
+        details: (() => {
+          if (!item.details) return null;
+          if (typeof item.details === 'object') return item.details;
+          if (typeof item.details === 'string') {
+            try {
+              return JSON.parse(item.details);
+            } catch {
+              return { message: item.details };
+            }
+          }
+          return null;
+        })(),
       })),
       students: students.map((student: any) => {
         const attendance = attendanceMap.get(student.id);
+        const attendanceProfile = student.studentattendanceprofile;
         return {
           id: student.id,
           name: student.name,
@@ -871,14 +878,14 @@ export const getSessionSummary = async (req: AuthRequest, res: Response) => {
                 sessionDistance: (attendance as any).sessionDistance,
               }
             : null,
-          profile: student.attendanceProfile
+          profile: attendanceProfile
             ? {
-                firstIpAddress: student.attendanceProfile.firstIpAddress,
-                firstLatitude: student.attendanceProfile.firstLatitude,
-                firstLongitude: student.attendanceProfile.firstLongitude,
-                firstCheckInAt: student.attendanceProfile.firstCheckInAt,
-                lastCheckInAt: student.attendanceProfile.lastCheckInAt,
-                totalVerifiedCheckIns: student.attendanceProfile.totalVerifiedCheckIns,
+                firstIpAddress: attendanceProfile.firstIpAddress,
+                firstLatitude: attendanceProfile.firstLatitude,
+                firstLongitude: attendanceProfile.firstLongitude,
+                firstCheckInAt: attendanceProfile.firstCheckInAt,
+                lastCheckInAt: attendanceProfile.lastCheckInAt,
+                totalVerifiedCheckIns: attendanceProfile.totalVerifiedCheckIns,
               }
             : null,
         };
@@ -923,7 +930,7 @@ export const endAttendanceSession = async (req: AuthRequest, res: Response) => {
         updatedAt: new Date(),
       },
       include: {
-        Renamedclass: true,
+        class: true,
       },
     });
 

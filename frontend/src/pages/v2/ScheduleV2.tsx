@@ -5,7 +5,8 @@ import {
   ChevronRight, 
   Calendar, 
   Clock, 
-  MapPin
+  MapPin,
+  User
 } from 'lucide-react';
 import axios from '../../api/axios';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -42,7 +43,7 @@ const ScheduleV2 = () => {
   const [semesters, setSemesters] = useState<Semester[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<TimetableEvent | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [viewType, setViewType] = useState<'day' | 'week' | 'month'>('day');
+  const [viewType, setViewType] = useState<'day' | 'week' | 'month'>('week');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -52,13 +53,31 @@ const ScheduleV2 = () => {
           axios.get('/semesters')
         ]);
         setEvents(timetableRes.data);
-        setSemesters(semesterRes.data);
+        const semesterData = semesterRes.data;
+        setSemesters(semesterData);
+
+        // Luôn mặc định hiện tuần hiện tại (today)
+        // Nếu muốn tự động chuyển đến học kỳ gần nhất khi hôm nay nằm ngoài mọi học kỳ, có thể bỏ comment đoạn dưới
+        /*
+        if (semesterData && semesterData.length > 0) {
+          const now = new Date();
+          const isInAnySemester = semesterData.some((s: any) => {
+            if (!s.startDate || !s.endDate) return false;
+            return now >= new Date(s.startDate) && now <= new Date(s.endDate);
+          });
+
+          if (!isInAnySemester) {
+            const latest = semesterData[semesterData.length - 1];
+            if (latest && latest.startDate) setSelectedDate(new Date(latest.startDate));
+          }
+        }
+        */
       } catch (err) {
         toast.error('Không thể tải dữ liệu');
       }
     };
     if (user?.class_id) fetchData();
-  }, [user]);
+  }, [user?.class_id]);
 
   // Helper to check if a date is within a semester
   const isDateInSemester = (date: Date, semesterId: string) => {
@@ -131,6 +150,13 @@ const ScheduleV2 = () => {
                Tháng
              </button>
           </div>
+
+          <button 
+            onClick={goToToday}
+            className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-[11px] font-black text-blue-600 hover:bg-blue-50 transition-all shadow-sm active:scale-95"
+          >
+            Hôm nay
+          </button>
 
           <div className="flex items-center gap-2">
             <button 
@@ -318,7 +344,6 @@ const ScheduleGrid = ({ weekDates, events, onEventClick, isDateInSemester }: any
                       ))}
                       {eventsInSession.length === 0 && (
                         <div className="h-16 rounded-2xl border-2 border-dashed border-slate-50 flex items-center justify-center">
-                           <span className="text-[10px] font-bold text-slate-200">Trống</span>
                         </div>
                       )}
                     </div>
@@ -370,6 +395,10 @@ const EventBlock = ({ event, onClick }: any) => {
         <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
           <MapPin size={12} className="opacity-50" />
           <span>{event.room || 'Phòng học'}</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
+          <User size={12} className="opacity-50" />
+          <span className="truncate italic">{event.teacher || 'Chưa cập nhật GV'}</span>
         </div>
         <div className={`mt-2 inline-flex px-2 py-0.5 rounded-full text-[9px] font-black ${config.badgeBg} ${config.badgeText}`}>
           {config.label}
@@ -426,16 +455,44 @@ const ScheduleMonthGrid = ({ selectedDate, events, onEventClick, isDateInSemeste
                 </div>
                 <div className="space-y-1">
                   {dayEvents
-                    .slice(0, 3)
-                    .map((event: any) => (
-                      <div 
-                        key={event.id}
-                        onClick={() => onEventClick(event)}
-                        className="text-[9px] font-bold p-1 rounded-md bg-blue-50 text-blue-700 truncate cursor-pointer hover:bg-blue-100 transition-colors"
-                      >
-                        {event.subject}
-                      </div>
-                    ))}
+                    .slice(0, 4)
+                    .map((event: any) => {
+                      const { start } = getPeriodTimes(Number(event.startPeriod), Number(event.endPeriod));
+                      return (
+                        <div 
+                          key={event.id}
+                          onClick={() => onEventClick(event)}
+                          className="p-1.5 rounded-lg bg-blue-50/50 hover:bg-blue-100/50 border border-blue-100/50 cursor-pointer transition-all space-y-0.5 group"
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                             <div className="flex items-center gap-1">
+                               <Clock size={8} className="text-blue-400" />
+                               <span className="text-[8px] font-black text-blue-600/70 whitespace-nowrap">
+                                 {start}
+                               </span>
+                             </div>
+                             <div className="flex items-center gap-1 bg-white/80 px-1 rounded text-[8px] font-black text-slate-500 border border-slate-100">
+                               <MapPin size={8} className="text-slate-300" />
+                               <span>{event.room}</span>
+                             </div>
+                          </div>
+                          
+                          <h5 className="text-[10px] font-black text-blue-900 leading-tight line-clamp-1 group-hover:text-blue-600 transition-colors">
+                            {event.subject}
+                          </h5>
+                          
+                          <div className="flex items-center justify-between text-[8px] font-bold text-slate-400">
+                             <span className="flex items-center gap-0.5">
+                               Tiết {event.startPeriod}-{event.endPeriod}
+                             </span>
+                             <div className="flex items-center gap-0.5 truncate max-w-[65px] italic opacity-80">
+                               <User size={8} className="opacity-50 shrink-0" />
+                               <span>{event.teacher}</span>
+                             </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                 </div>
               </>
             )}

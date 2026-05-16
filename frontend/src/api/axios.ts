@@ -4,6 +4,21 @@ import toast from 'react-hot-toast';
 
 const CSRF_STORAGE_KEY = 'csrf_token_fallback';
 let csrfTokenCache = '';
+const KNOWN_BROKEN_API_HOSTS = new Set(['api.test.kzii.site']);
+
+const stripQuotes = (value?: string) => String(value || '').trim().replace(/^['"]|['"]$/g, '');
+
+const isKnownBrokenApiHost = (value?: string) => {
+  const raw = stripQuotes(value);
+  if (!raw || !raw.startsWith('http')) return false;
+
+  try {
+    const hostname = new URL(raw).hostname.toLowerCase();
+    return KNOWN_BROKEN_API_HOSTS.has(hostname);
+  } catch {
+    return false;
+  }
+};
 
 const readStoredCsrfToken = () => {
   try {
@@ -54,48 +69,51 @@ const getEffectiveCsrfToken = () => {
 };
 
 export const getBaseURL = () => {
-  const envUrl = import.meta.env.VITE_API_URL;
-  const envTarget = import.meta.env.VITE_API_TARGET;
+  const envUrl = stripQuotes(import.meta.env.VITE_API_URL);
+  const envTarget = stripQuotes(import.meta.env.VITE_API_TARGET);
   const isCapacitor = Capacitor.getPlatform() !== 'web';
 
-  // Nếu là Capacitor, bắt buộc dùng URL tuyệt đối
   if (isCapacitor) {
-    if (envTarget) return envTarget.endsWith('/') ? `${envTarget}api` : `${envTarget}/api`;
-    if (envUrl && envUrl.startsWith('http')) return envUrl;
+    if (envTarget && !isKnownBrokenApiHost(envTarget)) {
+      return envTarget.endsWith('/') ? `${envTarget}api` : `${envTarget}/api`;
+    }
+    if (envUrl && envUrl.startsWith('http') && !isKnownBrokenApiHost(envUrl)) {
+      return envUrl;
+    }
     return 'https://test.kzii.site/api';
   }
 
-  if (envUrl && envUrl.startsWith('http')) {
-    return envUrl;
-  }
-
+  if (envUrl === '/api') return '/api';
+  if (envUrl && envUrl.startsWith('http') && !isKnownBrokenApiHost(envUrl)) return envUrl;
   return '/api';
 };
 
 export const getAssetBaseURL = () => {
-  const envTarget = import.meta.env.VITE_API_TARGET;
-  const envUrl = import.meta.env.VITE_API_URL;
+  const envTarget = stripQuotes(import.meta.env.VITE_API_TARGET);
+  const envUrl = stripQuotes(import.meta.env.VITE_API_URL);
   const isCapacitor = Capacitor.getPlatform() !== 'web';
 
   if (isCapacitor) {
-    if (envTarget) return envTarget.endsWith('/') ? envTarget.slice(0, -1) : envTarget;
-    if (envUrl && envUrl.startsWith('http')) return envUrl.replace(/\/api\/?$/, '');
+    if (envTarget && !isKnownBrokenApiHost(envTarget)) {
+      return envTarget.endsWith('/') ? envTarget.slice(0, -1) : envTarget;
+    }
+    if (envUrl && envUrl.startsWith('http') && !isKnownBrokenApiHost(envUrl)) {
+      return envUrl.replace(/\/api\/?$/, '');
+    }
     return 'https://test.kzii.site';
   }
 
-  if (envUrl && envUrl.startsWith('http')) {
+  if (envUrl && envUrl.startsWith('http') && !isKnownBrokenApiHost(envUrl)) {
     return envUrl.replace(/\/api\/?$/, '');
   }
 
-  // Trên web prod/dev, /api/abc -> domain/api/abc
-  // Nên base asset thường là domain/
   return window.location.origin;
 };
 
 const api = axios.create({
   baseURL: getBaseURL(),
   withCredentials: true,
-  timeout: 15000, // Tăng lên 15s cho server chậm
+  timeout: 15000,
 });
 
 api.interceptors.request.use((config) => {
@@ -106,7 +124,7 @@ api.interceptors.request.use((config) => {
     const csrfToken = getEffectiveCsrfToken();
     if (csrfToken) {
       config.headers = config.headers || new AxiosHeaders();
-      
+
       if (config.headers instanceof AxiosHeaders) {
         config.headers.set('x-csrf-token', String(csrfToken).trim());
       } else {
@@ -131,11 +149,7 @@ api.interceptors.response.use(
     const status = error.response?.status;
     const message = String(error.response?.data?.message || '');
 
-    if (
-      status === 403 &&
-      message.toLowerCase().includes('csrf') &&
-      !originalRequest.__csrfRetried
-    ) {
+    if (status === 403 && message.toLowerCase().includes('csrf') && !originalRequest.__csrfRetried) {
       try {
         const refreshRes = await api.get('/auth/me');
         const refreshedToken = refreshRes?.data?.csrfToken;
@@ -152,10 +166,9 @@ api.interceptors.response.use(
     }
 
     if (!error.response) {
-      toast.error('Không thể kết nối tới máy chủ. Vui lòng kiểm tra mạng!');
+      toast.error('Khong the ket noi toi may chu. Vui long kiem tra mang!');
     } else if (error.response?.status === 401) {
       writeStoredCsrfToken('');
-      // Dispatch a custom event so the App can handle logout globally without circular imports
       window.dispatchEvent(new CustomEvent('qlsv-unauthorized'));
     }
 

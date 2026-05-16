@@ -104,7 +104,7 @@ export const getMySlip = async (req: Request, res: Response) => {
     // Also get scanned records to show separately
     const scannedRecords = await (prisma as any).activityattendancerecord.findMany({
       where: { studentId: user.studentId },
-      include: { activityattendancesession: true }
+      include: { session: true }
     });
 
     res.json({ slip, scannedRecords });
@@ -120,7 +120,7 @@ export const getAllSlips = async (req: Request, res: Response) => {
       where: semesterId ? { semesterId: String(semesterId) } : {},
       include: { 
         student: {
-          include: { Renamedclass: true }
+          include: { class: true }
         }
       }
     });

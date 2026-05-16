@@ -169,6 +169,11 @@ export type student = $Result.DefaultSelection<Prisma.$studentPayload>
  */
 export type servicerequest = $Result.DefaultSelection<Prisma.$servicerequestPayload>
 /**
+ * Model onestopservice
+ * 
+ */
+export type onestopservice = $Result.DefaultSelection<Prisma.$onestopservicePayload>
+/**
  * Model studentattendanceprofile
  * 
  */
@@ -665,6 +670,16 @@ export class PrismaClient<
     * ```
     */
   get servicerequest(): Prisma.servicerequestDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.onestopservice`: Exposes CRUD operations for the **onestopservice** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Onestopservices
+    * const onestopservices = await prisma.onestopservice.findMany()
+    * ```
+    */
+  get onestopservice(): Prisma.onestopserviceDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.studentattendanceprofile`: Exposes CRUD operations for the **studentattendanceprofile** model.
@@ -1237,6 +1252,7 @@ export namespace Prisma {
     semester: 'semester',
     student: 'student',
     servicerequest: 'servicerequest',
+    onestopservice: 'onestopservice',
     studentattendanceprofile: 'studentattendanceprofile',
     studentaward: 'studentaward',
     subject: 'subject',
@@ -1265,7 +1281,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "activityattendancerecord" | "activityattendancesession" | "activityevidence" | "assignment" | "assignmentsubmission" | "attendance" | "attendancesession" | "auditlog" | "bchassignment" | "renamedclass" | "classsubject" | "course" | "courseregistration" | "curriculumsemester" | "curriculumsubject" | "exam" | "examoption" | "examquestion" | "examresult" | "faculty" | "grade" | "lesson" | "major" | "notification" | "payment" | "paymentlog" | "room" | "roomborrowing" | "semester" | "student" | "servicerequest" | "studentattendanceprofile" | "studentaward" | "subject" | "systemsetting" | "teachingassignment" | "timetable" | "trainingevidenceslip" | "trainingscore" | "tuition" | "user"
+      modelProps: "activityattendancerecord" | "activityattendancesession" | "activityevidence" | "assignment" | "assignmentsubmission" | "attendance" | "attendancesession" | "auditlog" | "bchassignment" | "renamedclass" | "classsubject" | "course" | "courseregistration" | "curriculumsemester" | "curriculumsubject" | "exam" | "examoption" | "examquestion" | "examresult" | "faculty" | "grade" | "lesson" | "major" | "notification" | "payment" | "paymentlog" | "room" | "roomborrowing" | "semester" | "student" | "servicerequest" | "onestopservice" | "studentattendanceprofile" | "studentaward" | "subject" | "systemsetting" | "teachingassignment" | "timetable" | "trainingevidenceslip" | "trainingscore" | "tuition" | "user"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -3315,6 +3331,72 @@ export namespace Prisma {
           }
         }
       }
+      onestopservice: {
+        payload: Prisma.$onestopservicePayload<ExtArgs>
+        fields: Prisma.onestopserviceFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.onestopserviceFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$onestopservicePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.onestopserviceFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$onestopservicePayload>
+          }
+          findFirst: {
+            args: Prisma.onestopserviceFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$onestopservicePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.onestopserviceFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$onestopservicePayload>
+          }
+          findMany: {
+            args: Prisma.onestopserviceFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$onestopservicePayload>[]
+          }
+          create: {
+            args: Prisma.onestopserviceCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$onestopservicePayload>
+          }
+          createMany: {
+            args: Prisma.onestopserviceCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.onestopserviceDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$onestopservicePayload>
+          }
+          update: {
+            args: Prisma.onestopserviceUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$onestopservicePayload>
+          }
+          deleteMany: {
+            args: Prisma.onestopserviceDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.onestopserviceUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.onestopserviceUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$onestopservicePayload>
+          }
+          aggregate: {
+            args: Prisma.OnestopserviceAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateOnestopservice>
+          }
+          groupBy: {
+            args: Prisma.onestopserviceGroupByArgs<ExtArgs>
+            result: $Utils.Optional<OnestopserviceGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.onestopserviceCountArgs<ExtArgs>
+            result: $Utils.Optional<OnestopserviceCountAggregateOutputType> | number
+          }
+        }
+      }
       studentattendanceprofile: {
         payload: Prisma.$studentattendanceprofilePayload<ExtArgs>
         fields: Prisma.studentattendanceprofileFieldRefs
@@ -4102,6 +4184,7 @@ export namespace Prisma {
     semester?: semesterOmit
     student?: studentOmit
     servicerequest?: servicerequestOmit
+    onestopservice?: onestopserviceOmit
     studentattendanceprofile?: studentattendanceprofileOmit
     studentaward?: studentawardOmit
     subject?: subjectOmit
@@ -5180,7 +5263,7 @@ export namespace Prisma {
     studentId?: boolean
     points?: boolean
     scannedAt?: boolean
-    activityattendancesession?: boolean | activityattendancesessionDefaultArgs<ExtArgs>
+    session?: boolean | activityattendancesessionDefaultArgs<ExtArgs>
     student?: boolean | studentDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["activityattendancerecord"]>
 
@@ -5196,14 +5279,14 @@ export namespace Prisma {
 
   export type activityattendancerecordOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "sessionId" | "studentId" | "points" | "scannedAt", ExtArgs["result"]["activityattendancerecord"]>
   export type activityattendancerecordInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    activityattendancesession?: boolean | activityattendancesessionDefaultArgs<ExtArgs>
+    session?: boolean | activityattendancesessionDefaultArgs<ExtArgs>
     student?: boolean | studentDefaultArgs<ExtArgs>
   }
 
   export type $activityattendancerecordPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "activityattendancerecord"
     objects: {
-      activityattendancesession: Prisma.$activityattendancesessionPayload<ExtArgs>
+      session: Prisma.$activityattendancesessionPayload<ExtArgs>
       student: Prisma.$studentPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -5552,7 +5635,7 @@ export namespace Prisma {
    */
   export interface Prisma__activityattendancerecordClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    activityattendancesession<T extends activityattendancesessionDefaultArgs<ExtArgs> = {}>(args?: Subset<T, activityattendancesessionDefaultArgs<ExtArgs>>): Prisma__activityattendancesessionClient<$Result.GetResult<Prisma.$activityattendancesessionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    session<T extends activityattendancesessionDefaultArgs<ExtArgs> = {}>(args?: Subset<T, activityattendancesessionDefaultArgs<ExtArgs>>): Prisma__activityattendancesessionClient<$Result.GetResult<Prisma.$activityattendancesessionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     student<T extends studentDefaultArgs<ExtArgs> = {}>(args?: Subset<T, studentDefaultArgs<ExtArgs>>): Prisma__studentClient<$Result.GetResult<Prisma.$studentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -10445,7 +10528,7 @@ export namespace Prisma {
     profileDistance?: boolean
     sessionDistance?: boolean
     session_id?: boolean
-    attendancesession?: boolean | attendance$attendancesessionArgs<ExtArgs>
+    session?: boolean | attendance$sessionArgs<ExtArgs>
     student?: boolean | studentDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["attendance"]>
 
@@ -10472,14 +10555,14 @@ export namespace Prisma {
 
   export type attendanceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "student_id" | "date" | "status" | "createdAt" | "updatedAt" | "deviceInfo" | "ipAddress" | "latitude" | "longitude" | "baselineCreated" | "verifiedIp" | "verifiedLocation" | "profileDistance" | "sessionDistance" | "session_id", ExtArgs["result"]["attendance"]>
   export type attendanceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    attendancesession?: boolean | attendance$attendancesessionArgs<ExtArgs>
+    session?: boolean | attendance$sessionArgs<ExtArgs>
     student?: boolean | studentDefaultArgs<ExtArgs>
   }
 
   export type $attendancePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "attendance"
     objects: {
-      attendancesession: Prisma.$attendancesessionPayload<ExtArgs> | null
+      session: Prisma.$attendancesessionPayload<ExtArgs> | null
       student: Prisma.$studentPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -10839,7 +10922,7 @@ export namespace Prisma {
    */
   export interface Prisma__attendanceClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    attendancesession<T extends attendance$attendancesessionArgs<ExtArgs> = {}>(args?: Subset<T, attendance$attendancesessionArgs<ExtArgs>>): Prisma__attendancesessionClient<$Result.GetResult<Prisma.$attendancesessionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    session<T extends attendance$sessionArgs<ExtArgs> = {}>(args?: Subset<T, attendance$sessionArgs<ExtArgs>>): Prisma__attendancesessionClient<$Result.GetResult<Prisma.$attendancesessionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     student<T extends studentDefaultArgs<ExtArgs> = {}>(args?: Subset<T, studentDefaultArgs<ExtArgs>>): Prisma__studentClient<$Result.GetResult<Prisma.$studentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -11229,9 +11312,9 @@ export namespace Prisma {
   }
 
   /**
-   * attendance.attendancesession
+   * attendance.session
    */
-  export type attendance$attendancesessionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type attendance$sessionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
      * Select specific fields to fetch from the attendancesession
      */
@@ -11541,7 +11624,7 @@ export namespace Prisma {
     endedAt?: boolean
     sessionDate?: boolean
     attendance?: boolean | attendancesession$attendanceArgs<ExtArgs>
-    Renamedclass?: boolean | attendancesession$RenamedclassArgs<ExtArgs>
+    class?: boolean | attendancesession$classArgs<ExtArgs>
     _count?: boolean | AttendancesessionCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["attendancesession"]>
 
@@ -11566,7 +11649,7 @@ export namespace Prisma {
   export type attendancesessionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "subject" | "class_id" | "qrToken" | "lat" | "lng" | "radius" | "isActive" | "createdAt" | "updatedAt" | "endedAt" | "sessionDate", ExtArgs["result"]["attendancesession"]>
   export type attendancesessionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     attendance?: boolean | attendancesession$attendanceArgs<ExtArgs>
-    Renamedclass?: boolean | attendancesession$RenamedclassArgs<ExtArgs>
+    class?: boolean | attendancesession$classArgs<ExtArgs>
     _count?: boolean | AttendancesessionCountOutputTypeDefaultArgs<ExtArgs>
   }
 
@@ -11574,7 +11657,7 @@ export namespace Prisma {
     name: "attendancesession"
     objects: {
       attendance: Prisma.$attendancePayload<ExtArgs>[]
-      Renamedclass: Prisma.$RenamedclassPayload<ExtArgs> | null
+      class: Prisma.$RenamedclassPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -11931,7 +12014,7 @@ export namespace Prisma {
   export interface Prisma__attendancesessionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     attendance<T extends attendancesession$attendanceArgs<ExtArgs> = {}>(args?: Subset<T, attendancesession$attendanceArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$attendancePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    Renamedclass<T extends attendancesession$RenamedclassArgs<ExtArgs> = {}>(args?: Subset<T, attendancesession$RenamedclassArgs<ExtArgs>>): Prisma__RenamedclassClient<$Result.GetResult<Prisma.$RenamedclassPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    class<T extends attendancesession$classArgs<ExtArgs> = {}>(args?: Subset<T, attendancesession$classArgs<ExtArgs>>): Prisma__RenamedclassClient<$Result.GetResult<Prisma.$RenamedclassPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -12341,9 +12424,9 @@ export namespace Prisma {
   }
 
   /**
-   * attendancesession.Renamedclass
+   * attendancesession.class
    */
-  export type attendancesession$RenamedclassArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type attendancesession$classArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
      * Select specific fields to fetch from the Renamedclass
      */
@@ -35311,7 +35394,7 @@ export namespace Prisma {
     examresult?: boolean | student$examresultArgs<ExtArgs>
     grade?: boolean | student$gradeArgs<ExtArgs>
     servicerequest?: boolean | student$servicerequestArgs<ExtArgs>
-    Renamedclass?: boolean | RenamedclassDefaultArgs<ExtArgs>
+    class?: boolean | RenamedclassDefaultArgs<ExtArgs>
     studentattendanceprofile?: boolean | student$studentattendanceprofileArgs<ExtArgs>
     studentaward?: boolean | student$studentawardArgs<ExtArgs>
     trainingevidenceslip?: boolean | student$trainingevidenceslipArgs<ExtArgs>
@@ -35349,7 +35432,7 @@ export namespace Prisma {
     examresult?: boolean | student$examresultArgs<ExtArgs>
     grade?: boolean | student$gradeArgs<ExtArgs>
     servicerequest?: boolean | student$servicerequestArgs<ExtArgs>
-    Renamedclass?: boolean | RenamedclassDefaultArgs<ExtArgs>
+    class?: boolean | RenamedclassDefaultArgs<ExtArgs>
     studentattendanceprofile?: boolean | student$studentattendanceprofileArgs<ExtArgs>
     studentaward?: boolean | student$studentawardArgs<ExtArgs>
     trainingevidenceslip?: boolean | student$trainingevidenceslipArgs<ExtArgs>
@@ -35370,7 +35453,7 @@ export namespace Prisma {
       examresult: Prisma.$examresultPayload<ExtArgs>[]
       grade: Prisma.$gradePayload<ExtArgs>[]
       servicerequest: Prisma.$servicerequestPayload<ExtArgs>[]
-      Renamedclass: Prisma.$RenamedclassPayload<ExtArgs>
+      class: Prisma.$RenamedclassPayload<ExtArgs>
       studentattendanceprofile: Prisma.$studentattendanceprofilePayload<ExtArgs> | null
       studentaward: Prisma.$studentawardPayload<ExtArgs>[]
       trainingevidenceslip: Prisma.$trainingevidenceslipPayload<ExtArgs>[]
@@ -35740,7 +35823,7 @@ export namespace Prisma {
     examresult<T extends student$examresultArgs<ExtArgs> = {}>(args?: Subset<T, student$examresultArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$examresultPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     grade<T extends student$gradeArgs<ExtArgs> = {}>(args?: Subset<T, student$gradeArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$gradePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     servicerequest<T extends student$servicerequestArgs<ExtArgs> = {}>(args?: Subset<T, student$servicerequestArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$servicerequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    Renamedclass<T extends RenamedclassDefaultArgs<ExtArgs> = {}>(args?: Subset<T, RenamedclassDefaultArgs<ExtArgs>>): Prisma__RenamedclassClient<$Result.GetResult<Prisma.$RenamedclassPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    class<T extends RenamedclassDefaultArgs<ExtArgs> = {}>(args?: Subset<T, RenamedclassDefaultArgs<ExtArgs>>): Prisma__RenamedclassClient<$Result.GetResult<Prisma.$RenamedclassPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     studentattendanceprofile<T extends student$studentattendanceprofileArgs<ExtArgs> = {}>(args?: Subset<T, student$studentattendanceprofileArgs<ExtArgs>>): Prisma__studentattendanceprofileClient<$Result.GetResult<Prisma.$studentattendanceprofilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     studentaward<T extends student$studentawardArgs<ExtArgs> = {}>(args?: Subset<T, student$studentawardArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$studentawardPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     trainingevidenceslip<T extends student$trainingevidenceslipArgs<ExtArgs> = {}>(args?: Subset<T, student$trainingevidenceslipArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$trainingevidenceslipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -37473,6 +37556,977 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: servicerequestInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model onestopservice
+   */
+
+  export type AggregateOnestopservice = {
+    _count: OnestopserviceCountAggregateOutputType | null
+    _avg: OnestopserviceAvgAggregateOutputType | null
+    _sum: OnestopserviceSumAggregateOutputType | null
+    _min: OnestopserviceMinAggregateOutputType | null
+    _max: OnestopserviceMaxAggregateOutputType | null
+  }
+
+  export type OnestopserviceAvgAggregateOutputType = {
+    id: number | null
+  }
+
+  export type OnestopserviceSumAggregateOutputType = {
+    id: number | null
+  }
+
+  export type OnestopserviceMinAggregateOutputType = {
+    id: number | null
+    title: string | null
+    description: string | null
+    icon: string | null
+    category: string | null
+    color: string | null
+    route: string | null
+    isActive: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type OnestopserviceMaxAggregateOutputType = {
+    id: number | null
+    title: string | null
+    description: string | null
+    icon: string | null
+    category: string | null
+    color: string | null
+    route: string | null
+    isActive: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type OnestopserviceCountAggregateOutputType = {
+    id: number
+    title: number
+    description: number
+    icon: number
+    category: number
+    color: number
+    route: number
+    isActive: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type OnestopserviceAvgAggregateInputType = {
+    id?: true
+  }
+
+  export type OnestopserviceSumAggregateInputType = {
+    id?: true
+  }
+
+  export type OnestopserviceMinAggregateInputType = {
+    id?: true
+    title?: true
+    description?: true
+    icon?: true
+    category?: true
+    color?: true
+    route?: true
+    isActive?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type OnestopserviceMaxAggregateInputType = {
+    id?: true
+    title?: true
+    description?: true
+    icon?: true
+    category?: true
+    color?: true
+    route?: true
+    isActive?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type OnestopserviceCountAggregateInputType = {
+    id?: true
+    title?: true
+    description?: true
+    icon?: true
+    category?: true
+    color?: true
+    route?: true
+    isActive?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type OnestopserviceAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which onestopservice to aggregate.
+     */
+    where?: onestopserviceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of onestopservices to fetch.
+     */
+    orderBy?: onestopserviceOrderByWithRelationInput | onestopserviceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: onestopserviceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` onestopservices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` onestopservices.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned onestopservices
+    **/
+    _count?: true | OnestopserviceCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: OnestopserviceAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: OnestopserviceSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: OnestopserviceMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: OnestopserviceMaxAggregateInputType
+  }
+
+  export type GetOnestopserviceAggregateType<T extends OnestopserviceAggregateArgs> = {
+        [P in keyof T & keyof AggregateOnestopservice]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateOnestopservice[P]>
+      : GetScalarType<T[P], AggregateOnestopservice[P]>
+  }
+
+
+
+
+  export type onestopserviceGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: onestopserviceWhereInput
+    orderBy?: onestopserviceOrderByWithAggregationInput | onestopserviceOrderByWithAggregationInput[]
+    by: OnestopserviceScalarFieldEnum[] | OnestopserviceScalarFieldEnum
+    having?: onestopserviceScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: OnestopserviceCountAggregateInputType | true
+    _avg?: OnestopserviceAvgAggregateInputType
+    _sum?: OnestopserviceSumAggregateInputType
+    _min?: OnestopserviceMinAggregateInputType
+    _max?: OnestopserviceMaxAggregateInputType
+  }
+
+  export type OnestopserviceGroupByOutputType = {
+    id: number
+    title: string
+    description: string
+    icon: string
+    category: string
+    color: string
+    route: string
+    isActive: boolean
+    createdAt: Date
+    updatedAt: Date
+    _count: OnestopserviceCountAggregateOutputType | null
+    _avg: OnestopserviceAvgAggregateOutputType | null
+    _sum: OnestopserviceSumAggregateOutputType | null
+    _min: OnestopserviceMinAggregateOutputType | null
+    _max: OnestopserviceMaxAggregateOutputType | null
+  }
+
+  type GetOnestopserviceGroupByPayload<T extends onestopserviceGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<OnestopserviceGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof OnestopserviceGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], OnestopserviceGroupByOutputType[P]>
+            : GetScalarType<T[P], OnestopserviceGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type onestopserviceSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    title?: boolean
+    description?: boolean
+    icon?: boolean
+    category?: boolean
+    color?: boolean
+    route?: boolean
+    isActive?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["onestopservice"]>
+
+
+
+  export type onestopserviceSelectScalar = {
+    id?: boolean
+    title?: boolean
+    description?: boolean
+    icon?: boolean
+    category?: boolean
+    color?: boolean
+    route?: boolean
+    isActive?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type onestopserviceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "description" | "icon" | "category" | "color" | "route" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["onestopservice"]>
+
+  export type $onestopservicePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "onestopservice"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      title: string
+      description: string
+      icon: string
+      category: string
+      color: string
+      route: string
+      isActive: boolean
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["onestopservice"]>
+    composites: {}
+  }
+
+  type onestopserviceGetPayload<S extends boolean | null | undefined | onestopserviceDefaultArgs> = $Result.GetResult<Prisma.$onestopservicePayload, S>
+
+  type onestopserviceCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<onestopserviceFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: OnestopserviceCountAggregateInputType | true
+    }
+
+  export interface onestopserviceDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['onestopservice'], meta: { name: 'onestopservice' } }
+    /**
+     * Find zero or one Onestopservice that matches the filter.
+     * @param {onestopserviceFindUniqueArgs} args - Arguments to find a Onestopservice
+     * @example
+     * // Get one Onestopservice
+     * const onestopservice = await prisma.onestopservice.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends onestopserviceFindUniqueArgs>(args: SelectSubset<T, onestopserviceFindUniqueArgs<ExtArgs>>): Prisma__onestopserviceClient<$Result.GetResult<Prisma.$onestopservicePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Onestopservice that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {onestopserviceFindUniqueOrThrowArgs} args - Arguments to find a Onestopservice
+     * @example
+     * // Get one Onestopservice
+     * const onestopservice = await prisma.onestopservice.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends onestopserviceFindUniqueOrThrowArgs>(args: SelectSubset<T, onestopserviceFindUniqueOrThrowArgs<ExtArgs>>): Prisma__onestopserviceClient<$Result.GetResult<Prisma.$onestopservicePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Onestopservice that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {onestopserviceFindFirstArgs} args - Arguments to find a Onestopservice
+     * @example
+     * // Get one Onestopservice
+     * const onestopservice = await prisma.onestopservice.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends onestopserviceFindFirstArgs>(args?: SelectSubset<T, onestopserviceFindFirstArgs<ExtArgs>>): Prisma__onestopserviceClient<$Result.GetResult<Prisma.$onestopservicePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Onestopservice that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {onestopserviceFindFirstOrThrowArgs} args - Arguments to find a Onestopservice
+     * @example
+     * // Get one Onestopservice
+     * const onestopservice = await prisma.onestopservice.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends onestopserviceFindFirstOrThrowArgs>(args?: SelectSubset<T, onestopserviceFindFirstOrThrowArgs<ExtArgs>>): Prisma__onestopserviceClient<$Result.GetResult<Prisma.$onestopservicePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Onestopservices that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {onestopserviceFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Onestopservices
+     * const onestopservices = await prisma.onestopservice.findMany()
+     * 
+     * // Get first 10 Onestopservices
+     * const onestopservices = await prisma.onestopservice.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const onestopserviceWithIdOnly = await prisma.onestopservice.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends onestopserviceFindManyArgs>(args?: SelectSubset<T, onestopserviceFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$onestopservicePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Onestopservice.
+     * @param {onestopserviceCreateArgs} args - Arguments to create a Onestopservice.
+     * @example
+     * // Create one Onestopservice
+     * const Onestopservice = await prisma.onestopservice.create({
+     *   data: {
+     *     // ... data to create a Onestopservice
+     *   }
+     * })
+     * 
+     */
+    create<T extends onestopserviceCreateArgs>(args: SelectSubset<T, onestopserviceCreateArgs<ExtArgs>>): Prisma__onestopserviceClient<$Result.GetResult<Prisma.$onestopservicePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Onestopservices.
+     * @param {onestopserviceCreateManyArgs} args - Arguments to create many Onestopservices.
+     * @example
+     * // Create many Onestopservices
+     * const onestopservice = await prisma.onestopservice.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends onestopserviceCreateManyArgs>(args?: SelectSubset<T, onestopserviceCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a Onestopservice.
+     * @param {onestopserviceDeleteArgs} args - Arguments to delete one Onestopservice.
+     * @example
+     * // Delete one Onestopservice
+     * const Onestopservice = await prisma.onestopservice.delete({
+     *   where: {
+     *     // ... filter to delete one Onestopservice
+     *   }
+     * })
+     * 
+     */
+    delete<T extends onestopserviceDeleteArgs>(args: SelectSubset<T, onestopserviceDeleteArgs<ExtArgs>>): Prisma__onestopserviceClient<$Result.GetResult<Prisma.$onestopservicePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Onestopservice.
+     * @param {onestopserviceUpdateArgs} args - Arguments to update one Onestopservice.
+     * @example
+     * // Update one Onestopservice
+     * const onestopservice = await prisma.onestopservice.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends onestopserviceUpdateArgs>(args: SelectSubset<T, onestopserviceUpdateArgs<ExtArgs>>): Prisma__onestopserviceClient<$Result.GetResult<Prisma.$onestopservicePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Onestopservices.
+     * @param {onestopserviceDeleteManyArgs} args - Arguments to filter Onestopservices to delete.
+     * @example
+     * // Delete a few Onestopservices
+     * const { count } = await prisma.onestopservice.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends onestopserviceDeleteManyArgs>(args?: SelectSubset<T, onestopserviceDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Onestopservices.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {onestopserviceUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Onestopservices
+     * const onestopservice = await prisma.onestopservice.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends onestopserviceUpdateManyArgs>(args: SelectSubset<T, onestopserviceUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one Onestopservice.
+     * @param {onestopserviceUpsertArgs} args - Arguments to update or create a Onestopservice.
+     * @example
+     * // Update or create a Onestopservice
+     * const onestopservice = await prisma.onestopservice.upsert({
+     *   create: {
+     *     // ... data to create a Onestopservice
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Onestopservice we want to update
+     *   }
+     * })
+     */
+    upsert<T extends onestopserviceUpsertArgs>(args: SelectSubset<T, onestopserviceUpsertArgs<ExtArgs>>): Prisma__onestopserviceClient<$Result.GetResult<Prisma.$onestopservicePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Onestopservices.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {onestopserviceCountArgs} args - Arguments to filter Onestopservices to count.
+     * @example
+     * // Count the number of Onestopservices
+     * const count = await prisma.onestopservice.count({
+     *   where: {
+     *     // ... the filter for the Onestopservices we want to count
+     *   }
+     * })
+    **/
+    count<T extends onestopserviceCountArgs>(
+      args?: Subset<T, onestopserviceCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], OnestopserviceCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Onestopservice.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OnestopserviceAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends OnestopserviceAggregateArgs>(args: Subset<T, OnestopserviceAggregateArgs>): Prisma.PrismaPromise<GetOnestopserviceAggregateType<T>>
+
+    /**
+     * Group by Onestopservice.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {onestopserviceGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends onestopserviceGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: onestopserviceGroupByArgs['orderBy'] }
+        : { orderBy?: onestopserviceGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, onestopserviceGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetOnestopserviceGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the onestopservice model
+   */
+  readonly fields: onestopserviceFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for onestopservice.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__onestopserviceClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the onestopservice model
+   */
+  interface onestopserviceFieldRefs {
+    readonly id: FieldRef<"onestopservice", 'Int'>
+    readonly title: FieldRef<"onestopservice", 'String'>
+    readonly description: FieldRef<"onestopservice", 'String'>
+    readonly icon: FieldRef<"onestopservice", 'String'>
+    readonly category: FieldRef<"onestopservice", 'String'>
+    readonly color: FieldRef<"onestopservice", 'String'>
+    readonly route: FieldRef<"onestopservice", 'String'>
+    readonly isActive: FieldRef<"onestopservice", 'Boolean'>
+    readonly createdAt: FieldRef<"onestopservice", 'DateTime'>
+    readonly updatedAt: FieldRef<"onestopservice", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * onestopservice findUnique
+   */
+  export type onestopserviceFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the onestopservice
+     */
+    select?: onestopserviceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the onestopservice
+     */
+    omit?: onestopserviceOmit<ExtArgs> | null
+    /**
+     * Filter, which onestopservice to fetch.
+     */
+    where: onestopserviceWhereUniqueInput
+  }
+
+  /**
+   * onestopservice findUniqueOrThrow
+   */
+  export type onestopserviceFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the onestopservice
+     */
+    select?: onestopserviceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the onestopservice
+     */
+    omit?: onestopserviceOmit<ExtArgs> | null
+    /**
+     * Filter, which onestopservice to fetch.
+     */
+    where: onestopserviceWhereUniqueInput
+  }
+
+  /**
+   * onestopservice findFirst
+   */
+  export type onestopserviceFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the onestopservice
+     */
+    select?: onestopserviceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the onestopservice
+     */
+    omit?: onestopserviceOmit<ExtArgs> | null
+    /**
+     * Filter, which onestopservice to fetch.
+     */
+    where?: onestopserviceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of onestopservices to fetch.
+     */
+    orderBy?: onestopserviceOrderByWithRelationInput | onestopserviceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for onestopservices.
+     */
+    cursor?: onestopserviceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` onestopservices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` onestopservices.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of onestopservices.
+     */
+    distinct?: OnestopserviceScalarFieldEnum | OnestopserviceScalarFieldEnum[]
+  }
+
+  /**
+   * onestopservice findFirstOrThrow
+   */
+  export type onestopserviceFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the onestopservice
+     */
+    select?: onestopserviceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the onestopservice
+     */
+    omit?: onestopserviceOmit<ExtArgs> | null
+    /**
+     * Filter, which onestopservice to fetch.
+     */
+    where?: onestopserviceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of onestopservices to fetch.
+     */
+    orderBy?: onestopserviceOrderByWithRelationInput | onestopserviceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for onestopservices.
+     */
+    cursor?: onestopserviceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` onestopservices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` onestopservices.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of onestopservices.
+     */
+    distinct?: OnestopserviceScalarFieldEnum | OnestopserviceScalarFieldEnum[]
+  }
+
+  /**
+   * onestopservice findMany
+   */
+  export type onestopserviceFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the onestopservice
+     */
+    select?: onestopserviceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the onestopservice
+     */
+    omit?: onestopserviceOmit<ExtArgs> | null
+    /**
+     * Filter, which onestopservices to fetch.
+     */
+    where?: onestopserviceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of onestopservices to fetch.
+     */
+    orderBy?: onestopserviceOrderByWithRelationInput | onestopserviceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing onestopservices.
+     */
+    cursor?: onestopserviceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` onestopservices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` onestopservices.
+     */
+    skip?: number
+    distinct?: OnestopserviceScalarFieldEnum | OnestopserviceScalarFieldEnum[]
+  }
+
+  /**
+   * onestopservice create
+   */
+  export type onestopserviceCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the onestopservice
+     */
+    select?: onestopserviceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the onestopservice
+     */
+    omit?: onestopserviceOmit<ExtArgs> | null
+    /**
+     * The data needed to create a onestopservice.
+     */
+    data: XOR<onestopserviceCreateInput, onestopserviceUncheckedCreateInput>
+  }
+
+  /**
+   * onestopservice createMany
+   */
+  export type onestopserviceCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many onestopservices.
+     */
+    data: onestopserviceCreateManyInput | onestopserviceCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * onestopservice update
+   */
+  export type onestopserviceUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the onestopservice
+     */
+    select?: onestopserviceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the onestopservice
+     */
+    omit?: onestopserviceOmit<ExtArgs> | null
+    /**
+     * The data needed to update a onestopservice.
+     */
+    data: XOR<onestopserviceUpdateInput, onestopserviceUncheckedUpdateInput>
+    /**
+     * Choose, which onestopservice to update.
+     */
+    where: onestopserviceWhereUniqueInput
+  }
+
+  /**
+   * onestopservice updateMany
+   */
+  export type onestopserviceUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update onestopservices.
+     */
+    data: XOR<onestopserviceUpdateManyMutationInput, onestopserviceUncheckedUpdateManyInput>
+    /**
+     * Filter which onestopservices to update
+     */
+    where?: onestopserviceWhereInput
+    /**
+     * Limit how many onestopservices to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * onestopservice upsert
+   */
+  export type onestopserviceUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the onestopservice
+     */
+    select?: onestopserviceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the onestopservice
+     */
+    omit?: onestopserviceOmit<ExtArgs> | null
+    /**
+     * The filter to search for the onestopservice to update in case it exists.
+     */
+    where: onestopserviceWhereUniqueInput
+    /**
+     * In case the onestopservice found by the `where` argument doesn't exist, create a new onestopservice with this data.
+     */
+    create: XOR<onestopserviceCreateInput, onestopserviceUncheckedCreateInput>
+    /**
+     * In case the onestopservice was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<onestopserviceUpdateInput, onestopserviceUncheckedUpdateInput>
+  }
+
+  /**
+   * onestopservice delete
+   */
+  export type onestopserviceDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the onestopservice
+     */
+    select?: onestopserviceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the onestopservice
+     */
+    omit?: onestopserviceOmit<ExtArgs> | null
+    /**
+     * Filter which onestopservice to delete.
+     */
+    where: onestopserviceWhereUniqueInput
+  }
+
+  /**
+   * onestopservice deleteMany
+   */
+  export type onestopserviceDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which onestopservices to delete
+     */
+    where?: onestopserviceWhereInput
+    /**
+     * Limit how many onestopservices to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * onestopservice without action
+   */
+  export type onestopserviceDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the onestopservice
+     */
+    select?: onestopserviceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the onestopservice
+     */
+    omit?: onestopserviceOmit<ExtArgs> | null
   }
 
 
@@ -48566,6 +49620,22 @@ export namespace Prisma {
   export type ServicerequestScalarFieldEnum = (typeof ServicerequestScalarFieldEnum)[keyof typeof ServicerequestScalarFieldEnum]
 
 
+  export const OnestopserviceScalarFieldEnum: {
+    id: 'id',
+    title: 'title',
+    description: 'description',
+    icon: 'icon',
+    category: 'category',
+    color: 'color',
+    route: 'route',
+    isActive: 'isActive',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type OnestopserviceScalarFieldEnum = (typeof OnestopserviceScalarFieldEnum)[keyof typeof OnestopserviceScalarFieldEnum]
+
+
   export const StudentattendanceprofileScalarFieldEnum: {
     id: 'id',
     student_id: 'student_id',
@@ -49022,6 +50092,18 @@ export namespace Prisma {
   export type servicerequestOrderByRelevanceFieldEnum = (typeof servicerequestOrderByRelevanceFieldEnum)[keyof typeof servicerequestOrderByRelevanceFieldEnum]
 
 
+  export const onestopserviceOrderByRelevanceFieldEnum: {
+    title: 'title',
+    description: 'description',
+    icon: 'icon',
+    category: 'category',
+    color: 'color',
+    route: 'route'
+  };
+
+  export type onestopserviceOrderByRelevanceFieldEnum = (typeof onestopserviceOrderByRelevanceFieldEnum)[keyof typeof onestopserviceOrderByRelevanceFieldEnum]
+
+
   export const studentattendanceprofileOrderByRelevanceFieldEnum: {
     firstIpAddress: 'firstIpAddress',
     lastIpAddress: 'lastIpAddress'
@@ -49172,7 +50254,7 @@ export namespace Prisma {
     studentId?: IntFilter<"activityattendancerecord"> | number
     points?: IntFilter<"activityattendancerecord"> | number
     scannedAt?: DateTimeFilter<"activityattendancerecord"> | Date | string
-    activityattendancesession?: XOR<ActivityattendancesessionScalarRelationFilter, activityattendancesessionWhereInput>
+    session?: XOR<ActivityattendancesessionScalarRelationFilter, activityattendancesessionWhereInput>
     student?: XOR<StudentScalarRelationFilter, studentWhereInput>
   }
 
@@ -49182,7 +50264,7 @@ export namespace Prisma {
     studentId?: SortOrder
     points?: SortOrder
     scannedAt?: SortOrder
-    activityattendancesession?: activityattendancesessionOrderByWithRelationInput
+    session?: activityattendancesessionOrderByWithRelationInput
     student?: studentOrderByWithRelationInput
   }
 
@@ -49196,7 +50278,7 @@ export namespace Prisma {
     studentId?: IntFilter<"activityattendancerecord"> | number
     points?: IntFilter<"activityattendancerecord"> | number
     scannedAt?: DateTimeFilter<"activityattendancerecord"> | Date | string
-    activityattendancesession?: XOR<ActivityattendancesessionScalarRelationFilter, activityattendancesessionWhereInput>
+    session?: XOR<ActivityattendancesessionScalarRelationFilter, activityattendancesessionWhereInput>
     student?: XOR<StudentScalarRelationFilter, studentWhereInput>
   }, "id" | "sessionId_studentId">
 
@@ -49593,7 +50675,7 @@ export namespace Prisma {
     profileDistance?: FloatNullableFilter<"attendance"> | number | null
     sessionDistance?: FloatNullableFilter<"attendance"> | number | null
     session_id?: IntNullableFilter<"attendance"> | number | null
-    attendancesession?: XOR<AttendancesessionNullableScalarRelationFilter, attendancesessionWhereInput> | null
+    session?: XOR<AttendancesessionNullableScalarRelationFilter, attendancesessionWhereInput> | null
     student?: XOR<StudentScalarRelationFilter, studentWhereInput>
   }
 
@@ -49614,7 +50696,7 @@ export namespace Prisma {
     profileDistance?: SortOrderInput | SortOrder
     sessionDistance?: SortOrderInput | SortOrder
     session_id?: SortOrderInput | SortOrder
-    attendancesession?: attendancesessionOrderByWithRelationInput
+    session?: attendancesessionOrderByWithRelationInput
     student?: studentOrderByWithRelationInput
     _relevance?: attendanceOrderByRelevanceInput
   }
@@ -49639,7 +50721,7 @@ export namespace Prisma {
     profileDistance?: FloatNullableFilter<"attendance"> | number | null
     sessionDistance?: FloatNullableFilter<"attendance"> | number | null
     session_id?: IntNullableFilter<"attendance"> | number | null
-    attendancesession?: XOR<AttendancesessionNullableScalarRelationFilter, attendancesessionWhereInput> | null
+    session?: XOR<AttendancesessionNullableScalarRelationFilter, attendancesessionWhereInput> | null
     student?: XOR<StudentScalarRelationFilter, studentWhereInput>
   }, "id">
 
@@ -49707,7 +50789,7 @@ export namespace Prisma {
     endedAt?: DateTimeNullableFilter<"attendancesession"> | Date | string | null
     sessionDate?: DateTimeFilter<"attendancesession"> | Date | string
     attendance?: AttendanceListRelationFilter
-    Renamedclass?: XOR<RenamedclassNullableScalarRelationFilter, RenamedclassWhereInput> | null
+    class?: XOR<RenamedclassNullableScalarRelationFilter, RenamedclassWhereInput> | null
   }
 
   export type attendancesessionOrderByWithRelationInput = {
@@ -49725,7 +50807,7 @@ export namespace Prisma {
     endedAt?: SortOrderInput | SortOrder
     sessionDate?: SortOrder
     attendance?: attendanceOrderByRelationAggregateInput
-    Renamedclass?: RenamedclassOrderByWithRelationInput
+    class?: RenamedclassOrderByWithRelationInput
     _relevance?: attendancesessionOrderByRelevanceInput
   }
 
@@ -49747,7 +50829,7 @@ export namespace Prisma {
     endedAt?: DateTimeNullableFilter<"attendancesession"> | Date | string | null
     sessionDate?: DateTimeFilter<"attendancesession"> | Date | string
     attendance?: AttendanceListRelationFilter
-    Renamedclass?: XOR<RenamedclassNullableScalarRelationFilter, RenamedclassWhereInput> | null
+    class?: XOR<RenamedclassNullableScalarRelationFilter, RenamedclassWhereInput> | null
   }, "id" | "qrToken">
 
   export type attendancesessionOrderByWithAggregationInput = {
@@ -51488,7 +52570,7 @@ export namespace Prisma {
     examresult?: ExamresultListRelationFilter
     grade?: GradeListRelationFilter
     servicerequest?: ServicerequestListRelationFilter
-    Renamedclass?: XOR<RenamedclassScalarRelationFilter, RenamedclassWhereInput>
+    class?: XOR<RenamedclassScalarRelationFilter, RenamedclassWhereInput>
     studentattendanceprofile?: XOR<StudentattendanceprofileNullableScalarRelationFilter, studentattendanceprofileWhereInput> | null
     studentaward?: StudentawardListRelationFilter
     trainingevidenceslip?: TrainingevidenceslipListRelationFilter
@@ -51519,7 +52601,7 @@ export namespace Prisma {
     examresult?: examresultOrderByRelationAggregateInput
     grade?: gradeOrderByRelationAggregateInput
     servicerequest?: servicerequestOrderByRelationAggregateInput
-    Renamedclass?: RenamedclassOrderByWithRelationInput
+    class?: RenamedclassOrderByWithRelationInput
     studentattendanceprofile?: studentattendanceprofileOrderByWithRelationInput
     studentaward?: studentawardOrderByRelationAggregateInput
     trainingevidenceslip?: trainingevidenceslipOrderByRelationAggregateInput
@@ -51554,7 +52636,7 @@ export namespace Prisma {
     examresult?: ExamresultListRelationFilter
     grade?: GradeListRelationFilter
     servicerequest?: ServicerequestListRelationFilter
-    Renamedclass?: XOR<RenamedclassScalarRelationFilter, RenamedclassWhereInput>
+    class?: XOR<RenamedclassScalarRelationFilter, RenamedclassWhereInput>
     studentattendanceprofile?: XOR<StudentattendanceprofileNullableScalarRelationFilter, studentattendanceprofileWhereInput> | null
     studentaward?: StudentawardListRelationFilter
     trainingevidenceslip?: TrainingevidenceslipListRelationFilter
@@ -51674,6 +52756,86 @@ export namespace Prisma {
     details?: StringWithAggregatesFilter<"servicerequest"> | string
     createdAt?: DateTimeWithAggregatesFilter<"servicerequest"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"servicerequest"> | Date | string
+  }
+
+  export type onestopserviceWhereInput = {
+    AND?: onestopserviceWhereInput | onestopserviceWhereInput[]
+    OR?: onestopserviceWhereInput[]
+    NOT?: onestopserviceWhereInput | onestopserviceWhereInput[]
+    id?: IntFilter<"onestopservice"> | number
+    title?: StringFilter<"onestopservice"> | string
+    description?: StringFilter<"onestopservice"> | string
+    icon?: StringFilter<"onestopservice"> | string
+    category?: StringFilter<"onestopservice"> | string
+    color?: StringFilter<"onestopservice"> | string
+    route?: StringFilter<"onestopservice"> | string
+    isActive?: BoolFilter<"onestopservice"> | boolean
+    createdAt?: DateTimeFilter<"onestopservice"> | Date | string
+    updatedAt?: DateTimeFilter<"onestopservice"> | Date | string
+  }
+
+  export type onestopserviceOrderByWithRelationInput = {
+    id?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    icon?: SortOrder
+    category?: SortOrder
+    color?: SortOrder
+    route?: SortOrder
+    isActive?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _relevance?: onestopserviceOrderByRelevanceInput
+  }
+
+  export type onestopserviceWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: onestopserviceWhereInput | onestopserviceWhereInput[]
+    OR?: onestopserviceWhereInput[]
+    NOT?: onestopserviceWhereInput | onestopserviceWhereInput[]
+    title?: StringFilter<"onestopservice"> | string
+    description?: StringFilter<"onestopservice"> | string
+    icon?: StringFilter<"onestopservice"> | string
+    category?: StringFilter<"onestopservice"> | string
+    color?: StringFilter<"onestopservice"> | string
+    route?: StringFilter<"onestopservice"> | string
+    isActive?: BoolFilter<"onestopservice"> | boolean
+    createdAt?: DateTimeFilter<"onestopservice"> | Date | string
+    updatedAt?: DateTimeFilter<"onestopservice"> | Date | string
+  }, "id">
+
+  export type onestopserviceOrderByWithAggregationInput = {
+    id?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    icon?: SortOrder
+    category?: SortOrder
+    color?: SortOrder
+    route?: SortOrder
+    isActive?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: onestopserviceCountOrderByAggregateInput
+    _avg?: onestopserviceAvgOrderByAggregateInput
+    _max?: onestopserviceMaxOrderByAggregateInput
+    _min?: onestopserviceMinOrderByAggregateInput
+    _sum?: onestopserviceSumOrderByAggregateInput
+  }
+
+  export type onestopserviceScalarWhereWithAggregatesInput = {
+    AND?: onestopserviceScalarWhereWithAggregatesInput | onestopserviceScalarWhereWithAggregatesInput[]
+    OR?: onestopserviceScalarWhereWithAggregatesInput[]
+    NOT?: onestopserviceScalarWhereWithAggregatesInput | onestopserviceScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"onestopservice"> | number
+    title?: StringWithAggregatesFilter<"onestopservice"> | string
+    description?: StringWithAggregatesFilter<"onestopservice"> | string
+    icon?: StringWithAggregatesFilter<"onestopservice"> | string
+    category?: StringWithAggregatesFilter<"onestopservice"> | string
+    color?: StringWithAggregatesFilter<"onestopservice"> | string
+    route?: StringWithAggregatesFilter<"onestopservice"> | string
+    isActive?: BoolWithAggregatesFilter<"onestopservice"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"onestopservice"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"onestopservice"> | Date | string
   }
 
   export type studentattendanceprofileWhereInput = {
@@ -52572,7 +53734,7 @@ export namespace Prisma {
   export type activityattendancerecordCreateInput = {
     points: number
     scannedAt?: Date | string
-    activityattendancesession: activityattendancesessionCreateNestedOneWithoutActivityattendancerecordInput
+    session: activityattendancesessionCreateNestedOneWithoutActivityattendancerecordInput
     student: studentCreateNestedOneWithoutActivityattendancerecordInput
   }
 
@@ -52587,7 +53749,7 @@ export namespace Prisma {
   export type activityattendancerecordUpdateInput = {
     points?: IntFieldUpdateOperationsInput | number
     scannedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    activityattendancesession?: activityattendancesessionUpdateOneRequiredWithoutActivityattendancerecordNestedInput
+    session?: activityattendancesessionUpdateOneRequiredWithoutActivityattendancerecordNestedInput
     student?: studentUpdateOneRequiredWithoutActivityattendancerecordNestedInput
   }
 
@@ -52631,7 +53793,7 @@ export namespace Prisma {
     classId?: string | null
     isActive?: boolean
     createdAt?: Date | string
-    activityattendancerecord?: activityattendancerecordCreateNestedManyWithoutActivityattendancesessionInput
+    activityattendancerecord?: activityattendancerecordCreateNestedManyWithoutSessionInput
   }
 
   export type activityattendancesessionUncheckedCreateInput = {
@@ -52646,7 +53808,7 @@ export namespace Prisma {
     classId?: string | null
     isActive?: boolean
     createdAt?: Date | string
-    activityattendancerecord?: activityattendancerecordUncheckedCreateNestedManyWithoutActivityattendancesessionInput
+    activityattendancerecord?: activityattendancerecordUncheckedCreateNestedManyWithoutSessionInput
   }
 
   export type activityattendancesessionUpdateInput = {
@@ -52660,7 +53822,7 @@ export namespace Prisma {
     classId?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    activityattendancerecord?: activityattendancerecordUpdateManyWithoutActivityattendancesessionNestedInput
+    activityattendancerecord?: activityattendancerecordUpdateManyWithoutSessionNestedInput
   }
 
   export type activityattendancesessionUncheckedUpdateInput = {
@@ -52675,7 +53837,7 @@ export namespace Prisma {
     classId?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    activityattendancerecord?: activityattendancerecordUncheckedUpdateManyWithoutActivityattendancesessionNestedInput
+    activityattendancerecord?: activityattendancerecordUncheckedUpdateManyWithoutSessionNestedInput
   }
 
   export type activityattendancesessionCreateManyInput = {
@@ -53004,7 +54166,7 @@ export namespace Prisma {
     verifiedLocation?: boolean | null
     profileDistance?: number | null
     sessionDistance?: number | null
-    attendancesession?: attendancesessionCreateNestedOneWithoutAttendanceInput
+    session?: attendancesessionCreateNestedOneWithoutAttendanceInput
     student: studentCreateNestedOneWithoutAttendanceInput
   }
 
@@ -53041,7 +54203,7 @@ export namespace Prisma {
     verifiedLocation?: NullableBoolFieldUpdateOperationsInput | boolean | null
     profileDistance?: NullableFloatFieldUpdateOperationsInput | number | null
     sessionDistance?: NullableFloatFieldUpdateOperationsInput | number | null
-    attendancesession?: attendancesessionUpdateOneWithoutAttendanceNestedInput
+    session?: attendancesessionUpdateOneWithoutAttendanceNestedInput
     student?: studentUpdateOneRequiredWithoutAttendanceNestedInput
   }
 
@@ -53130,8 +54292,8 @@ export namespace Prisma {
     updatedAt: Date | string
     endedAt?: Date | string | null
     sessionDate?: Date | string
-    attendance?: attendanceCreateNestedManyWithoutAttendancesessionInput
-    Renamedclass?: RenamedclassCreateNestedOneWithoutAttendancesessionInput
+    attendance?: attendanceCreateNestedManyWithoutSessionInput
+    class?: RenamedclassCreateNestedOneWithoutAttendancesessionInput
   }
 
   export type attendancesessionUncheckedCreateInput = {
@@ -53148,7 +54310,7 @@ export namespace Prisma {
     updatedAt: Date | string
     endedAt?: Date | string | null
     sessionDate?: Date | string
-    attendance?: attendanceUncheckedCreateNestedManyWithoutAttendancesessionInput
+    attendance?: attendanceUncheckedCreateNestedManyWithoutSessionInput
   }
 
   export type attendancesessionUpdateInput = {
@@ -53163,8 +54325,8 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sessionDate?: DateTimeFieldUpdateOperationsInput | Date | string
-    attendance?: attendanceUpdateManyWithoutAttendancesessionNestedInput
-    Renamedclass?: RenamedclassUpdateOneWithoutAttendancesessionNestedInput
+    attendance?: attendanceUpdateManyWithoutSessionNestedInput
+    class?: RenamedclassUpdateOneWithoutAttendancesessionNestedInput
   }
 
   export type attendancesessionUncheckedUpdateInput = {
@@ -53181,7 +54343,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sessionDate?: DateTimeFieldUpdateOperationsInput | Date | string
-    attendance?: attendanceUncheckedUpdateManyWithoutAttendancesessionNestedInput
+    attendance?: attendanceUncheckedUpdateManyWithoutSessionNestedInput
   }
 
   export type attendancesessionCreateManyInput = {
@@ -53373,10 +54535,10 @@ export namespace Prisma {
     name: string
     createdAt?: Date | string
     updatedAt: Date | string
-    attendancesession?: attendancesessionCreateNestedManyWithoutRenamedclassInput
+    attendancesession?: attendancesessionCreateNestedManyWithoutClassInput
     semester_Renamedclass_active_semester_idTosemester?: semesterCreateNestedOneWithoutRenamedclass_Renamedclass_active_semester_idTosemesterInput
     major?: majorCreateNestedOneWithoutRenamedclassInput
-    student?: studentCreateNestedManyWithoutRenamedclassInput
+    student?: studentCreateNestedManyWithoutClassInput
     semester_semesterscope?: semesterCreateNestedManyWithoutRenamedclass_semesterscopeInput
   }
 
@@ -53386,8 +54548,8 @@ export namespace Prisma {
     majorId?: number | null
     createdAt?: Date | string
     updatedAt: Date | string
-    attendancesession?: attendancesessionUncheckedCreateNestedManyWithoutRenamedclassInput
-    student?: studentUncheckedCreateNestedManyWithoutRenamedclassInput
+    attendancesession?: attendancesessionUncheckedCreateNestedManyWithoutClassInput
+    student?: studentUncheckedCreateNestedManyWithoutClassInput
     semester_semesterscope?: semesterUncheckedCreateNestedManyWithoutRenamedclass_semesterscopeInput
   }
 
@@ -53395,10 +54557,10 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    attendancesession?: attendancesessionUpdateManyWithoutRenamedclassNestedInput
+    attendancesession?: attendancesessionUpdateManyWithoutClassNestedInput
     semester_Renamedclass_active_semester_idTosemester?: semesterUpdateOneWithoutRenamedclass_Renamedclass_active_semester_idTosemesterNestedInput
     major?: majorUpdateOneWithoutRenamedclassNestedInput
-    student?: studentUpdateManyWithoutRenamedclassNestedInput
+    student?: studentUpdateManyWithoutClassNestedInput
     semester_semesterscope?: semesterUpdateManyWithoutRenamedclass_semesterscopeNestedInput
   }
 
@@ -53408,8 +54570,8 @@ export namespace Prisma {
     majorId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    attendancesession?: attendancesessionUncheckedUpdateManyWithoutRenamedclassNestedInput
-    student?: studentUncheckedUpdateManyWithoutRenamedclassNestedInput
+    attendancesession?: attendancesessionUncheckedUpdateManyWithoutClassNestedInput
+    student?: studentUncheckedUpdateManyWithoutClassNestedInput
     semester_semesterscope?: semesterUncheckedUpdateManyWithoutRenamedclass_semesterscopeNestedInput
   }
 
@@ -54935,7 +56097,7 @@ export namespace Prisma {
     examresult?: examresultCreateNestedManyWithoutStudentInput
     grade?: gradeCreateNestedManyWithoutStudentInput
     servicerequest?: servicerequestCreateNestedManyWithoutStudentInput
-    Renamedclass: RenamedclassCreateNestedOneWithoutStudentInput
+    class: RenamedclassCreateNestedOneWithoutStudentInput
     studentattendanceprofile?: studentattendanceprofileCreateNestedOneWithoutStudentInput
     studentaward?: studentawardCreateNestedManyWithoutStudentInput
     trainingevidenceslip?: trainingevidenceslipCreateNestedManyWithoutStudentInput
@@ -54994,7 +56156,7 @@ export namespace Prisma {
     examresult?: examresultUpdateManyWithoutStudentNestedInput
     grade?: gradeUpdateManyWithoutStudentNestedInput
     servicerequest?: servicerequestUpdateManyWithoutStudentNestedInput
-    Renamedclass?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
+    class?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
     studentattendanceprofile?: studentattendanceprofileUpdateOneWithoutStudentNestedInput
     studentaward?: studentawardUpdateManyWithoutStudentNestedInput
     trainingevidenceslip?: trainingevidenceslipUpdateManyWithoutStudentNestedInput
@@ -55148,6 +56310,94 @@ export namespace Prisma {
     type?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     details?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type onestopserviceCreateInput = {
+    title: string
+    description: string
+    icon: string
+    category: string
+    color: string
+    route: string
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type onestopserviceUncheckedCreateInput = {
+    id?: number
+    title: string
+    description: string
+    icon: string
+    category: string
+    color: string
+    route: string
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type onestopserviceUpdateInput = {
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    icon?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    color?: StringFieldUpdateOperationsInput | string
+    route?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type onestopserviceUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    icon?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    color?: StringFieldUpdateOperationsInput | string
+    route?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type onestopserviceCreateManyInput = {
+    id?: number
+    title: string
+    description: string
+    icon: string
+    category: string
+    color: string
+    route: string
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type onestopserviceUpdateManyMutationInput = {
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    icon?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    color?: StringFieldUpdateOperationsInput | string
+    route?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type onestopserviceUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    icon?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    color?: StringFieldUpdateOperationsInput | string
+    route?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -58418,6 +59668,59 @@ export namespace Prisma {
     studentId?: SortOrder
   }
 
+  export type onestopserviceOrderByRelevanceInput = {
+    fields: onestopserviceOrderByRelevanceFieldEnum | onestopserviceOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
+  }
+
+  export type onestopserviceCountOrderByAggregateInput = {
+    id?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    icon?: SortOrder
+    category?: SortOrder
+    color?: SortOrder
+    route?: SortOrder
+    isActive?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type onestopserviceAvgOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
+  export type onestopserviceMaxOrderByAggregateInput = {
+    id?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    icon?: SortOrder
+    category?: SortOrder
+    color?: SortOrder
+    route?: SortOrder
+    isActive?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type onestopserviceMinOrderByAggregateInput = {
+    id?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    icon?: SortOrder
+    category?: SortOrder
+    color?: SortOrder
+    route?: SortOrder
+    isActive?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type onestopserviceSumOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
   export type studentattendanceprofileOrderByRelevanceInput = {
     fields: studentattendanceprofileOrderByRelevanceFieldEnum | studentattendanceprofileOrderByRelevanceFieldEnum[]
     sort: SortOrder
@@ -59171,17 +60474,17 @@ export namespace Prisma {
     update?: XOR<XOR<studentUpdateToOneWithWhereWithoutActivityattendancerecordInput, studentUpdateWithoutActivityattendancerecordInput>, studentUncheckedUpdateWithoutActivityattendancerecordInput>
   }
 
-  export type activityattendancerecordCreateNestedManyWithoutActivityattendancesessionInput = {
-    create?: XOR<activityattendancerecordCreateWithoutActivityattendancesessionInput, activityattendancerecordUncheckedCreateWithoutActivityattendancesessionInput> | activityattendancerecordCreateWithoutActivityattendancesessionInput[] | activityattendancerecordUncheckedCreateWithoutActivityattendancesessionInput[]
-    connectOrCreate?: activityattendancerecordCreateOrConnectWithoutActivityattendancesessionInput | activityattendancerecordCreateOrConnectWithoutActivityattendancesessionInput[]
-    createMany?: activityattendancerecordCreateManyActivityattendancesessionInputEnvelope
+  export type activityattendancerecordCreateNestedManyWithoutSessionInput = {
+    create?: XOR<activityattendancerecordCreateWithoutSessionInput, activityattendancerecordUncheckedCreateWithoutSessionInput> | activityattendancerecordCreateWithoutSessionInput[] | activityattendancerecordUncheckedCreateWithoutSessionInput[]
+    connectOrCreate?: activityattendancerecordCreateOrConnectWithoutSessionInput | activityattendancerecordCreateOrConnectWithoutSessionInput[]
+    createMany?: activityattendancerecordCreateManySessionInputEnvelope
     connect?: activityattendancerecordWhereUniqueInput | activityattendancerecordWhereUniqueInput[]
   }
 
-  export type activityattendancerecordUncheckedCreateNestedManyWithoutActivityattendancesessionInput = {
-    create?: XOR<activityattendancerecordCreateWithoutActivityattendancesessionInput, activityattendancerecordUncheckedCreateWithoutActivityattendancesessionInput> | activityattendancerecordCreateWithoutActivityattendancesessionInput[] | activityattendancerecordUncheckedCreateWithoutActivityattendancesessionInput[]
-    connectOrCreate?: activityattendancerecordCreateOrConnectWithoutActivityattendancesessionInput | activityattendancerecordCreateOrConnectWithoutActivityattendancesessionInput[]
-    createMany?: activityattendancerecordCreateManyActivityattendancesessionInputEnvelope
+  export type activityattendancerecordUncheckedCreateNestedManyWithoutSessionInput = {
+    create?: XOR<activityattendancerecordCreateWithoutSessionInput, activityattendancerecordUncheckedCreateWithoutSessionInput> | activityattendancerecordCreateWithoutSessionInput[] | activityattendancerecordUncheckedCreateWithoutSessionInput[]
+    connectOrCreate?: activityattendancerecordCreateOrConnectWithoutSessionInput | activityattendancerecordCreateOrConnectWithoutSessionInput[]
+    createMany?: activityattendancerecordCreateManySessionInputEnvelope
     connect?: activityattendancerecordWhereUniqueInput | activityattendancerecordWhereUniqueInput[]
   }
 
@@ -59197,31 +60500,31 @@ export namespace Prisma {
     set?: boolean
   }
 
-  export type activityattendancerecordUpdateManyWithoutActivityattendancesessionNestedInput = {
-    create?: XOR<activityattendancerecordCreateWithoutActivityattendancesessionInput, activityattendancerecordUncheckedCreateWithoutActivityattendancesessionInput> | activityattendancerecordCreateWithoutActivityattendancesessionInput[] | activityattendancerecordUncheckedCreateWithoutActivityattendancesessionInput[]
-    connectOrCreate?: activityattendancerecordCreateOrConnectWithoutActivityattendancesessionInput | activityattendancerecordCreateOrConnectWithoutActivityattendancesessionInput[]
-    upsert?: activityattendancerecordUpsertWithWhereUniqueWithoutActivityattendancesessionInput | activityattendancerecordUpsertWithWhereUniqueWithoutActivityattendancesessionInput[]
-    createMany?: activityattendancerecordCreateManyActivityattendancesessionInputEnvelope
+  export type activityattendancerecordUpdateManyWithoutSessionNestedInput = {
+    create?: XOR<activityattendancerecordCreateWithoutSessionInput, activityattendancerecordUncheckedCreateWithoutSessionInput> | activityattendancerecordCreateWithoutSessionInput[] | activityattendancerecordUncheckedCreateWithoutSessionInput[]
+    connectOrCreate?: activityattendancerecordCreateOrConnectWithoutSessionInput | activityattendancerecordCreateOrConnectWithoutSessionInput[]
+    upsert?: activityattendancerecordUpsertWithWhereUniqueWithoutSessionInput | activityattendancerecordUpsertWithWhereUniqueWithoutSessionInput[]
+    createMany?: activityattendancerecordCreateManySessionInputEnvelope
     set?: activityattendancerecordWhereUniqueInput | activityattendancerecordWhereUniqueInput[]
     disconnect?: activityattendancerecordWhereUniqueInput | activityattendancerecordWhereUniqueInput[]
     delete?: activityattendancerecordWhereUniqueInput | activityattendancerecordWhereUniqueInput[]
     connect?: activityattendancerecordWhereUniqueInput | activityattendancerecordWhereUniqueInput[]
-    update?: activityattendancerecordUpdateWithWhereUniqueWithoutActivityattendancesessionInput | activityattendancerecordUpdateWithWhereUniqueWithoutActivityattendancesessionInput[]
-    updateMany?: activityattendancerecordUpdateManyWithWhereWithoutActivityattendancesessionInput | activityattendancerecordUpdateManyWithWhereWithoutActivityattendancesessionInput[]
+    update?: activityattendancerecordUpdateWithWhereUniqueWithoutSessionInput | activityattendancerecordUpdateWithWhereUniqueWithoutSessionInput[]
+    updateMany?: activityattendancerecordUpdateManyWithWhereWithoutSessionInput | activityattendancerecordUpdateManyWithWhereWithoutSessionInput[]
     deleteMany?: activityattendancerecordScalarWhereInput | activityattendancerecordScalarWhereInput[]
   }
 
-  export type activityattendancerecordUncheckedUpdateManyWithoutActivityattendancesessionNestedInput = {
-    create?: XOR<activityattendancerecordCreateWithoutActivityattendancesessionInput, activityattendancerecordUncheckedCreateWithoutActivityattendancesessionInput> | activityattendancerecordCreateWithoutActivityattendancesessionInput[] | activityattendancerecordUncheckedCreateWithoutActivityattendancesessionInput[]
-    connectOrCreate?: activityattendancerecordCreateOrConnectWithoutActivityattendancesessionInput | activityattendancerecordCreateOrConnectWithoutActivityattendancesessionInput[]
-    upsert?: activityattendancerecordUpsertWithWhereUniqueWithoutActivityattendancesessionInput | activityattendancerecordUpsertWithWhereUniqueWithoutActivityattendancesessionInput[]
-    createMany?: activityattendancerecordCreateManyActivityattendancesessionInputEnvelope
+  export type activityattendancerecordUncheckedUpdateManyWithoutSessionNestedInput = {
+    create?: XOR<activityattendancerecordCreateWithoutSessionInput, activityattendancerecordUncheckedCreateWithoutSessionInput> | activityattendancerecordCreateWithoutSessionInput[] | activityattendancerecordUncheckedCreateWithoutSessionInput[]
+    connectOrCreate?: activityattendancerecordCreateOrConnectWithoutSessionInput | activityattendancerecordCreateOrConnectWithoutSessionInput[]
+    upsert?: activityattendancerecordUpsertWithWhereUniqueWithoutSessionInput | activityattendancerecordUpsertWithWhereUniqueWithoutSessionInput[]
+    createMany?: activityattendancerecordCreateManySessionInputEnvelope
     set?: activityattendancerecordWhereUniqueInput | activityattendancerecordWhereUniqueInput[]
     disconnect?: activityattendancerecordWhereUniqueInput | activityattendancerecordWhereUniqueInput[]
     delete?: activityattendancerecordWhereUniqueInput | activityattendancerecordWhereUniqueInput[]
     connect?: activityattendancerecordWhereUniqueInput | activityattendancerecordWhereUniqueInput[]
-    update?: activityattendancerecordUpdateWithWhereUniqueWithoutActivityattendancesessionInput | activityattendancerecordUpdateWithWhereUniqueWithoutActivityattendancesessionInput[]
-    updateMany?: activityattendancerecordUpdateManyWithWhereWithoutActivityattendancesessionInput | activityattendancerecordUpdateManyWithWhereWithoutActivityattendancesessionInput[]
+    update?: activityattendancerecordUpdateWithWhereUniqueWithoutSessionInput | activityattendancerecordUpdateWithWhereUniqueWithoutSessionInput[]
+    updateMany?: activityattendancerecordUpdateManyWithWhereWithoutSessionInput | activityattendancerecordUpdateManyWithWhereWithoutSessionInput[]
     deleteMany?: activityattendancerecordScalarWhereInput | activityattendancerecordScalarWhereInput[]
   }
 
@@ -59373,10 +60676,10 @@ export namespace Prisma {
     update?: XOR<XOR<studentUpdateToOneWithWhereWithoutAttendanceInput, studentUpdateWithoutAttendanceInput>, studentUncheckedUpdateWithoutAttendanceInput>
   }
 
-  export type attendanceCreateNestedManyWithoutAttendancesessionInput = {
-    create?: XOR<attendanceCreateWithoutAttendancesessionInput, attendanceUncheckedCreateWithoutAttendancesessionInput> | attendanceCreateWithoutAttendancesessionInput[] | attendanceUncheckedCreateWithoutAttendancesessionInput[]
-    connectOrCreate?: attendanceCreateOrConnectWithoutAttendancesessionInput | attendanceCreateOrConnectWithoutAttendancesessionInput[]
-    createMany?: attendanceCreateManyAttendancesessionInputEnvelope
+  export type attendanceCreateNestedManyWithoutSessionInput = {
+    create?: XOR<attendanceCreateWithoutSessionInput, attendanceUncheckedCreateWithoutSessionInput> | attendanceCreateWithoutSessionInput[] | attendanceUncheckedCreateWithoutSessionInput[]
+    connectOrCreate?: attendanceCreateOrConnectWithoutSessionInput | attendanceCreateOrConnectWithoutSessionInput[]
+    createMany?: attendanceCreateManySessionInputEnvelope
     connect?: attendanceWhereUniqueInput | attendanceWhereUniqueInput[]
   }
 
@@ -59386,10 +60689,10 @@ export namespace Prisma {
     connect?: RenamedclassWhereUniqueInput
   }
 
-  export type attendanceUncheckedCreateNestedManyWithoutAttendancesessionInput = {
-    create?: XOR<attendanceCreateWithoutAttendancesessionInput, attendanceUncheckedCreateWithoutAttendancesessionInput> | attendanceCreateWithoutAttendancesessionInput[] | attendanceUncheckedCreateWithoutAttendancesessionInput[]
-    connectOrCreate?: attendanceCreateOrConnectWithoutAttendancesessionInput | attendanceCreateOrConnectWithoutAttendancesessionInput[]
-    createMany?: attendanceCreateManyAttendancesessionInputEnvelope
+  export type attendanceUncheckedCreateNestedManyWithoutSessionInput = {
+    create?: XOR<attendanceCreateWithoutSessionInput, attendanceUncheckedCreateWithoutSessionInput> | attendanceCreateWithoutSessionInput[] | attendanceUncheckedCreateWithoutSessionInput[]
+    connectOrCreate?: attendanceCreateOrConnectWithoutSessionInput | attendanceCreateOrConnectWithoutSessionInput[]
+    createMany?: attendanceCreateManySessionInputEnvelope
     connect?: attendanceWhereUniqueInput | attendanceWhereUniqueInput[]
   }
 
@@ -59405,17 +60708,17 @@ export namespace Prisma {
     set?: Date | string | null
   }
 
-  export type attendanceUpdateManyWithoutAttendancesessionNestedInput = {
-    create?: XOR<attendanceCreateWithoutAttendancesessionInput, attendanceUncheckedCreateWithoutAttendancesessionInput> | attendanceCreateWithoutAttendancesessionInput[] | attendanceUncheckedCreateWithoutAttendancesessionInput[]
-    connectOrCreate?: attendanceCreateOrConnectWithoutAttendancesessionInput | attendanceCreateOrConnectWithoutAttendancesessionInput[]
-    upsert?: attendanceUpsertWithWhereUniqueWithoutAttendancesessionInput | attendanceUpsertWithWhereUniqueWithoutAttendancesessionInput[]
-    createMany?: attendanceCreateManyAttendancesessionInputEnvelope
+  export type attendanceUpdateManyWithoutSessionNestedInput = {
+    create?: XOR<attendanceCreateWithoutSessionInput, attendanceUncheckedCreateWithoutSessionInput> | attendanceCreateWithoutSessionInput[] | attendanceUncheckedCreateWithoutSessionInput[]
+    connectOrCreate?: attendanceCreateOrConnectWithoutSessionInput | attendanceCreateOrConnectWithoutSessionInput[]
+    upsert?: attendanceUpsertWithWhereUniqueWithoutSessionInput | attendanceUpsertWithWhereUniqueWithoutSessionInput[]
+    createMany?: attendanceCreateManySessionInputEnvelope
     set?: attendanceWhereUniqueInput | attendanceWhereUniqueInput[]
     disconnect?: attendanceWhereUniqueInput | attendanceWhereUniqueInput[]
     delete?: attendanceWhereUniqueInput | attendanceWhereUniqueInput[]
     connect?: attendanceWhereUniqueInput | attendanceWhereUniqueInput[]
-    update?: attendanceUpdateWithWhereUniqueWithoutAttendancesessionInput | attendanceUpdateWithWhereUniqueWithoutAttendancesessionInput[]
-    updateMany?: attendanceUpdateManyWithWhereWithoutAttendancesessionInput | attendanceUpdateManyWithWhereWithoutAttendancesessionInput[]
+    update?: attendanceUpdateWithWhereUniqueWithoutSessionInput | attendanceUpdateWithWhereUniqueWithoutSessionInput[]
+    updateMany?: attendanceUpdateManyWithWhereWithoutSessionInput | attendanceUpdateManyWithWhereWithoutSessionInput[]
     deleteMany?: attendanceScalarWhereInput | attendanceScalarWhereInput[]
   }
 
@@ -59429,17 +60732,17 @@ export namespace Prisma {
     update?: XOR<XOR<RenamedclassUpdateToOneWithWhereWithoutAttendancesessionInput, RenamedclassUpdateWithoutAttendancesessionInput>, RenamedclassUncheckedUpdateWithoutAttendancesessionInput>
   }
 
-  export type attendanceUncheckedUpdateManyWithoutAttendancesessionNestedInput = {
-    create?: XOR<attendanceCreateWithoutAttendancesessionInput, attendanceUncheckedCreateWithoutAttendancesessionInput> | attendanceCreateWithoutAttendancesessionInput[] | attendanceUncheckedCreateWithoutAttendancesessionInput[]
-    connectOrCreate?: attendanceCreateOrConnectWithoutAttendancesessionInput | attendanceCreateOrConnectWithoutAttendancesessionInput[]
-    upsert?: attendanceUpsertWithWhereUniqueWithoutAttendancesessionInput | attendanceUpsertWithWhereUniqueWithoutAttendancesessionInput[]
-    createMany?: attendanceCreateManyAttendancesessionInputEnvelope
+  export type attendanceUncheckedUpdateManyWithoutSessionNestedInput = {
+    create?: XOR<attendanceCreateWithoutSessionInput, attendanceUncheckedCreateWithoutSessionInput> | attendanceCreateWithoutSessionInput[] | attendanceUncheckedCreateWithoutSessionInput[]
+    connectOrCreate?: attendanceCreateOrConnectWithoutSessionInput | attendanceCreateOrConnectWithoutSessionInput[]
+    upsert?: attendanceUpsertWithWhereUniqueWithoutSessionInput | attendanceUpsertWithWhereUniqueWithoutSessionInput[]
+    createMany?: attendanceCreateManySessionInputEnvelope
     set?: attendanceWhereUniqueInput | attendanceWhereUniqueInput[]
     disconnect?: attendanceWhereUniqueInput | attendanceWhereUniqueInput[]
     delete?: attendanceWhereUniqueInput | attendanceWhereUniqueInput[]
     connect?: attendanceWhereUniqueInput | attendanceWhereUniqueInput[]
-    update?: attendanceUpdateWithWhereUniqueWithoutAttendancesessionInput | attendanceUpdateWithWhereUniqueWithoutAttendancesessionInput[]
-    updateMany?: attendanceUpdateManyWithWhereWithoutAttendancesessionInput | attendanceUpdateManyWithWhereWithoutAttendancesessionInput[]
+    update?: attendanceUpdateWithWhereUniqueWithoutSessionInput | attendanceUpdateWithWhereUniqueWithoutSessionInput[]
+    updateMany?: attendanceUpdateManyWithWhereWithoutSessionInput | attendanceUpdateManyWithWhereWithoutSessionInput[]
     deleteMany?: attendanceScalarWhereInput | attendanceScalarWhereInput[]
   }
 
@@ -59473,10 +60776,10 @@ export namespace Prisma {
     update?: XOR<XOR<userUpdateToOneWithWhereWithoutBchassignmentInput, userUpdateWithoutBchassignmentInput>, userUncheckedUpdateWithoutBchassignmentInput>
   }
 
-  export type attendancesessionCreateNestedManyWithoutRenamedclassInput = {
-    create?: XOR<attendancesessionCreateWithoutRenamedclassInput, attendancesessionUncheckedCreateWithoutRenamedclassInput> | attendancesessionCreateWithoutRenamedclassInput[] | attendancesessionUncheckedCreateWithoutRenamedclassInput[]
-    connectOrCreate?: attendancesessionCreateOrConnectWithoutRenamedclassInput | attendancesessionCreateOrConnectWithoutRenamedclassInput[]
-    createMany?: attendancesessionCreateManyRenamedclassInputEnvelope
+  export type attendancesessionCreateNestedManyWithoutClassInput = {
+    create?: XOR<attendancesessionCreateWithoutClassInput, attendancesessionUncheckedCreateWithoutClassInput> | attendancesessionCreateWithoutClassInput[] | attendancesessionUncheckedCreateWithoutClassInput[]
+    connectOrCreate?: attendancesessionCreateOrConnectWithoutClassInput | attendancesessionCreateOrConnectWithoutClassInput[]
+    createMany?: attendancesessionCreateManyClassInputEnvelope
     connect?: attendancesessionWhereUniqueInput | attendancesessionWhereUniqueInput[]
   }
 
@@ -59492,10 +60795,10 @@ export namespace Prisma {
     connect?: majorWhereUniqueInput
   }
 
-  export type studentCreateNestedManyWithoutRenamedclassInput = {
-    create?: XOR<studentCreateWithoutRenamedclassInput, studentUncheckedCreateWithoutRenamedclassInput> | studentCreateWithoutRenamedclassInput[] | studentUncheckedCreateWithoutRenamedclassInput[]
-    connectOrCreate?: studentCreateOrConnectWithoutRenamedclassInput | studentCreateOrConnectWithoutRenamedclassInput[]
-    createMany?: studentCreateManyRenamedclassInputEnvelope
+  export type studentCreateNestedManyWithoutClassInput = {
+    create?: XOR<studentCreateWithoutClassInput, studentUncheckedCreateWithoutClassInput> | studentCreateWithoutClassInput[] | studentUncheckedCreateWithoutClassInput[]
+    connectOrCreate?: studentCreateOrConnectWithoutClassInput | studentCreateOrConnectWithoutClassInput[]
+    createMany?: studentCreateManyClassInputEnvelope
     connect?: studentWhereUniqueInput | studentWhereUniqueInput[]
   }
 
@@ -59505,17 +60808,17 @@ export namespace Prisma {
     connect?: semesterWhereUniqueInput | semesterWhereUniqueInput[]
   }
 
-  export type attendancesessionUncheckedCreateNestedManyWithoutRenamedclassInput = {
-    create?: XOR<attendancesessionCreateWithoutRenamedclassInput, attendancesessionUncheckedCreateWithoutRenamedclassInput> | attendancesessionCreateWithoutRenamedclassInput[] | attendancesessionUncheckedCreateWithoutRenamedclassInput[]
-    connectOrCreate?: attendancesessionCreateOrConnectWithoutRenamedclassInput | attendancesessionCreateOrConnectWithoutRenamedclassInput[]
-    createMany?: attendancesessionCreateManyRenamedclassInputEnvelope
+  export type attendancesessionUncheckedCreateNestedManyWithoutClassInput = {
+    create?: XOR<attendancesessionCreateWithoutClassInput, attendancesessionUncheckedCreateWithoutClassInput> | attendancesessionCreateWithoutClassInput[] | attendancesessionUncheckedCreateWithoutClassInput[]
+    connectOrCreate?: attendancesessionCreateOrConnectWithoutClassInput | attendancesessionCreateOrConnectWithoutClassInput[]
+    createMany?: attendancesessionCreateManyClassInputEnvelope
     connect?: attendancesessionWhereUniqueInput | attendancesessionWhereUniqueInput[]
   }
 
-  export type studentUncheckedCreateNestedManyWithoutRenamedclassInput = {
-    create?: XOR<studentCreateWithoutRenamedclassInput, studentUncheckedCreateWithoutRenamedclassInput> | studentCreateWithoutRenamedclassInput[] | studentUncheckedCreateWithoutRenamedclassInput[]
-    connectOrCreate?: studentCreateOrConnectWithoutRenamedclassInput | studentCreateOrConnectWithoutRenamedclassInput[]
-    createMany?: studentCreateManyRenamedclassInputEnvelope
+  export type studentUncheckedCreateNestedManyWithoutClassInput = {
+    create?: XOR<studentCreateWithoutClassInput, studentUncheckedCreateWithoutClassInput> | studentCreateWithoutClassInput[] | studentUncheckedCreateWithoutClassInput[]
+    connectOrCreate?: studentCreateOrConnectWithoutClassInput | studentCreateOrConnectWithoutClassInput[]
+    createMany?: studentCreateManyClassInputEnvelope
     connect?: studentWhereUniqueInput | studentWhereUniqueInput[]
   }
 
@@ -59525,17 +60828,17 @@ export namespace Prisma {
     connect?: semesterWhereUniqueInput | semesterWhereUniqueInput[]
   }
 
-  export type attendancesessionUpdateManyWithoutRenamedclassNestedInput = {
-    create?: XOR<attendancesessionCreateWithoutRenamedclassInput, attendancesessionUncheckedCreateWithoutRenamedclassInput> | attendancesessionCreateWithoutRenamedclassInput[] | attendancesessionUncheckedCreateWithoutRenamedclassInput[]
-    connectOrCreate?: attendancesessionCreateOrConnectWithoutRenamedclassInput | attendancesessionCreateOrConnectWithoutRenamedclassInput[]
-    upsert?: attendancesessionUpsertWithWhereUniqueWithoutRenamedclassInput | attendancesessionUpsertWithWhereUniqueWithoutRenamedclassInput[]
-    createMany?: attendancesessionCreateManyRenamedclassInputEnvelope
+  export type attendancesessionUpdateManyWithoutClassNestedInput = {
+    create?: XOR<attendancesessionCreateWithoutClassInput, attendancesessionUncheckedCreateWithoutClassInput> | attendancesessionCreateWithoutClassInput[] | attendancesessionUncheckedCreateWithoutClassInput[]
+    connectOrCreate?: attendancesessionCreateOrConnectWithoutClassInput | attendancesessionCreateOrConnectWithoutClassInput[]
+    upsert?: attendancesessionUpsertWithWhereUniqueWithoutClassInput | attendancesessionUpsertWithWhereUniqueWithoutClassInput[]
+    createMany?: attendancesessionCreateManyClassInputEnvelope
     set?: attendancesessionWhereUniqueInput | attendancesessionWhereUniqueInput[]
     disconnect?: attendancesessionWhereUniqueInput | attendancesessionWhereUniqueInput[]
     delete?: attendancesessionWhereUniqueInput | attendancesessionWhereUniqueInput[]
     connect?: attendancesessionWhereUniqueInput | attendancesessionWhereUniqueInput[]
-    update?: attendancesessionUpdateWithWhereUniqueWithoutRenamedclassInput | attendancesessionUpdateWithWhereUniqueWithoutRenamedclassInput[]
-    updateMany?: attendancesessionUpdateManyWithWhereWithoutRenamedclassInput | attendancesessionUpdateManyWithWhereWithoutRenamedclassInput[]
+    update?: attendancesessionUpdateWithWhereUniqueWithoutClassInput | attendancesessionUpdateWithWhereUniqueWithoutClassInput[]
+    updateMany?: attendancesessionUpdateManyWithWhereWithoutClassInput | attendancesessionUpdateManyWithWhereWithoutClassInput[]
     deleteMany?: attendancesessionScalarWhereInput | attendancesessionScalarWhereInput[]
   }
 
@@ -59559,17 +60862,17 @@ export namespace Prisma {
     update?: XOR<XOR<majorUpdateToOneWithWhereWithoutRenamedclassInput, majorUpdateWithoutRenamedclassInput>, majorUncheckedUpdateWithoutRenamedclassInput>
   }
 
-  export type studentUpdateManyWithoutRenamedclassNestedInput = {
-    create?: XOR<studentCreateWithoutRenamedclassInput, studentUncheckedCreateWithoutRenamedclassInput> | studentCreateWithoutRenamedclassInput[] | studentUncheckedCreateWithoutRenamedclassInput[]
-    connectOrCreate?: studentCreateOrConnectWithoutRenamedclassInput | studentCreateOrConnectWithoutRenamedclassInput[]
-    upsert?: studentUpsertWithWhereUniqueWithoutRenamedclassInput | studentUpsertWithWhereUniqueWithoutRenamedclassInput[]
-    createMany?: studentCreateManyRenamedclassInputEnvelope
+  export type studentUpdateManyWithoutClassNestedInput = {
+    create?: XOR<studentCreateWithoutClassInput, studentUncheckedCreateWithoutClassInput> | studentCreateWithoutClassInput[] | studentUncheckedCreateWithoutClassInput[]
+    connectOrCreate?: studentCreateOrConnectWithoutClassInput | studentCreateOrConnectWithoutClassInput[]
+    upsert?: studentUpsertWithWhereUniqueWithoutClassInput | studentUpsertWithWhereUniqueWithoutClassInput[]
+    createMany?: studentCreateManyClassInputEnvelope
     set?: studentWhereUniqueInput | studentWhereUniqueInput[]
     disconnect?: studentWhereUniqueInput | studentWhereUniqueInput[]
     delete?: studentWhereUniqueInput | studentWhereUniqueInput[]
     connect?: studentWhereUniqueInput | studentWhereUniqueInput[]
-    update?: studentUpdateWithWhereUniqueWithoutRenamedclassInput | studentUpdateWithWhereUniqueWithoutRenamedclassInput[]
-    updateMany?: studentUpdateManyWithWhereWithoutRenamedclassInput | studentUpdateManyWithWhereWithoutRenamedclassInput[]
+    update?: studentUpdateWithWhereUniqueWithoutClassInput | studentUpdateWithWhereUniqueWithoutClassInput[]
+    updateMany?: studentUpdateManyWithWhereWithoutClassInput | studentUpdateManyWithWhereWithoutClassInput[]
     deleteMany?: studentScalarWhereInput | studentScalarWhereInput[]
   }
 
@@ -59586,31 +60889,31 @@ export namespace Prisma {
     deleteMany?: semesterScalarWhereInput | semesterScalarWhereInput[]
   }
 
-  export type attendancesessionUncheckedUpdateManyWithoutRenamedclassNestedInput = {
-    create?: XOR<attendancesessionCreateWithoutRenamedclassInput, attendancesessionUncheckedCreateWithoutRenamedclassInput> | attendancesessionCreateWithoutRenamedclassInput[] | attendancesessionUncheckedCreateWithoutRenamedclassInput[]
-    connectOrCreate?: attendancesessionCreateOrConnectWithoutRenamedclassInput | attendancesessionCreateOrConnectWithoutRenamedclassInput[]
-    upsert?: attendancesessionUpsertWithWhereUniqueWithoutRenamedclassInput | attendancesessionUpsertWithWhereUniqueWithoutRenamedclassInput[]
-    createMany?: attendancesessionCreateManyRenamedclassInputEnvelope
+  export type attendancesessionUncheckedUpdateManyWithoutClassNestedInput = {
+    create?: XOR<attendancesessionCreateWithoutClassInput, attendancesessionUncheckedCreateWithoutClassInput> | attendancesessionCreateWithoutClassInput[] | attendancesessionUncheckedCreateWithoutClassInput[]
+    connectOrCreate?: attendancesessionCreateOrConnectWithoutClassInput | attendancesessionCreateOrConnectWithoutClassInput[]
+    upsert?: attendancesessionUpsertWithWhereUniqueWithoutClassInput | attendancesessionUpsertWithWhereUniqueWithoutClassInput[]
+    createMany?: attendancesessionCreateManyClassInputEnvelope
     set?: attendancesessionWhereUniqueInput | attendancesessionWhereUniqueInput[]
     disconnect?: attendancesessionWhereUniqueInput | attendancesessionWhereUniqueInput[]
     delete?: attendancesessionWhereUniqueInput | attendancesessionWhereUniqueInput[]
     connect?: attendancesessionWhereUniqueInput | attendancesessionWhereUniqueInput[]
-    update?: attendancesessionUpdateWithWhereUniqueWithoutRenamedclassInput | attendancesessionUpdateWithWhereUniqueWithoutRenamedclassInput[]
-    updateMany?: attendancesessionUpdateManyWithWhereWithoutRenamedclassInput | attendancesessionUpdateManyWithWhereWithoutRenamedclassInput[]
+    update?: attendancesessionUpdateWithWhereUniqueWithoutClassInput | attendancesessionUpdateWithWhereUniqueWithoutClassInput[]
+    updateMany?: attendancesessionUpdateManyWithWhereWithoutClassInput | attendancesessionUpdateManyWithWhereWithoutClassInput[]
     deleteMany?: attendancesessionScalarWhereInput | attendancesessionScalarWhereInput[]
   }
 
-  export type studentUncheckedUpdateManyWithoutRenamedclassNestedInput = {
-    create?: XOR<studentCreateWithoutRenamedclassInput, studentUncheckedCreateWithoutRenamedclassInput> | studentCreateWithoutRenamedclassInput[] | studentUncheckedCreateWithoutRenamedclassInput[]
-    connectOrCreate?: studentCreateOrConnectWithoutRenamedclassInput | studentCreateOrConnectWithoutRenamedclassInput[]
-    upsert?: studentUpsertWithWhereUniqueWithoutRenamedclassInput | studentUpsertWithWhereUniqueWithoutRenamedclassInput[]
-    createMany?: studentCreateManyRenamedclassInputEnvelope
+  export type studentUncheckedUpdateManyWithoutClassNestedInput = {
+    create?: XOR<studentCreateWithoutClassInput, studentUncheckedCreateWithoutClassInput> | studentCreateWithoutClassInput[] | studentUncheckedCreateWithoutClassInput[]
+    connectOrCreate?: studentCreateOrConnectWithoutClassInput | studentCreateOrConnectWithoutClassInput[]
+    upsert?: studentUpsertWithWhereUniqueWithoutClassInput | studentUpsertWithWhereUniqueWithoutClassInput[]
+    createMany?: studentCreateManyClassInputEnvelope
     set?: studentWhereUniqueInput | studentWhereUniqueInput[]
     disconnect?: studentWhereUniqueInput | studentWhereUniqueInput[]
     delete?: studentWhereUniqueInput | studentWhereUniqueInput[]
     connect?: studentWhereUniqueInput | studentWhereUniqueInput[]
-    update?: studentUpdateWithWhereUniqueWithoutRenamedclassInput | studentUpdateWithWhereUniqueWithoutRenamedclassInput[]
-    updateMany?: studentUpdateManyWithWhereWithoutRenamedclassInput | studentUpdateManyWithWhereWithoutRenamedclassInput[]
+    update?: studentUpdateWithWhereUniqueWithoutClassInput | studentUpdateWithWhereUniqueWithoutClassInput[]
+    updateMany?: studentUpdateManyWithWhereWithoutClassInput | studentUpdateManyWithWhereWithoutClassInput[]
     deleteMany?: studentScalarWhereInput | studentScalarWhereInput[]
   }
 
@@ -62099,7 +63402,7 @@ export namespace Prisma {
     examresult?: examresultCreateNestedManyWithoutStudentInput
     grade?: gradeCreateNestedManyWithoutStudentInput
     servicerequest?: servicerequestCreateNestedManyWithoutStudentInput
-    Renamedclass: RenamedclassCreateNestedOneWithoutStudentInput
+    class: RenamedclassCreateNestedOneWithoutStudentInput
     studentattendanceprofile?: studentattendanceprofileCreateNestedOneWithoutStudentInput
     studentaward?: studentawardCreateNestedManyWithoutStudentInput
     trainingevidenceslip?: trainingevidenceslipCreateNestedManyWithoutStudentInput
@@ -62210,7 +63513,7 @@ export namespace Prisma {
     examresult?: examresultUpdateManyWithoutStudentNestedInput
     grade?: gradeUpdateManyWithoutStudentNestedInput
     servicerequest?: servicerequestUpdateManyWithoutStudentNestedInput
-    Renamedclass?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
+    class?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
     studentattendanceprofile?: studentattendanceprofileUpdateOneWithoutStudentNestedInput
     studentaward?: studentawardUpdateManyWithoutStudentNestedInput
     trainingevidenceslip?: trainingevidenceslipUpdateManyWithoutStudentNestedInput
@@ -62248,43 +63551,43 @@ export namespace Prisma {
     user?: userUncheckedUpdateOneWithoutStudentNestedInput
   }
 
-  export type activityattendancerecordCreateWithoutActivityattendancesessionInput = {
+  export type activityattendancerecordCreateWithoutSessionInput = {
     points: number
     scannedAt?: Date | string
     student: studentCreateNestedOneWithoutActivityattendancerecordInput
   }
 
-  export type activityattendancerecordUncheckedCreateWithoutActivityattendancesessionInput = {
+  export type activityattendancerecordUncheckedCreateWithoutSessionInput = {
     id?: number
     studentId: number
     points: number
     scannedAt?: Date | string
   }
 
-  export type activityattendancerecordCreateOrConnectWithoutActivityattendancesessionInput = {
+  export type activityattendancerecordCreateOrConnectWithoutSessionInput = {
     where: activityattendancerecordWhereUniqueInput
-    create: XOR<activityattendancerecordCreateWithoutActivityattendancesessionInput, activityattendancerecordUncheckedCreateWithoutActivityattendancesessionInput>
+    create: XOR<activityattendancerecordCreateWithoutSessionInput, activityattendancerecordUncheckedCreateWithoutSessionInput>
   }
 
-  export type activityattendancerecordCreateManyActivityattendancesessionInputEnvelope = {
-    data: activityattendancerecordCreateManyActivityattendancesessionInput | activityattendancerecordCreateManyActivityattendancesessionInput[]
+  export type activityattendancerecordCreateManySessionInputEnvelope = {
+    data: activityattendancerecordCreateManySessionInput | activityattendancerecordCreateManySessionInput[]
     skipDuplicates?: boolean
   }
 
-  export type activityattendancerecordUpsertWithWhereUniqueWithoutActivityattendancesessionInput = {
+  export type activityattendancerecordUpsertWithWhereUniqueWithoutSessionInput = {
     where: activityattendancerecordWhereUniqueInput
-    update: XOR<activityattendancerecordUpdateWithoutActivityattendancesessionInput, activityattendancerecordUncheckedUpdateWithoutActivityattendancesessionInput>
-    create: XOR<activityattendancerecordCreateWithoutActivityattendancesessionInput, activityattendancerecordUncheckedCreateWithoutActivityattendancesessionInput>
+    update: XOR<activityattendancerecordUpdateWithoutSessionInput, activityattendancerecordUncheckedUpdateWithoutSessionInput>
+    create: XOR<activityattendancerecordCreateWithoutSessionInput, activityattendancerecordUncheckedCreateWithoutSessionInput>
   }
 
-  export type activityattendancerecordUpdateWithWhereUniqueWithoutActivityattendancesessionInput = {
+  export type activityattendancerecordUpdateWithWhereUniqueWithoutSessionInput = {
     where: activityattendancerecordWhereUniqueInput
-    data: XOR<activityattendancerecordUpdateWithoutActivityattendancesessionInput, activityattendancerecordUncheckedUpdateWithoutActivityattendancesessionInput>
+    data: XOR<activityattendancerecordUpdateWithoutSessionInput, activityattendancerecordUncheckedUpdateWithoutSessionInput>
   }
 
-  export type activityattendancerecordUpdateManyWithWhereWithoutActivityattendancesessionInput = {
+  export type activityattendancerecordUpdateManyWithWhereWithoutSessionInput = {
     where: activityattendancerecordScalarWhereInput
-    data: XOR<activityattendancerecordUpdateManyMutationInput, activityattendancerecordUncheckedUpdateManyWithoutActivityattendancesessionInput>
+    data: XOR<activityattendancerecordUpdateManyMutationInput, activityattendancerecordUncheckedUpdateManyWithoutSessionInput>
   }
 
   export type activityattendancerecordScalarWhereInput = {
@@ -62317,7 +63620,7 @@ export namespace Prisma {
     examresult?: examresultCreateNestedManyWithoutStudentInput
     grade?: gradeCreateNestedManyWithoutStudentInput
     servicerequest?: servicerequestCreateNestedManyWithoutStudentInput
-    Renamedclass: RenamedclassCreateNestedOneWithoutStudentInput
+    class: RenamedclassCreateNestedOneWithoutStudentInput
     studentattendanceprofile?: studentattendanceprofileCreateNestedOneWithoutStudentInput
     studentaward?: studentawardCreateNestedManyWithoutStudentInput
     trainingevidenceslip?: trainingevidenceslipCreateNestedManyWithoutStudentInput
@@ -62390,7 +63693,7 @@ export namespace Prisma {
     examresult?: examresultUpdateManyWithoutStudentNestedInput
     grade?: gradeUpdateManyWithoutStudentNestedInput
     servicerequest?: servicerequestUpdateManyWithoutStudentNestedInput
-    Renamedclass?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
+    class?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
     studentattendanceprofile?: studentattendanceprofileUpdateOneWithoutStudentNestedInput
     studentaward?: studentawardUpdateManyWithoutStudentNestedInput
     trainingevidenceslip?: trainingevidenceslipUpdateManyWithoutStudentNestedInput
@@ -62621,7 +63924,7 @@ export namespace Prisma {
     examresult?: examresultCreateNestedManyWithoutStudentInput
     grade?: gradeCreateNestedManyWithoutStudentInput
     servicerequest?: servicerequestCreateNestedManyWithoutStudentInput
-    Renamedclass: RenamedclassCreateNestedOneWithoutStudentInput
+    class: RenamedclassCreateNestedOneWithoutStudentInput
     studentattendanceprofile?: studentattendanceprofileCreateNestedOneWithoutStudentInput
     studentaward?: studentawardCreateNestedManyWithoutStudentInput
     trainingevidenceslip?: trainingevidenceslipCreateNestedManyWithoutStudentInput
@@ -62730,7 +64033,7 @@ export namespace Prisma {
     examresult?: examresultUpdateManyWithoutStudentNestedInput
     grade?: gradeUpdateManyWithoutStudentNestedInput
     servicerequest?: servicerequestUpdateManyWithoutStudentNestedInput
-    Renamedclass?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
+    class?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
     studentattendanceprofile?: studentattendanceprofileUpdateOneWithoutStudentNestedInput
     studentaward?: studentawardUpdateManyWithoutStudentNestedInput
     trainingevidenceslip?: trainingevidenceslipUpdateManyWithoutStudentNestedInput
@@ -62780,7 +64083,7 @@ export namespace Prisma {
     updatedAt: Date | string
     endedAt?: Date | string | null
     sessionDate?: Date | string
-    Renamedclass?: RenamedclassCreateNestedOneWithoutAttendancesessionInput
+    class?: RenamedclassCreateNestedOneWithoutAttendancesessionInput
   }
 
   export type attendancesessionUncheckedCreateWithoutAttendanceInput = {
@@ -62823,7 +64126,7 @@ export namespace Prisma {
     examresult?: examresultCreateNestedManyWithoutStudentInput
     grade?: gradeCreateNestedManyWithoutStudentInput
     servicerequest?: servicerequestCreateNestedManyWithoutStudentInput
-    Renamedclass: RenamedclassCreateNestedOneWithoutStudentInput
+    class: RenamedclassCreateNestedOneWithoutStudentInput
     studentattendanceprofile?: studentattendanceprofileCreateNestedOneWithoutStudentInput
     studentaward?: studentawardCreateNestedManyWithoutStudentInput
     trainingevidenceslip?: trainingevidenceslipCreateNestedManyWithoutStudentInput
@@ -62889,7 +64192,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sessionDate?: DateTimeFieldUpdateOperationsInput | Date | string
-    Renamedclass?: RenamedclassUpdateOneWithoutAttendancesessionNestedInput
+    class?: RenamedclassUpdateOneWithoutAttendancesessionNestedInput
   }
 
   export type attendancesessionUncheckedUpdateWithoutAttendanceInput = {
@@ -62938,7 +64241,7 @@ export namespace Prisma {
     examresult?: examresultUpdateManyWithoutStudentNestedInput
     grade?: gradeUpdateManyWithoutStudentNestedInput
     servicerequest?: servicerequestUpdateManyWithoutStudentNestedInput
-    Renamedclass?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
+    class?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
     studentattendanceprofile?: studentattendanceprofileUpdateOneWithoutStudentNestedInput
     studentaward?: studentawardUpdateManyWithoutStudentNestedInput
     trainingevidenceslip?: trainingevidenceslipUpdateManyWithoutStudentNestedInput
@@ -62976,7 +64279,7 @@ export namespace Prisma {
     user?: userUncheckedUpdateOneWithoutStudentNestedInput
   }
 
-  export type attendanceCreateWithoutAttendancesessionInput = {
+  export type attendanceCreateWithoutSessionInput = {
     date?: Date | string
     status: string
     createdAt?: Date | string
@@ -62993,7 +64296,7 @@ export namespace Prisma {
     student: studentCreateNestedOneWithoutAttendanceInput
   }
 
-  export type attendanceUncheckedCreateWithoutAttendancesessionInput = {
+  export type attendanceUncheckedCreateWithoutSessionInput = {
     id?: number
     student_id: number
     date?: Date | string
@@ -63011,13 +64314,13 @@ export namespace Prisma {
     sessionDistance?: number | null
   }
 
-  export type attendanceCreateOrConnectWithoutAttendancesessionInput = {
+  export type attendanceCreateOrConnectWithoutSessionInput = {
     where: attendanceWhereUniqueInput
-    create: XOR<attendanceCreateWithoutAttendancesessionInput, attendanceUncheckedCreateWithoutAttendancesessionInput>
+    create: XOR<attendanceCreateWithoutSessionInput, attendanceUncheckedCreateWithoutSessionInput>
   }
 
-  export type attendanceCreateManyAttendancesessionInputEnvelope = {
-    data: attendanceCreateManyAttendancesessionInput | attendanceCreateManyAttendancesessionInput[]
+  export type attendanceCreateManySessionInputEnvelope = {
+    data: attendanceCreateManySessionInput | attendanceCreateManySessionInput[]
     skipDuplicates?: boolean
   }
 
@@ -63027,7 +64330,7 @@ export namespace Prisma {
     updatedAt: Date | string
     semester_Renamedclass_active_semester_idTosemester?: semesterCreateNestedOneWithoutRenamedclass_Renamedclass_active_semester_idTosemesterInput
     major?: majorCreateNestedOneWithoutRenamedclassInput
-    student?: studentCreateNestedManyWithoutRenamedclassInput
+    student?: studentCreateNestedManyWithoutClassInput
     semester_semesterscope?: semesterCreateNestedManyWithoutRenamedclass_semesterscopeInput
   }
 
@@ -63037,7 +64340,7 @@ export namespace Prisma {
     majorId?: number | null
     createdAt?: Date | string
     updatedAt: Date | string
-    student?: studentUncheckedCreateNestedManyWithoutRenamedclassInput
+    student?: studentUncheckedCreateNestedManyWithoutClassInput
     semester_semesterscope?: semesterUncheckedCreateNestedManyWithoutRenamedclass_semesterscopeInput
   }
 
@@ -63046,20 +64349,20 @@ export namespace Prisma {
     create: XOR<RenamedclassCreateWithoutAttendancesessionInput, RenamedclassUncheckedCreateWithoutAttendancesessionInput>
   }
 
-  export type attendanceUpsertWithWhereUniqueWithoutAttendancesessionInput = {
+  export type attendanceUpsertWithWhereUniqueWithoutSessionInput = {
     where: attendanceWhereUniqueInput
-    update: XOR<attendanceUpdateWithoutAttendancesessionInput, attendanceUncheckedUpdateWithoutAttendancesessionInput>
-    create: XOR<attendanceCreateWithoutAttendancesessionInput, attendanceUncheckedCreateWithoutAttendancesessionInput>
+    update: XOR<attendanceUpdateWithoutSessionInput, attendanceUncheckedUpdateWithoutSessionInput>
+    create: XOR<attendanceCreateWithoutSessionInput, attendanceUncheckedCreateWithoutSessionInput>
   }
 
-  export type attendanceUpdateWithWhereUniqueWithoutAttendancesessionInput = {
+  export type attendanceUpdateWithWhereUniqueWithoutSessionInput = {
     where: attendanceWhereUniqueInput
-    data: XOR<attendanceUpdateWithoutAttendancesessionInput, attendanceUncheckedUpdateWithoutAttendancesessionInput>
+    data: XOR<attendanceUpdateWithoutSessionInput, attendanceUncheckedUpdateWithoutSessionInput>
   }
 
-  export type attendanceUpdateManyWithWhereWithoutAttendancesessionInput = {
+  export type attendanceUpdateManyWithWhereWithoutSessionInput = {
     where: attendanceScalarWhereInput
-    data: XOR<attendanceUpdateManyMutationInput, attendanceUncheckedUpdateManyWithoutAttendancesessionInput>
+    data: XOR<attendanceUpdateManyMutationInput, attendanceUncheckedUpdateManyWithoutSessionInput>
   }
 
   export type attendanceScalarWhereInput = {
@@ -63101,7 +64404,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     semester_Renamedclass_active_semester_idTosemester?: semesterUpdateOneWithoutRenamedclass_Renamedclass_active_semester_idTosemesterNestedInput
     major?: majorUpdateOneWithoutRenamedclassNestedInput
-    student?: studentUpdateManyWithoutRenamedclassNestedInput
+    student?: studentUpdateManyWithoutClassNestedInput
     semester_semesterscope?: semesterUpdateManyWithoutRenamedclass_semesterscopeNestedInput
   }
 
@@ -63111,7 +64414,7 @@ export namespace Prisma {
     majorId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    student?: studentUncheckedUpdateManyWithoutRenamedclassNestedInput
+    student?: studentUncheckedUpdateManyWithoutClassNestedInput
     semester_semesterscope?: semesterUncheckedUpdateManyWithoutRenamedclass_semesterscopeNestedInput
   }
 
@@ -63287,7 +64590,7 @@ export namespace Prisma {
     teachingassignment?: teachingassignmentUncheckedUpdateManyWithoutUserNestedInput
   }
 
-  export type attendancesessionCreateWithoutRenamedclassInput = {
+  export type attendancesessionCreateWithoutClassInput = {
     title: string
     subject?: string
     qrToken: string
@@ -63299,10 +64602,10 @@ export namespace Prisma {
     updatedAt: Date | string
     endedAt?: Date | string | null
     sessionDate?: Date | string
-    attendance?: attendanceCreateNestedManyWithoutAttendancesessionInput
+    attendance?: attendanceCreateNestedManyWithoutSessionInput
   }
 
-  export type attendancesessionUncheckedCreateWithoutRenamedclassInput = {
+  export type attendancesessionUncheckedCreateWithoutClassInput = {
     id?: number
     title: string
     subject?: string
@@ -63315,16 +64618,16 @@ export namespace Prisma {
     updatedAt: Date | string
     endedAt?: Date | string | null
     sessionDate?: Date | string
-    attendance?: attendanceUncheckedCreateNestedManyWithoutAttendancesessionInput
+    attendance?: attendanceUncheckedCreateNestedManyWithoutSessionInput
   }
 
-  export type attendancesessionCreateOrConnectWithoutRenamedclassInput = {
+  export type attendancesessionCreateOrConnectWithoutClassInput = {
     where: attendancesessionWhereUniqueInput
-    create: XOR<attendancesessionCreateWithoutRenamedclassInput, attendancesessionUncheckedCreateWithoutRenamedclassInput>
+    create: XOR<attendancesessionCreateWithoutClassInput, attendancesessionUncheckedCreateWithoutClassInput>
   }
 
-  export type attendancesessionCreateManyRenamedclassInputEnvelope = {
-    data: attendancesessionCreateManyRenamedclassInput | attendancesessionCreateManyRenamedclassInput[]
+  export type attendancesessionCreateManyClassInputEnvelope = {
+    data: attendancesessionCreateManyClassInput | attendancesessionCreateManyClassInput[]
     skipDuplicates?: boolean
   }
 
@@ -63387,7 +64690,7 @@ export namespace Prisma {
     create: XOR<majorCreateWithoutRenamedclassInput, majorUncheckedCreateWithoutRenamedclassInput>
   }
 
-  export type studentCreateWithoutRenamedclassInput = {
+  export type studentCreateWithoutClassInput = {
     name: string
     student_code: string
     email: string
@@ -63415,7 +64718,7 @@ export namespace Prisma {
     user?: userCreateNestedOneWithoutStudentInput
   }
 
-  export type studentUncheckedCreateWithoutRenamedclassInput = {
+  export type studentUncheckedCreateWithoutClassInput = {
     id?: number
     name: string
     student_code: string
@@ -63444,13 +64747,13 @@ export namespace Prisma {
     user?: userUncheckedCreateNestedOneWithoutStudentInput
   }
 
-  export type studentCreateOrConnectWithoutRenamedclassInput = {
+  export type studentCreateOrConnectWithoutClassInput = {
     where: studentWhereUniqueInput
-    create: XOR<studentCreateWithoutRenamedclassInput, studentUncheckedCreateWithoutRenamedclassInput>
+    create: XOR<studentCreateWithoutClassInput, studentUncheckedCreateWithoutClassInput>
   }
 
-  export type studentCreateManyRenamedclassInputEnvelope = {
-    data: studentCreateManyRenamedclassInput | studentCreateManyRenamedclassInput[]
+  export type studentCreateManyClassInputEnvelope = {
+    data: studentCreateManyClassInput | studentCreateManyClassInput[]
     skipDuplicates?: boolean
   }
 
@@ -63481,20 +64784,20 @@ export namespace Prisma {
     create: XOR<semesterCreateWithoutRenamedclass_semesterscopeInput, semesterUncheckedCreateWithoutRenamedclass_semesterscopeInput>
   }
 
-  export type attendancesessionUpsertWithWhereUniqueWithoutRenamedclassInput = {
+  export type attendancesessionUpsertWithWhereUniqueWithoutClassInput = {
     where: attendancesessionWhereUniqueInput
-    update: XOR<attendancesessionUpdateWithoutRenamedclassInput, attendancesessionUncheckedUpdateWithoutRenamedclassInput>
-    create: XOR<attendancesessionCreateWithoutRenamedclassInput, attendancesessionUncheckedCreateWithoutRenamedclassInput>
+    update: XOR<attendancesessionUpdateWithoutClassInput, attendancesessionUncheckedUpdateWithoutClassInput>
+    create: XOR<attendancesessionCreateWithoutClassInput, attendancesessionUncheckedCreateWithoutClassInput>
   }
 
-  export type attendancesessionUpdateWithWhereUniqueWithoutRenamedclassInput = {
+  export type attendancesessionUpdateWithWhereUniqueWithoutClassInput = {
     where: attendancesessionWhereUniqueInput
-    data: XOR<attendancesessionUpdateWithoutRenamedclassInput, attendancesessionUncheckedUpdateWithoutRenamedclassInput>
+    data: XOR<attendancesessionUpdateWithoutClassInput, attendancesessionUncheckedUpdateWithoutClassInput>
   }
 
-  export type attendancesessionUpdateManyWithWhereWithoutRenamedclassInput = {
+  export type attendancesessionUpdateManyWithWhereWithoutClassInput = {
     where: attendancesessionScalarWhereInput
-    data: XOR<attendancesessionUpdateManyMutationInput, attendancesessionUncheckedUpdateManyWithoutRenamedclassInput>
+    data: XOR<attendancesessionUpdateManyMutationInput, attendancesessionUncheckedUpdateManyWithoutClassInput>
   }
 
   export type attendancesessionScalarWhereInput = {
@@ -63587,20 +64890,20 @@ export namespace Prisma {
     curriculumsubject?: curriculumsubjectUncheckedUpdateManyWithoutMajorNestedInput
   }
 
-  export type studentUpsertWithWhereUniqueWithoutRenamedclassInput = {
+  export type studentUpsertWithWhereUniqueWithoutClassInput = {
     where: studentWhereUniqueInput
-    update: XOR<studentUpdateWithoutRenamedclassInput, studentUncheckedUpdateWithoutRenamedclassInput>
-    create: XOR<studentCreateWithoutRenamedclassInput, studentUncheckedCreateWithoutRenamedclassInput>
+    update: XOR<studentUpdateWithoutClassInput, studentUncheckedUpdateWithoutClassInput>
+    create: XOR<studentCreateWithoutClassInput, studentUncheckedCreateWithoutClassInput>
   }
 
-  export type studentUpdateWithWhereUniqueWithoutRenamedclassInput = {
+  export type studentUpdateWithWhereUniqueWithoutClassInput = {
     where: studentWhereUniqueInput
-    data: XOR<studentUpdateWithoutRenamedclassInput, studentUncheckedUpdateWithoutRenamedclassInput>
+    data: XOR<studentUpdateWithoutClassInput, studentUncheckedUpdateWithoutClassInput>
   }
 
-  export type studentUpdateManyWithWhereWithoutRenamedclassInput = {
+  export type studentUpdateManyWithWhereWithoutClassInput = {
     where: studentScalarWhereInput
-    data: XOR<studentUpdateManyMutationInput, studentUncheckedUpdateManyWithoutRenamedclassInput>
+    data: XOR<studentUpdateManyMutationInput, studentUncheckedUpdateManyWithoutClassInput>
   }
 
   export type studentScalarWhereInput = {
@@ -64137,7 +65440,7 @@ export namespace Prisma {
     examresult?: examresultCreateNestedManyWithoutStudentInput
     grade?: gradeCreateNestedManyWithoutStudentInput
     servicerequest?: servicerequestCreateNestedManyWithoutStudentInput
-    Renamedclass: RenamedclassCreateNestedOneWithoutStudentInput
+    class: RenamedclassCreateNestedOneWithoutStudentInput
     studentattendanceprofile?: studentattendanceprofileCreateNestedOneWithoutStudentInput
     studentaward?: studentawardCreateNestedManyWithoutStudentInput
     trainingevidenceslip?: trainingevidenceslipCreateNestedManyWithoutStudentInput
@@ -64250,7 +65553,7 @@ export namespace Prisma {
     examresult?: examresultUpdateManyWithoutStudentNestedInput
     grade?: gradeUpdateManyWithoutStudentNestedInput
     servicerequest?: servicerequestUpdateManyWithoutStudentNestedInput
-    Renamedclass?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
+    class?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
     studentattendanceprofile?: studentattendanceprofileUpdateOneWithoutStudentNestedInput
     studentaward?: studentawardUpdateManyWithoutStudentNestedInput
     trainingevidenceslip?: trainingevidenceslipUpdateManyWithoutStudentNestedInput
@@ -65188,7 +66491,7 @@ export namespace Prisma {
     courseregistration?: courseregistrationCreateNestedManyWithoutStudentInput
     grade?: gradeCreateNestedManyWithoutStudentInput
     servicerequest?: servicerequestCreateNestedManyWithoutStudentInput
-    Renamedclass: RenamedclassCreateNestedOneWithoutStudentInput
+    class: RenamedclassCreateNestedOneWithoutStudentInput
     studentattendanceprofile?: studentattendanceprofileCreateNestedOneWithoutStudentInput
     studentaward?: studentawardCreateNestedManyWithoutStudentInput
     trainingevidenceslip?: trainingevidenceslipCreateNestedManyWithoutStudentInput
@@ -65303,7 +66606,7 @@ export namespace Prisma {
     courseregistration?: courseregistrationUpdateManyWithoutStudentNestedInput
     grade?: gradeUpdateManyWithoutStudentNestedInput
     servicerequest?: servicerequestUpdateManyWithoutStudentNestedInput
-    Renamedclass?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
+    class?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
     studentattendanceprofile?: studentattendanceprofileUpdateOneWithoutStudentNestedInput
     studentaward?: studentawardUpdateManyWithoutStudentNestedInput
     trainingevidenceslip?: trainingevidenceslipUpdateManyWithoutStudentNestedInput
@@ -65428,7 +66731,7 @@ export namespace Prisma {
     courseregistration?: courseregistrationCreateNestedManyWithoutStudentInput
     examresult?: examresultCreateNestedManyWithoutStudentInput
     servicerequest?: servicerequestCreateNestedManyWithoutStudentInput
-    Renamedclass: RenamedclassCreateNestedOneWithoutStudentInput
+    class: RenamedclassCreateNestedOneWithoutStudentInput
     studentattendanceprofile?: studentattendanceprofileCreateNestedOneWithoutStudentInput
     studentaward?: studentawardCreateNestedManyWithoutStudentInput
     trainingevidenceslip?: trainingevidenceslipCreateNestedManyWithoutStudentInput
@@ -65501,7 +66804,7 @@ export namespace Prisma {
     courseregistration?: courseregistrationUpdateManyWithoutStudentNestedInput
     examresult?: examresultUpdateManyWithoutStudentNestedInput
     servicerequest?: servicerequestUpdateManyWithoutStudentNestedInput
-    Renamedclass?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
+    class?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
     studentattendanceprofile?: studentattendanceprofileUpdateOneWithoutStudentNestedInput
     studentaward?: studentawardUpdateManyWithoutStudentNestedInput
     trainingevidenceslip?: trainingevidenceslipUpdateManyWithoutStudentNestedInput
@@ -65625,9 +66928,9 @@ export namespace Prisma {
     name: string
     createdAt?: Date | string
     updatedAt: Date | string
-    attendancesession?: attendancesessionCreateNestedManyWithoutRenamedclassInput
+    attendancesession?: attendancesessionCreateNestedManyWithoutClassInput
     semester_Renamedclass_active_semester_idTosemester?: semesterCreateNestedOneWithoutRenamedclass_Renamedclass_active_semester_idTosemesterInput
-    student?: studentCreateNestedManyWithoutRenamedclassInput
+    student?: studentCreateNestedManyWithoutClassInput
     semester_semesterscope?: semesterCreateNestedManyWithoutRenamedclass_semesterscopeInput
   }
 
@@ -65636,8 +66939,8 @@ export namespace Prisma {
     active_semester_id?: string | null
     createdAt?: Date | string
     updatedAt: Date | string
-    attendancesession?: attendancesessionUncheckedCreateNestedManyWithoutRenamedclassInput
-    student?: studentUncheckedCreateNestedManyWithoutRenamedclassInput
+    attendancesession?: attendancesessionUncheckedCreateNestedManyWithoutClassInput
+    student?: studentUncheckedCreateNestedManyWithoutClassInput
     semester_semesterscope?: semesterUncheckedCreateNestedManyWithoutRenamedclass_semesterscopeInput
   }
 
@@ -66148,9 +67451,9 @@ export namespace Prisma {
     name: string
     createdAt?: Date | string
     updatedAt: Date | string
-    attendancesession?: attendancesessionCreateNestedManyWithoutRenamedclassInput
+    attendancesession?: attendancesessionCreateNestedManyWithoutClassInput
     major?: majorCreateNestedOneWithoutRenamedclassInput
-    student?: studentCreateNestedManyWithoutRenamedclassInput
+    student?: studentCreateNestedManyWithoutClassInput
     semester_semesterscope?: semesterCreateNestedManyWithoutRenamedclass_semesterscopeInput
   }
 
@@ -66159,8 +67462,8 @@ export namespace Prisma {
     majorId?: number | null
     createdAt?: Date | string
     updatedAt: Date | string
-    attendancesession?: attendancesessionUncheckedCreateNestedManyWithoutRenamedclassInput
-    student?: studentUncheckedCreateNestedManyWithoutRenamedclassInput
+    attendancesession?: attendancesessionUncheckedCreateNestedManyWithoutClassInput
+    student?: studentUncheckedCreateNestedManyWithoutClassInput
     semester_semesterscope?: semesterUncheckedCreateNestedManyWithoutRenamedclass_semesterscopeInput
   }
 
@@ -66225,10 +67528,10 @@ export namespace Prisma {
     name: string
     createdAt?: Date | string
     updatedAt: Date | string
-    attendancesession?: attendancesessionCreateNestedManyWithoutRenamedclassInput
+    attendancesession?: attendancesessionCreateNestedManyWithoutClassInput
     semester_Renamedclass_active_semester_idTosemester?: semesterCreateNestedOneWithoutRenamedclass_Renamedclass_active_semester_idTosemesterInput
     major?: majorCreateNestedOneWithoutRenamedclassInput
-    student?: studentCreateNestedManyWithoutRenamedclassInput
+    student?: studentCreateNestedManyWithoutClassInput
   }
 
   export type RenamedclassUncheckedCreateWithoutSemester_semesterscopeInput = {
@@ -66237,8 +67540,8 @@ export namespace Prisma {
     majorId?: number | null
     createdAt?: Date | string
     updatedAt: Date | string
-    attendancesession?: attendancesessionUncheckedCreateNestedManyWithoutRenamedclassInput
-    student?: studentUncheckedCreateNestedManyWithoutRenamedclassInput
+    attendancesession?: attendancesessionUncheckedCreateNestedManyWithoutClassInput
+    student?: studentUncheckedCreateNestedManyWithoutClassInput
   }
 
   export type RenamedclassCreateOrConnectWithoutSemester_semesterscopeInput = {
@@ -66320,7 +67623,7 @@ export namespace Prisma {
   export type activityattendancerecordCreateWithoutStudentInput = {
     points: number
     scannedAt?: Date | string
-    activityattendancesession: activityattendancesessionCreateNestedOneWithoutActivityattendancerecordInput
+    session: activityattendancesessionCreateNestedOneWithoutActivityattendancerecordInput
   }
 
   export type activityattendancerecordUncheckedCreateWithoutStudentInput = {
@@ -66422,7 +67725,7 @@ export namespace Prisma {
     verifiedLocation?: boolean | null
     profileDistance?: number | null
     sessionDistance?: number | null
-    attendancesession?: attendancesessionCreateNestedOneWithoutAttendanceInput
+    session?: attendancesessionCreateNestedOneWithoutAttendanceInput
   }
 
   export type attendanceUncheckedCreateWithoutStudentInput = {
@@ -66577,7 +67880,7 @@ export namespace Prisma {
     name: string
     createdAt?: Date | string
     updatedAt: Date | string
-    attendancesession?: attendancesessionCreateNestedManyWithoutRenamedclassInput
+    attendancesession?: attendancesessionCreateNestedManyWithoutClassInput
     semester_Renamedclass_active_semester_idTosemester?: semesterCreateNestedOneWithoutRenamedclass_Renamedclass_active_semester_idTosemesterInput
     major?: majorCreateNestedOneWithoutRenamedclassInput
     semester_semesterscope?: semesterCreateNestedManyWithoutRenamedclass_semesterscopeInput
@@ -66589,7 +67892,7 @@ export namespace Prisma {
     majorId?: number | null
     createdAt?: Date | string
     updatedAt: Date | string
-    attendancesession?: attendancesessionUncheckedCreateNestedManyWithoutRenamedclassInput
+    attendancesession?: attendancesessionUncheckedCreateNestedManyWithoutClassInput
     semester_semesterscope?: semesterUncheckedCreateNestedManyWithoutRenamedclass_semesterscopeInput
   }
 
@@ -67011,7 +68314,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    attendancesession?: attendancesessionUpdateManyWithoutRenamedclassNestedInput
+    attendancesession?: attendancesessionUpdateManyWithoutClassNestedInput
     semester_Renamedclass_active_semester_idTosemester?: semesterUpdateOneWithoutRenamedclass_Renamedclass_active_semester_idTosemesterNestedInput
     major?: majorUpdateOneWithoutRenamedclassNestedInput
     semester_semesterscope?: semesterUpdateManyWithoutRenamedclass_semesterscopeNestedInput
@@ -67023,7 +68326,7 @@ export namespace Prisma {
     majorId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    attendancesession?: attendancesessionUncheckedUpdateManyWithoutRenamedclassNestedInput
+    attendancesession?: attendancesessionUncheckedUpdateManyWithoutClassNestedInput
     semester_semesterscope?: semesterUncheckedUpdateManyWithoutRenamedclass_semesterscopeNestedInput
   }
 
@@ -67235,7 +68538,7 @@ export namespace Prisma {
     courseregistration?: courseregistrationCreateNestedManyWithoutStudentInput
     examresult?: examresultCreateNestedManyWithoutStudentInput
     grade?: gradeCreateNestedManyWithoutStudentInput
-    Renamedclass: RenamedclassCreateNestedOneWithoutStudentInput
+    class: RenamedclassCreateNestedOneWithoutStudentInput
     studentattendanceprofile?: studentattendanceprofileCreateNestedOneWithoutStudentInput
     studentaward?: studentawardCreateNestedManyWithoutStudentInput
     trainingevidenceslip?: trainingevidenceslipCreateNestedManyWithoutStudentInput
@@ -67308,7 +68611,7 @@ export namespace Prisma {
     courseregistration?: courseregistrationUpdateManyWithoutStudentNestedInput
     examresult?: examresultUpdateManyWithoutStudentNestedInput
     grade?: gradeUpdateManyWithoutStudentNestedInput
-    Renamedclass?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
+    class?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
     studentattendanceprofile?: studentattendanceprofileUpdateOneWithoutStudentNestedInput
     studentaward?: studentawardUpdateManyWithoutStudentNestedInput
     trainingevidenceslip?: trainingevidenceslipUpdateManyWithoutStudentNestedInput
@@ -67366,7 +68669,7 @@ export namespace Prisma {
     examresult?: examresultCreateNestedManyWithoutStudentInput
     grade?: gradeCreateNestedManyWithoutStudentInput
     servicerequest?: servicerequestCreateNestedManyWithoutStudentInput
-    Renamedclass: RenamedclassCreateNestedOneWithoutStudentInput
+    class: RenamedclassCreateNestedOneWithoutStudentInput
     studentaward?: studentawardCreateNestedManyWithoutStudentInput
     trainingevidenceslip?: trainingevidenceslipCreateNestedManyWithoutStudentInput
     trainingscore?: trainingscoreCreateNestedManyWithoutStudentInput
@@ -67439,7 +68742,7 @@ export namespace Prisma {
     examresult?: examresultUpdateManyWithoutStudentNestedInput
     grade?: gradeUpdateManyWithoutStudentNestedInput
     servicerequest?: servicerequestUpdateManyWithoutStudentNestedInput
-    Renamedclass?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
+    class?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
     studentaward?: studentawardUpdateManyWithoutStudentNestedInput
     trainingevidenceslip?: trainingevidenceslipUpdateManyWithoutStudentNestedInput
     trainingscore?: trainingscoreUpdateManyWithoutStudentNestedInput
@@ -67496,7 +68799,7 @@ export namespace Prisma {
     examresult?: examresultCreateNestedManyWithoutStudentInput
     grade?: gradeCreateNestedManyWithoutStudentInput
     servicerequest?: servicerequestCreateNestedManyWithoutStudentInput
-    Renamedclass: RenamedclassCreateNestedOneWithoutStudentInput
+    class: RenamedclassCreateNestedOneWithoutStudentInput
     studentattendanceprofile?: studentattendanceprofileCreateNestedOneWithoutStudentInput
     trainingevidenceslip?: trainingevidenceslipCreateNestedManyWithoutStudentInput
     trainingscore?: trainingscoreCreateNestedManyWithoutStudentInput
@@ -67569,7 +68872,7 @@ export namespace Prisma {
     examresult?: examresultUpdateManyWithoutStudentNestedInput
     grade?: gradeUpdateManyWithoutStudentNestedInput
     servicerequest?: servicerequestUpdateManyWithoutStudentNestedInput
-    Renamedclass?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
+    class?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
     studentattendanceprofile?: studentattendanceprofileUpdateOneWithoutStudentNestedInput
     trainingevidenceslip?: trainingevidenceslipUpdateManyWithoutStudentNestedInput
     trainingscore?: trainingscoreUpdateManyWithoutStudentNestedInput
@@ -68112,7 +69415,7 @@ export namespace Prisma {
     examresult?: examresultCreateNestedManyWithoutStudentInput
     grade?: gradeCreateNestedManyWithoutStudentInput
     servicerequest?: servicerequestCreateNestedManyWithoutStudentInput
-    Renamedclass: RenamedclassCreateNestedOneWithoutStudentInput
+    class: RenamedclassCreateNestedOneWithoutStudentInput
     studentattendanceprofile?: studentattendanceprofileCreateNestedOneWithoutStudentInput
     studentaward?: studentawardCreateNestedManyWithoutStudentInput
     trainingscore?: trainingscoreCreateNestedManyWithoutStudentInput
@@ -68185,7 +69488,7 @@ export namespace Prisma {
     examresult?: examresultUpdateManyWithoutStudentNestedInput
     grade?: gradeUpdateManyWithoutStudentNestedInput
     servicerequest?: servicerequestUpdateManyWithoutStudentNestedInput
-    Renamedclass?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
+    class?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
     studentattendanceprofile?: studentattendanceprofileUpdateOneWithoutStudentNestedInput
     studentaward?: studentawardUpdateManyWithoutStudentNestedInput
     trainingscore?: trainingscoreUpdateManyWithoutStudentNestedInput
@@ -68269,7 +69572,7 @@ export namespace Prisma {
     examresult?: examresultCreateNestedManyWithoutStudentInput
     grade?: gradeCreateNestedManyWithoutStudentInput
     servicerequest?: servicerequestCreateNestedManyWithoutStudentInput
-    Renamedclass: RenamedclassCreateNestedOneWithoutStudentInput
+    class: RenamedclassCreateNestedOneWithoutStudentInput
     studentattendanceprofile?: studentattendanceprofileCreateNestedOneWithoutStudentInput
     studentaward?: studentawardCreateNestedManyWithoutStudentInput
     trainingevidenceslip?: trainingevidenceslipCreateNestedManyWithoutStudentInput
@@ -68375,7 +69678,7 @@ export namespace Prisma {
     examresult?: examresultUpdateManyWithoutStudentNestedInput
     grade?: gradeUpdateManyWithoutStudentNestedInput
     servicerequest?: servicerequestUpdateManyWithoutStudentNestedInput
-    Renamedclass?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
+    class?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
     studentattendanceprofile?: studentattendanceprofileUpdateOneWithoutStudentNestedInput
     studentaward?: studentawardUpdateManyWithoutStudentNestedInput
     trainingevidenceslip?: trainingevidenceslipUpdateManyWithoutStudentNestedInput
@@ -68471,7 +69774,7 @@ export namespace Prisma {
     examresult?: examresultCreateNestedManyWithoutStudentInput
     grade?: gradeCreateNestedManyWithoutStudentInput
     servicerequest?: servicerequestCreateNestedManyWithoutStudentInput
-    Renamedclass: RenamedclassCreateNestedOneWithoutStudentInput
+    class: RenamedclassCreateNestedOneWithoutStudentInput
     studentattendanceprofile?: studentattendanceprofileCreateNestedOneWithoutStudentInput
     studentaward?: studentawardCreateNestedManyWithoutStudentInput
     trainingevidenceslip?: trainingevidenceslipCreateNestedManyWithoutStudentInput
@@ -68578,7 +69881,7 @@ export namespace Prisma {
     examresult?: examresultUpdateManyWithoutStudentNestedInput
     grade?: gradeUpdateManyWithoutStudentNestedInput
     servicerequest?: servicerequestUpdateManyWithoutStudentNestedInput
-    Renamedclass?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
+    class?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
     studentattendanceprofile?: studentattendanceprofileUpdateOneWithoutStudentNestedInput
     studentaward?: studentawardUpdateManyWithoutStudentNestedInput
     trainingevidenceslip?: trainingevidenceslipUpdateManyWithoutStudentNestedInput
@@ -68755,7 +70058,7 @@ export namespace Prisma {
     examresult?: examresultCreateNestedManyWithoutStudentInput
     grade?: gradeCreateNestedManyWithoutStudentInput
     servicerequest?: servicerequestCreateNestedManyWithoutStudentInput
-    Renamedclass: RenamedclassCreateNestedOneWithoutStudentInput
+    class: RenamedclassCreateNestedOneWithoutStudentInput
     studentattendanceprofile?: studentattendanceprofileCreateNestedOneWithoutStudentInput
     studentaward?: studentawardCreateNestedManyWithoutStudentInput
     trainingevidenceslip?: trainingevidenceslipCreateNestedManyWithoutStudentInput
@@ -68919,7 +70222,7 @@ export namespace Prisma {
     examresult?: examresultUpdateManyWithoutStudentNestedInput
     grade?: gradeUpdateManyWithoutStudentNestedInput
     servicerequest?: servicerequestUpdateManyWithoutStudentNestedInput
-    Renamedclass?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
+    class?: RenamedclassUpdateOneRequiredWithoutStudentNestedInput
     studentattendanceprofile?: studentattendanceprofileUpdateOneWithoutStudentNestedInput
     studentaward?: studentawardUpdateManyWithoutStudentNestedInput
     trainingevidenceslip?: trainingevidenceslipUpdateManyWithoutStudentNestedInput
@@ -68956,27 +70259,27 @@ export namespace Prisma {
     tuition?: tuitionUncheckedUpdateManyWithoutStudentNestedInput
   }
 
-  export type activityattendancerecordCreateManyActivityattendancesessionInput = {
+  export type activityattendancerecordCreateManySessionInput = {
     id?: number
     studentId: number
     points: number
     scannedAt?: Date | string
   }
 
-  export type activityattendancerecordUpdateWithoutActivityattendancesessionInput = {
+  export type activityattendancerecordUpdateWithoutSessionInput = {
     points?: IntFieldUpdateOperationsInput | number
     scannedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     student?: studentUpdateOneRequiredWithoutActivityattendancerecordNestedInput
   }
 
-  export type activityattendancerecordUncheckedUpdateWithoutActivityattendancesessionInput = {
+  export type activityattendancerecordUncheckedUpdateWithoutSessionInput = {
     id?: IntFieldUpdateOperationsInput | number
     studentId?: IntFieldUpdateOperationsInput | number
     points?: IntFieldUpdateOperationsInput | number
     scannedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type activityattendancerecordUncheckedUpdateManyWithoutActivityattendancesessionInput = {
+  export type activityattendancerecordUncheckedUpdateManyWithoutSessionInput = {
     id?: IntFieldUpdateOperationsInput | number
     studentId?: IntFieldUpdateOperationsInput | number
     points?: IntFieldUpdateOperationsInput | number
@@ -69026,7 +70329,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type attendanceCreateManyAttendancesessionInput = {
+  export type attendanceCreateManySessionInput = {
     id?: number
     student_id: number
     date?: Date | string
@@ -69044,7 +70347,7 @@ export namespace Prisma {
     sessionDistance?: number | null
   }
 
-  export type attendanceUpdateWithoutAttendancesessionInput = {
+  export type attendanceUpdateWithoutSessionInput = {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -69061,7 +70364,7 @@ export namespace Prisma {
     student?: studentUpdateOneRequiredWithoutAttendanceNestedInput
   }
 
-  export type attendanceUncheckedUpdateWithoutAttendancesessionInput = {
+  export type attendanceUncheckedUpdateWithoutSessionInput = {
     id?: IntFieldUpdateOperationsInput | number
     student_id?: IntFieldUpdateOperationsInput | number
     date?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -69079,7 +70382,7 @@ export namespace Prisma {
     sessionDistance?: NullableFloatFieldUpdateOperationsInput | number | null
   }
 
-  export type attendanceUncheckedUpdateManyWithoutAttendancesessionInput = {
+  export type attendanceUncheckedUpdateManyWithoutSessionInput = {
     id?: IntFieldUpdateOperationsInput | number
     student_id?: IntFieldUpdateOperationsInput | number
     date?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -69097,7 +70400,7 @@ export namespace Prisma {
     sessionDistance?: NullableFloatFieldUpdateOperationsInput | number | null
   }
 
-  export type attendancesessionCreateManyRenamedclassInput = {
+  export type attendancesessionCreateManyClassInput = {
     id?: number
     title: string
     subject?: string
@@ -69112,7 +70415,7 @@ export namespace Prisma {
     sessionDate?: Date | string
   }
 
-  export type studentCreateManyRenamedclassInput = {
+  export type studentCreateManyClassInput = {
     id?: number
     name: string
     student_code: string
@@ -69127,7 +70430,7 @@ export namespace Prisma {
     address?: string | null
   }
 
-  export type attendancesessionUpdateWithoutRenamedclassInput = {
+  export type attendancesessionUpdateWithoutClassInput = {
     title?: StringFieldUpdateOperationsInput | string
     subject?: StringFieldUpdateOperationsInput | string
     qrToken?: StringFieldUpdateOperationsInput | string
@@ -69139,10 +70442,10 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sessionDate?: DateTimeFieldUpdateOperationsInput | Date | string
-    attendance?: attendanceUpdateManyWithoutAttendancesessionNestedInput
+    attendance?: attendanceUpdateManyWithoutSessionNestedInput
   }
 
-  export type attendancesessionUncheckedUpdateWithoutRenamedclassInput = {
+  export type attendancesessionUncheckedUpdateWithoutClassInput = {
     id?: IntFieldUpdateOperationsInput | number
     title?: StringFieldUpdateOperationsInput | string
     subject?: StringFieldUpdateOperationsInput | string
@@ -69155,10 +70458,10 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     endedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sessionDate?: DateTimeFieldUpdateOperationsInput | Date | string
-    attendance?: attendanceUncheckedUpdateManyWithoutAttendancesessionNestedInput
+    attendance?: attendanceUncheckedUpdateManyWithoutSessionNestedInput
   }
 
-  export type attendancesessionUncheckedUpdateManyWithoutRenamedclassInput = {
+  export type attendancesessionUncheckedUpdateManyWithoutClassInput = {
     id?: IntFieldUpdateOperationsInput | number
     title?: StringFieldUpdateOperationsInput | string
     subject?: StringFieldUpdateOperationsInput | string
@@ -69173,7 +70476,7 @@ export namespace Prisma {
     sessionDate?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type studentUpdateWithoutRenamedclassInput = {
+  export type studentUpdateWithoutClassInput = {
     name?: StringFieldUpdateOperationsInput | string
     student_code?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
@@ -69201,7 +70504,7 @@ export namespace Prisma {
     user?: userUpdateOneWithoutStudentNestedInput
   }
 
-  export type studentUncheckedUpdateWithoutRenamedclassInput = {
+  export type studentUncheckedUpdateWithoutClassInput = {
     id?: IntFieldUpdateOperationsInput | number
     name?: StringFieldUpdateOperationsInput | string
     student_code?: StringFieldUpdateOperationsInput | string
@@ -69230,7 +70533,7 @@ export namespace Prisma {
     user?: userUncheckedUpdateOneWithoutStudentNestedInput
   }
 
-  export type studentUncheckedUpdateManyWithoutRenamedclassInput = {
+  export type studentUncheckedUpdateManyWithoutClassInput = {
     id?: IntFieldUpdateOperationsInput | number
     name?: StringFieldUpdateOperationsInput | string
     student_code?: StringFieldUpdateOperationsInput | string
@@ -69653,9 +70956,9 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    attendancesession?: attendancesessionUpdateManyWithoutRenamedclassNestedInput
+    attendancesession?: attendancesessionUpdateManyWithoutClassNestedInput
     semester_Renamedclass_active_semester_idTosemester?: semesterUpdateOneWithoutRenamedclass_Renamedclass_active_semester_idTosemesterNestedInput
-    student?: studentUpdateManyWithoutRenamedclassNestedInput
+    student?: studentUpdateManyWithoutClassNestedInput
     semester_semesterscope?: semesterUpdateManyWithoutRenamedclass_semesterscopeNestedInput
   }
 
@@ -69664,8 +70967,8 @@ export namespace Prisma {
     active_semester_id?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    attendancesession?: attendancesessionUncheckedUpdateManyWithoutRenamedclassNestedInput
-    student?: studentUncheckedUpdateManyWithoutRenamedclassNestedInput
+    attendancesession?: attendancesessionUncheckedUpdateManyWithoutClassNestedInput
+    student?: studentUncheckedUpdateManyWithoutClassNestedInput
     semester_semesterscope?: semesterUncheckedUpdateManyWithoutRenamedclass_semesterscopeNestedInput
   }
 
@@ -69848,9 +71151,9 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    attendancesession?: attendancesessionUpdateManyWithoutRenamedclassNestedInput
+    attendancesession?: attendancesessionUpdateManyWithoutClassNestedInput
     major?: majorUpdateOneWithoutRenamedclassNestedInput
-    student?: studentUpdateManyWithoutRenamedclassNestedInput
+    student?: studentUpdateManyWithoutClassNestedInput
     semester_semesterscope?: semesterUpdateManyWithoutRenamedclass_semesterscopeNestedInput
   }
 
@@ -69859,8 +71162,8 @@ export namespace Prisma {
     majorId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    attendancesession?: attendancesessionUncheckedUpdateManyWithoutRenamedclassNestedInput
-    student?: studentUncheckedUpdateManyWithoutRenamedclassNestedInput
+    attendancesession?: attendancesessionUncheckedUpdateManyWithoutClassNestedInput
+    student?: studentUncheckedUpdateManyWithoutClassNestedInput
     semester_semesterscope?: semesterUncheckedUpdateManyWithoutRenamedclass_semesterscopeNestedInput
   }
 
@@ -69931,10 +71234,10 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    attendancesession?: attendancesessionUpdateManyWithoutRenamedclassNestedInput
+    attendancesession?: attendancesessionUpdateManyWithoutClassNestedInput
     semester_Renamedclass_active_semester_idTosemester?: semesterUpdateOneWithoutRenamedclass_Renamedclass_active_semester_idTosemesterNestedInput
     major?: majorUpdateOneWithoutRenamedclassNestedInput
-    student?: studentUpdateManyWithoutRenamedclassNestedInput
+    student?: studentUpdateManyWithoutClassNestedInput
   }
 
   export type RenamedclassUncheckedUpdateWithoutSemester_semesterscopeInput = {
@@ -69943,8 +71246,8 @@ export namespace Prisma {
     majorId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    attendancesession?: attendancesessionUncheckedUpdateManyWithoutRenamedclassNestedInput
-    student?: studentUncheckedUpdateManyWithoutRenamedclassNestedInput
+    attendancesession?: attendancesessionUncheckedUpdateManyWithoutClassNestedInput
+    student?: studentUncheckedUpdateManyWithoutClassNestedInput
   }
 
   export type RenamedclassUncheckedUpdateManyWithoutSemester_semesterscopeInput = {
@@ -70100,7 +71403,7 @@ export namespace Prisma {
   export type activityattendancerecordUpdateWithoutStudentInput = {
     points?: IntFieldUpdateOperationsInput | number
     scannedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    activityattendancesession?: activityattendancesessionUpdateOneRequiredWithoutActivityattendancerecordNestedInput
+    session?: activityattendancesessionUpdateOneRequiredWithoutActivityattendancerecordNestedInput
   }
 
   export type activityattendancerecordUncheckedUpdateWithoutStudentInput = {
@@ -70204,7 +71507,7 @@ export namespace Prisma {
     verifiedLocation?: NullableBoolFieldUpdateOperationsInput | boolean | null
     profileDistance?: NullableFloatFieldUpdateOperationsInput | number | null
     sessionDistance?: NullableFloatFieldUpdateOperationsInput | number | null
-    attendancesession?: attendancesessionUpdateOneWithoutAttendanceNestedInput
+    session?: attendancesessionUpdateOneWithoutAttendanceNestedInput
   }
 
   export type attendanceUncheckedUpdateWithoutStudentInput = {

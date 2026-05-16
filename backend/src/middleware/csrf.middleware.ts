@@ -2,7 +2,7 @@ import type { NextFunction, Request, Response } from 'express';
 import { CSRF_COOKIE_NAME, getCookieValue } from '../utils/security';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
-const EXCLUDED_PATHS = new Set(['/api/auth/login', '/api/payments/sepay/webhook']);
+const EXCLUDED_PATHS = new Set(['/api/auth/login', '/api/auth/register', '/api/payments/sepay/webhook']);
 
 const normalizePath = (req: Request) => {
   const fullPath = (req.originalUrl || req.url || req.path || '').split('?')[0];

@@ -75,7 +75,7 @@ export const createOrUpdateTrainingScore = async (req: Request, res: Response) =
       });
     }
 
-    const existingScore = await (prisma.trainingScore as any).findFirst({
+    const existingScore = await (prisma as any).trainingscore.findFirst({
       where: { 
         student_id, 
         semester_id: semesterName 
@@ -83,14 +83,14 @@ export const createOrUpdateTrainingScore = async (req: Request, res: Response) =
     });
 
     if (existingScore) {
-      const updatedScore = await (prisma.trainingScore as any).update({
+      const updatedScore = await (prisma as any).trainingscore.update({
         where: { id: existingScore.id },
         data: { y_thuc, hoat_dong, ky_luat, total }
       });
       return res.json(updatedScore);
     }
 
-    const trainingScore = await (prisma.trainingScore as any).create({
+    const trainingScore = await (prisma as any).trainingscore.create({
       data: { 
         student_id, 
         semester_id: semesterName, 
@@ -111,7 +111,7 @@ export const getTrainingScoreByStudent = async (req: Request, res: Response) => 
   const { studentId } = req.params;
 
   try {
-    const scores = await (prisma.trainingScore as any).findMany({
+    const scores = await (prisma as any).trainingscore.findMany({
       where: { student_id: Number(studentId) },
       orderBy: { semester_id: 'desc' }
     });
@@ -173,7 +173,7 @@ export const createTrainingScore = async (req: AuthRequest, res: Response) => {
     const kl = Math.min(Number(ky_luat || 0), secMaxPoints[3] + secMaxPoints[4]);
     const cappedTotal = Math.min(yt + hd + kl, 100);
 
-    const existingScore = await (prisma.trainingScore as any).findFirst({
+    const existingScore = await (prisma as any).trainingscore.findFirst({
       where: {
         student_id: targetStudentId,
         semester_id: semesterName,
@@ -194,13 +194,13 @@ export const createTrainingScore = async (req: AuthRequest, res: Response) => {
     let score: any;
     if (existingScore) {
       await (prisma as any).$executeRaw`
-        UPDATE "TrainingScore"
+        UPDATE trainingscore
         SET 
           y_thuc = ${yt},
           hoat_dong = ${hd},
           ky_luat = ${kl},
           total = ${cappedTotal},
-          details = ${details ? JSON.stringify(details) : '{}'}::jsonb,
+          details = ${details ? (typeof details === 'string' ? details : JSON.stringify(details)) : '{}'},
           status = ${status || 'PENDING'},
           admin_y_thuc = NULL,
           admin_hoat_dong = NULL,
@@ -208,11 +208,11 @@ export const createTrainingScore = async (req: AuthRequest, res: Response) => {
           admin_total = NULL,
           admin_details = NULL,
           admin_notes = NULL,
-          "updatedAt" = NOW()
+          updatedAt = NOW()
         WHERE id = ${existingScore.id}
       `;
       
-      score = await (prisma.trainingScore as any).findUnique({
+      score = await (prisma as any).trainingscore.findUnique({
         where: { id: existingScore.id },
         include: {
           student: true,
@@ -220,7 +220,7 @@ export const createTrainingScore = async (req: AuthRequest, res: Response) => {
         },
       });
     } else {
-      score = await (prisma.trainingScore as any).create({
+      score = await (prisma as any).trainingscore.create({
           data: {
             student_id: targetStudentId,
             semester_id: semesterName,
@@ -228,7 +228,7 @@ export const createTrainingScore = async (req: AuthRequest, res: Response) => {
             hoat_dong: hd,
             ky_luat: kl,
             total: cappedTotal,
-            details: details || {},
+            details: details ? JSON.stringify(details) : '{}',
             status: status || 'PENDING',
           },
           include: {
@@ -238,7 +238,9 @@ export const createTrainingScore = async (req: AuthRequest, res: Response) => {
         });
     }
 
+    console.log(`[Email-Check] Score ID: ${score.id}, Status: ${status}, Student Email: ${score.student?.email}`);
     if (score.student?.email && status !== 'DRAFT') {
+      console.log('[Email-Check] Condition met, triggering background email...');
       // Send email in background to prevent hanging the response
       (async () => {
         try {
@@ -382,8 +384,8 @@ export const getTrainingScores = async (req: AuthRequest, res: Response) => {
 
     if (pagination.enabled) {
       const [total, items] = await Promise.all([
-        (prisma.trainingScore as any).count({ where }),
-        (prisma.trainingScore as any).findMany({
+        (prisma as any).trainingscore.count({ where }),
+        (prisma as any).trainingscore.findMany({
           where,
           select: trainingListSelect,
           orderBy,
@@ -407,7 +409,7 @@ export const getTrainingScores = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const scores = await (prisma.trainingScore as any).findMany({
+    const scores = await (prisma as any).trainingscore.findMany({
       where,
       select: trainingListSelect,
       orderBy,
@@ -433,10 +435,10 @@ export const getTrainingStats = async (req: AuthRequest, res: Response) => {
     }
 
     const [total, pending, approved, rejected] = await Promise.all([
-      (prisma.trainingScore as any).count({ where: baseWhere }),
-      (prisma.trainingScore as any).count({ where: { ...baseWhere, status: 'PENDING' } }),
-      (prisma.trainingScore as any).count({ where: { ...baseWhere, status: 'APPROVED' } }),
-      (prisma.trainingScore as any).count({ where: { ...baseWhere, status: 'REJECTED' } }),
+      (prisma as any).trainingscore.count({ where: baseWhere }),
+      (prisma as any).trainingscore.count({ where: { ...baseWhere, status: 'PENDING' } }),
+      (prisma as any).trainingscore.count({ where: { ...baseWhere, status: 'APPROVED' } }),
+      (prisma as any).trainingscore.count({ where: { ...baseWhere, status: 'REJECTED' } }),
     ]);
 
     return res.json({
@@ -455,7 +457,7 @@ export const getTrainingScoreById = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
-    const score = await (prisma.trainingScore as any).findUnique({
+    const score = await (prisma as any).trainingscore.findUnique({
       where: { id: Number(id) },
       include: {
         student: true,
@@ -507,7 +509,7 @@ export const approveTrainingScore = async (req: AuthRequest, res: Response) => {
       // Dùng Raw SQL để bỏ qua bước kiểm tra schema của Prisma Client (đang bị lệch)
       // Lưu ý: admin_details được ép kiểu về jsonb để đảm bảo lưu trữ đúng cấu trúc
       await (prisma as any).$executeRaw`
-        UPDATE "TrainingScore"
+        UPDATE trainingscore
         SET 
           status = ${status},
           admin_y_thuc = ${updateData.admin_y_thuc ?? 0},
@@ -515,13 +517,13 @@ export const approveTrainingScore = async (req: AuthRequest, res: Response) => {
           admin_ky_luat = ${updateData.admin_ky_luat ?? 0},
           admin_total = ${updateData.admin_total ?? 0},
           admin_notes = ${updateData.admin_notes ?? ''},
-          admin_details = ${updateData.admin_details ? JSON.stringify(updateData.admin_details) : null}::jsonb,
-          "updatedAt" = NOW()
+          admin_details = ${updateData.admin_details ? (typeof updateData.admin_details === 'string' ? updateData.admin_details : JSON.stringify(updateData.admin_details)) : null},
+          updatedAt = NOW()
         WHERE id = ${Number(id)}
       `;
 
       // Sau khi update xong bằng SQL, load lại bản ghi để trả về cho frontend
-      updated = await (prisma.trainingScore as any).findUnique({
+      updated = await (prisma as any).trainingscore.findUnique({
         where: { id: Number(id) },
         include: {
           student: true,
@@ -560,7 +562,9 @@ export const approveTrainingScore = async (req: AuthRequest, res: Response) => {
       req
     });
 
+    console.log(`[Email-Check-Approval] Score ID: ${id}, Student Email: ${updated.student?.email}`);
     if (updated.student?.email) {
+      console.log('[Email-Check-Approval] Condition met, triggering background email...');
       (async () => {
         try {
           let adminName = req.user?.username || 'Ban Chấp Hành';
@@ -638,7 +642,7 @@ export const exportTrainingScoresExcel = async (req: Request, res: Response) => 
     sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
     sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
 
-    const scores = await (prisma.trainingScore as any).findMany({
+    const scores = await (prisma as any).trainingscore.findMany({
       where: {
         semester_id: semester ? String(semester) : undefined,
         student: class_id ? { class_id: String(class_id) } : undefined,

@@ -71,7 +71,8 @@ export const getEvidenceUrl = (file: EvidenceFile | string) => {
     const key = normalized.path.slice(3);
     return `${API_BASE}/api/training/evidence/${encodeURIComponent(key)}`;
   }
-  return `${API_BASE}/${normalized.path.replace(/^\/+/, '')}`;
+  const safePath = normalized.path.replace(/^\/+/, '');
+  return `${API_BASE}/api/${safePath}`;
 };
 
 export const isPdfEvidence = (file: EvidenceFile | string) => {

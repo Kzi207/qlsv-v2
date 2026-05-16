@@ -40,6 +40,23 @@ const STATUS_META: Record<string, { label: string; className: string }> = {
   },
 };
 
+const parseDetails = (raw: any) => {
+  if (!raw) return {};
+  let parsed = raw;
+  for (let i = 0; i < 5; i += 1) {
+    if (typeof parsed !== 'string') break;
+    try {
+      const next = JSON.parse(parsed);
+      if (next === parsed) break;
+      parsed = next;
+    } catch {
+      break;
+    }
+  }
+  if (!parsed || typeof parsed !== 'object') return {};
+  return parsed;
+};
+
 const TrainingScoreDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -54,7 +71,11 @@ const TrainingScoreDetail = () => {
     const fetchDetail = async () => {
       try {
         const res = await api.get(`/training/${id}`);
-        const payload = res.data;
+        const payload = {
+          ...res.data,
+          details: parseDetails(res.data.details),
+          admin_details: parseDetails(res.data.admin_details)
+        };
         setData(payload);
         setAdminNotes(payload.admin_notes || '');
 
@@ -69,7 +90,7 @@ const TrainingScoreDetail = () => {
         setAdminScores(nextAdminScores);
       } catch (error) {
         toast.error('Khong the tai thong tin phieu diem');
-        navigate('/drl');
+        navigate('/training/approval');
       } finally {
         setLoading(false);
       }

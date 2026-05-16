@@ -16,7 +16,7 @@ const toNotificationId = (value: unknown) => {
 const buildReadMap = async (userId: number, notificationIds: number[]) => {
   if (!notificationIds.length) return new Set<number>();
 
-  const readLogs = await prisma.auditLog.findMany({
+  const readLogs = await (prisma as any).auditlog.findMany({
     where: {
       userId,
       action: 'NOTIFICATION_READ',
@@ -81,7 +81,7 @@ export const getNotificationCenter = async (req: AuthRequest, res: Response) => 
     const readIds = await buildReadMap(userId, notifications.map((item: any) => item.id));
     const [totalNotifications, readLogTargets] = await Promise.all([
       prisma.notification.count(),
-      prisma.auditLog.findMany({
+      (prisma as any).auditlog.findMany({
         where: {
           userId,
           action: 'NOTIFICATION_READ',
@@ -135,7 +135,7 @@ export const markNotificationRead = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: 'Notification not found' });
     }
 
-    const existed = await prisma.auditLog.findFirst({
+    const existed = await (prisma as any).auditlog.findFirst({
       where: {
         userId,
         action: 'NOTIFICATION_READ',
@@ -146,7 +146,7 @@ export const markNotificationRead = async (req: AuthRequest, res: Response) => {
     });
 
     if (!existed) {
-      await prisma.auditLog.create({
+      await (prisma as any).auditlog.create({
         data: {
           userId,
           action: 'NOTIFICATION_READ',
@@ -185,7 +185,7 @@ export const markAllNotificationsRead = async (req: AuthRequest, res: Response) 
     const unreadIds = notifications.map((item: any) => item.id).filter((id: any) => !readIds.has(id));
 
     if (unreadIds.length > 0) {
-      await prisma.auditLog.createMany({
+      await (prisma as any).auditlog.createMany({
         data: unreadIds.map((id: any) => ({
           userId,
           action: 'NOTIFICATION_READ',

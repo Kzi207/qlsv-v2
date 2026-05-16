@@ -149,7 +149,7 @@ const DetailedEvaluationForm: React.FC<Props> = ({
       }));
       toast.success(`Đã upload minh chứng`);
     } catch (error: any) {
-      toast.error('Upload thất bại');
+      toast.error(error?.response?.data?.message || 'Upload thất bại');
     } finally {
       event.target.value = '';
     }

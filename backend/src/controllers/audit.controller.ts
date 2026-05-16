@@ -22,8 +22,8 @@ export const getAuditLogs = async (req: AuthRequest, res: Response) => {
     if (targetType) where.targetType = String(targetType);
 
     const [total, logs] = await Promise.all([
-      prisma.auditLog.count({ where }),
-      prisma.auditLog.findMany({
+      (prisma as any).auditlog.count({ where }),
+      (prisma as any).auditlog.findMany({
         where,
         include: {
           user: {

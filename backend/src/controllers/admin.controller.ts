@@ -149,7 +149,7 @@ export const globalAdminSearch = async (req: AuthRequest, res: Response) => {
         take: limit,
         orderBy: { name: 'asc' },
       }),
-      prisma.attendanceSession.findMany({
+      (prisma as any).attendancesession.findMany({
         where: {
           OR: [
             { title: { contains: keyword } },
@@ -270,19 +270,19 @@ export const getAdminAnalytics = async (req: AuthRequest, res: Response) => {
       prisma.student.count({ where: classFilter }),
       prisma.class.count(),
       prisma.subject.count(),
-      prisma.attendanceSession.count({
+      (prisma as any).attendancesession.count({
         where: {
           isActive: true,
           ...(classIdForBch ? { class_id: classIdForBch } : {}),
         },
       }),
-      prisma.trainingScore.count({
+      (prisma as any).trainingscore.count({
         where: {
           status: 'PENDING',
           ...(classIdForBch ? { student: { class_id: classIdForBch } } : {}),
         },
       }),
-      prisma.trainingScore.count({
+      (prisma as any).trainingscore.count({
         where: {
           status: 'APPROVED',
           ...(classIdForBch ? { student: { class_id: classIdForBch } } : {}),
@@ -293,7 +293,7 @@ export const getAdminAnalytics = async (req: AuthRequest, res: Response) => {
           createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
         },
       }),
-      prisma.auditLog.count({
+      (prisma as any).auditlog.count({
         where: {
           action: 'QR_RISK',
           createdAt: { gte: last24h },
@@ -314,7 +314,7 @@ export const getAdminAnalytics = async (req: AuthRequest, res: Response) => {
           createdAt: true,
         },
       }),
-      prisma.attendanceSession.findMany({
+      (prisma as any).attendancesession.findMany({
         where: {
           sessionDate: { gte: new Date(new Date().setDate(new Date().getDate() - 30)) },
           ...(classIdForBch ? { class_id: classIdForBch } : {}),
@@ -335,7 +335,7 @@ export const getAdminAnalytics = async (req: AuthRequest, res: Response) => {
           },
         },
       }),
-      prisma.auditLog.findMany({
+      (prisma as any).auditlog.findMany({
         where: {
           action: 'QR_RISK',
         },

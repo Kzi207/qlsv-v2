@@ -190,7 +190,7 @@ export const getMyRecords = async (req: AuthRequest, res: Response) => {
     const qrRecords = await prisma.activityattendancerecord.findMany({
       where: { studentId: studentIdInt },
       include: {
-        activityattendancesession: true
+        session: true
       }
     });
 
@@ -198,7 +198,7 @@ export const getMyRecords = async (req: AuthRequest, res: Response) => {
       id: r.id,
       points: r.points,
       scannedAt: r.scannedAt,
-      session: r.activityattendancesession
+      session: r.session
     }));
 
     // Get Approved manual evidence using Prisma Client

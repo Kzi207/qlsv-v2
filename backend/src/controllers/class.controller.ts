@@ -79,7 +79,7 @@ export const deleteClass = async (req: Request, res: Response) => {
     // 2. Thực hiện xóa trong một giao dịch
     await prisma.$transaction([
       // Xóa điểm rèn luyện
-      prisma.trainingScore.deleteMany({
+      (prisma as any).trainingscore.deleteMany({
         where: { student_id: { in: studentIds } }
       }),
       // Xóa điểm danh

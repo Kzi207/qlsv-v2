@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Loader2, User, Lock, ShieldCheck, ArrowRight, Sparkles } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Eye, EyeOff, Loader2, User, Lock, ShieldCheck, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import api from '../api/axios';
@@ -34,7 +34,11 @@ const Login = () => {
   const [isHovered, setIsHovered] = useState(false);
   
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuthStore();
+
+  const queryParams = new URLSearchParams(location.search);
+  const redirectTo = queryParams.get('redirectTo');
 
   const isSubmitDisabled = !username || !password || loading;
 
@@ -55,7 +59,12 @@ const Login = () => {
       login(res.data.user);
       localStorage.setItem('token', res.data.token);
       toast.success('Chào mừng bạn quay trở lại!');
-      navigate('/');
+      
+      if (redirectTo) {
+        navigate(redirectTo, { replace: true });
+      } else {
+        navigate('/');
+      }
     } catch (error) {
       const err = error as ApiError;
       toast.error(err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản.');
@@ -109,13 +118,13 @@ const Login = () => {
         <div className="bg-white/5 backdrop-blur-2xl rounded-[2.5rem] border border-white/10 shadow-[0_32px_120px_-15px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col md:flex-row h-auto md:h-[620px]">
           
           {/* Left Side: Branding & Info */}
-          <div className="w-full md:w-[45%] relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-950 p-6 md:p-10 flex flex-col justify-center text-white">
+          <div className="w-full md:w-[45%] relative overflow-hidden bg-[#1e45de] p-6 md:p-10 flex flex-col justify-start pt-8 md:pt-10 text-white">
             <div className="relative z-10 flex flex-col items-center text-center">
               <motion.div 
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="w-24 h-24 md:w-32 md:h-32 flex items-center justify-center mb-6 overflow-hidden"
+                className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center mb-2 overflow-hidden"
               >
                 <img 
                   src="/logoctut.png" 
@@ -125,7 +134,7 @@ const Login = () => {
                 />
               </motion.div>
               
-              <div className="space-y-4">
+              <div className="space-y-2">
                 <motion.div
                   initial={{ y: 10, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
@@ -144,12 +153,12 @@ const Login = () => {
                   initial={{ y: 10, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.4 }}
-                  className="py-2"
+                  className="py-1"
                 >
-                  <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-white mb-1">
+                  <h1 className="text-[20px] md:text-[26px] font-black uppercase tracking-tight text-white mb-2 md:whitespace-nowrap">
                     Cổng Quản lý Sinh viên
                   </h1>
-                  <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-none">
+                  <h1 className="text-2xl md:text-3xl font-black tracking-tight leading-none">
                     <span className="text-[#ffba2d]">My</span>
                     <span className="text-white">CTUTs</span>
                   </h1>
@@ -168,7 +177,7 @@ const Login = () => {
           </div>
 
           {/* Right Side: Login Form */}
-          <div className="flex-1 bg-white dark:bg-slate-900 p-8 md:p-12 flex flex-col justify-center">
+          <div className="flex-1 bg-white dark:bg-slate-900 p-8 md:p-12 flex flex-col justify-start pt-8 md:pt-10">
             <div className="w-full max-w-sm mx-auto">
               <div className="mb-8">
                 <motion.h2 
@@ -218,15 +227,8 @@ const Login = () => {
                   transition={{ delay: 0.6 }}
                   className="space-y-1.5"
                 >
-                  <div className="flex items-center justify-between px-1">
+                  <div className="px-1">
                     <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Mật khẩu</label>
-                    <button 
-                      type="button" 
-                      onClick={handleForgotPassword}
-                      className="text-[9px] font-black text-blue-600 uppercase tracking-widest hover:text-blue-700 transition-colors"
-                    >
-                      Quên?
-                    </button>
                   </div>
                   <div className="relative group">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600 group-focus-within:text-blue-500 transition-colors">
@@ -246,6 +248,15 @@ const Login = () => {
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600 hover:text-slate-500 transition-colors"
                     >
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                  <div className="flex justify-end px-1 mt-1">
+                    <button 
+                      type="button" 
+                      onClick={handleForgotPassword}
+                      className="text-[9px] font-black text-blue-600 uppercase tracking-widest hover:text-blue-700 transition-colors"
+                    >
+                      Quên mật khẩu?
                     </button>
                   </div>
                 </motion.div>
@@ -300,18 +311,15 @@ const Login = () => {
                 </motion.button>
               </form>
 
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1 }}
-                className="mt-6 flex flex-col items-center gap-3"
-              >
-                <div className="flex items-center gap-2">
-                  <Sparkles size={12} className="text-yellow-500" />
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Tin cậy • Bảo mật • Tốc độ</p>
-                </div>
-                <p className="text-[8px] font-bold text-slate-500/30 uppercase tracking-[0.2em]">CTUT IT Center © 2026</p>
-              </motion.div>
+              <div className="mt-4 text-center">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Chưa có tài khoản trải nghiệm?{' '}
+                  <Link to="/register" className="text-blue-600 hover:text-blue-700">
+                    Đăng ký ngay
+                  </Link>
+                </p>
+              </div>
+
             </div>
           </div>
         </div>

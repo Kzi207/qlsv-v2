@@ -103,7 +103,7 @@ const getExtensionForFile = (file: Express.Multer.File) => {
 
 const getNextIndexForCriterion = async (studentId: number, studentCode: string, criterionToken: string) => {
   const pattern = new RegExp(`^${escapeRegex(studentCode)}-${escapeRegex(criterionToken)}-(\\d+)$`, 'i');
-  const rows = await (prisma.trainingScore as any).findMany({
+  const rows = await (prisma as any).trainingscore.findMany({
     where: { student_id: studentId },
     select: { details: true },
   });
@@ -181,7 +181,7 @@ const upsertEvidenceToTrainingScore = async ({
   criterionId: string;
   files: Array<{ name: string; path: string; size: number }>;
 }) => {
-  const existing = await (prisma.trainingScore as any).findFirst({
+  const existing = await (prisma as any).trainingscore.findFirst({
     where: {
       student_id: studentId,
       semester_id: semester,
@@ -190,7 +190,7 @@ const upsertEvidenceToTrainingScore = async ({
   });
 
   if (!existing) {
-    return (prisma.trainingScore as any).create({
+    return (prisma as any).trainingscore.create({
       data: {
         student_id: studentId,
         semester_id: semester,
@@ -199,12 +199,13 @@ const upsertEvidenceToTrainingScore = async ({
         ky_luat: 0,
         total: 0,
         status: 'PENDING',
-        details: {
+        updatedAt: new Date(),
+        details: JSON.stringify({
           [criterionId]: {
             score: 0,
             files,
           },
-        },
+        }),
       },
     });
   }
@@ -221,11 +222,12 @@ const upsertEvidenceToTrainingScore = async ({
     files: [...existingFiles, ...files],
   };
 
-  return (prisma.trainingScore as any).update({
+  return (prisma as any).trainingscore.update({
     where: { id: existing.id },
     data: {
-      details,
+      details: JSON.stringify(details),
       status: 'PENDING',
+      updatedAt: new Date(),
       admin_y_thuc: null,
       admin_hoat_dong: null,
       admin_ky_luat: null,
@@ -296,14 +298,17 @@ export const uploadEvidence = (req: AuthRequest, res: Response) => {
       const classFolder = sanitizeSegment(String(student.class_id || 'unknown-class'));
       const studentFolder = studentCode;
       const startIndex = await getNextIndexForCriterion(studentId, studentCode, criterionToken);
-      const useR2 = isR2Configured();
+      let useR2 = isR2Configured();
+      let usedLocalFallback = false;
+      const storageWarnings: string[] = [];
 
       if (useR2) {
         const validation = await validateR2Access();
         if (!validation.ok) {
-          return res.status(500).json({
-            message: `R2 chua san sang: ${validation.message}`,
-          });
+          useR2 = false;
+          usedLocalFallback = true;
+          storageWarnings.push(`R2 khong kha dung (${validation.message}). He thong da tu dong luu local.`);
+          console.warn('[upload-evidence] R2 validation failed, fallback to local storage:', validation.message);
         }
       }
 
@@ -312,9 +317,19 @@ export const uploadEvidence = (req: AuthRequest, res: Response) => {
           const index = startIndex + offset;
           const extension = getExtensionForFile(file);
           const finalFileName = `${studentCode}-${criterionToken}-${index}${extension}`;
-          return useR2
-            ? saveToR2(file, classFolder, studentFolder, finalFileName)
-            : saveLocally(file, classFolder, studentFolder, finalFileName);
+          if (!useR2) {
+            return saveLocally(file, classFolder, studentFolder, finalFileName);
+          }
+
+          try {
+            return await saveToR2(file, classFolder, studentFolder, finalFileName);
+          } catch (r2UploadError) {
+            const reason = r2UploadError instanceof Error ? r2UploadError.message : String(r2UploadError);
+            usedLocalFallback = true;
+            storageWarnings.push(`R2 loi voi file ${finalFileName}. Da fallback local. (${reason})`);
+            console.warn('[upload-evidence] R2 upload failed, fallback local:', reason);
+            return saveLocally(file, classFolder, studentFolder, finalFileName);
+          }
         }),
       );
 
@@ -325,10 +340,18 @@ export const uploadEvidence = (req: AuthRequest, res: Response) => {
         files: saved,
       });
 
+      const storage = !useR2 ? 'local' : (usedLocalFallback ? 'mixed' : 'r2');
+      const baseMessage = storage === 'r2'
+        ? 'Upload thanh cong len Cloudflare R2'
+        : storage === 'mixed'
+          ? 'Upload thanh cong (mot so file da duoc fallback local)'
+          : 'Upload thanh cong';
+
       return res.json({
-        message: useR2 ? 'Upload thanh cong len Cloudflare R2' : 'Upload thanh cong',
+        message: baseMessage,
         files: saved,
-        storage: useR2 ? 'r2' : 'local',
+        storage,
+        warnings: storageWarnings,
         criterionId,
         semester,
         trainingScoreId: updatedScore?.id,

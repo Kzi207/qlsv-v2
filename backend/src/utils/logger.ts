@@ -16,7 +16,7 @@ export const logAudit = async (params: {
     
     const userAgent = req?.headers?.['user-agent'];
 
-    await prisma.auditLog.create({
+    await (prisma as any).auditlog.create({
       data: {
         userId,
         action,

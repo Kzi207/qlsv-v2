@@ -80,6 +80,10 @@ export const createBchAccount = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('createBchAccount detailed error:', error);
     if (error.code === 'P2002') {
+      const target = error.meta?.target || '';
+      if (String(target).includes('email')) {
+        return res.status(400).json({ message: 'Email này đã được sử dụng bởi tài khoản khác' });
+      }
       return res.status(400).json({ message: 'Tên đăng nhập đã tồn tại' });
     }
     if (error.code === 'P2003') {
@@ -239,6 +243,13 @@ export const updateBchAccount = async (req: Request, res: Response) => {
     res.json(account || updatedUser);
   } catch (error: any) {
     console.error('updateBchAccount error:', error);
+    if (error.code === 'P2002') {
+      const target = error.meta?.target || '';
+      if (String(target).includes('email')) {
+        return res.status(400).json({ message: 'Email này đã được sử dụng bởi tài khoản khác' });
+      }
+      return res.status(400).json({ message: 'Tên đăng nhập đã tồn tại' });
+    }
     if (error.code === 'P2003') {
       return res.status(400).json({ message: 'Môn dạy hoặc lớp quản lý không hợp lệ' });
     }

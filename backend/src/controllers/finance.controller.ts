@@ -12,7 +12,7 @@ export const getMyTuition = async (req: AuthRequest, res: Response) => {
       include: { 
         student: {
           include: {
-            Renamedclass: {
+            class: {
               include: { major: true }
             }
           }
@@ -77,7 +77,7 @@ export const generateTuition = async (req: AuthRequest, res: Response) => {
     if (classId) where.class_id = classId;
     const students = await (prisma as any).student.findMany({ 
       where,
-      include: { Renamedclass: { include: { major: true } } }
+      include: { class: { include: { major: true } } }
     });
 
     let count = 0;

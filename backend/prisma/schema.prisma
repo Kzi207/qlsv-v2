@@ -14,7 +14,7 @@ model activityattendancerecord {
   studentId                 Int
   points                    Int
   scannedAt                 DateTime                  @default(now())
-  activityattendancesession activityattendancesession @relation(fields: [sessionId], references: [id], map: "ActivityAttendanceRecord_sessionId_fkey")
+  session                   activityattendancesession @relation(fields: [sessionId], references: [id], map: "ActivityAttendanceRecord_sessionId_fkey")
   student                   student                   @relation(fields: [studentId], references: [id], map: "ActivityAttendanceRecord_studentId_fkey")
 
   @@unique([sessionId, studentId], map: "ActivityAttendanceRecord_sessionId_studentId_key")
@@ -106,7 +106,7 @@ model attendance {
   profileDistance   Float?
   sessionDistance   Float?
   session_id        Int?
-  attendancesession attendancesession? @relation(fields: [session_id], references: [id], onDelete: Cascade, map: "Attendance_session_id_fkey")
+  session           attendancesession? @relation(fields: [session_id], references: [id], onDelete: Cascade, map: "Attendance_session_id_fkey")
   student           student            @relation(fields: [student_id], references: [id], onDelete: Cascade, map: "Attendance_student_id_fkey")
 
   @@index([date], map: "Attendance_date_idx")
@@ -130,7 +130,7 @@ model attendancesession {
   endedAt      DateTime?
   sessionDate  DateTime      @default(now())
   attendance   attendance[]
-  Renamedclass Renamedclass? @relation(fields: [class_id], references: [name], onDelete: Cascade, map: "AttendanceSession_class_id_fkey")
+  class        Renamedclass? @relation(fields: [class_id], references: [name], onDelete: Cascade, map: "AttendanceSession_class_id_fkey")
 
   @@index([class_id, isActive], map: "AttendanceSession_class_id_isActive_idx")
   @@index([class_id, sessionDate], map: "AttendanceSession_class_id_sessionDate_idx")
@@ -506,7 +506,7 @@ model student {
   examresult               examresult[]
   grade                    grade[]
   servicerequest           servicerequest[]
-  Renamedclass             Renamedclass               @relation(fields: [class_id], references: [name], onDelete: Cascade, map: "Student_class_id_fkey")
+  class                    Renamedclass               @relation(fields: [class_id], references: [name], onDelete: Cascade, map: "Student_class_id_fkey")
   studentattendanceprofile studentattendanceprofile?
   studentaward             studentaward[]
   trainingevidenceslip     trainingevidenceslip[]

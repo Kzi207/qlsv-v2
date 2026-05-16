@@ -129,7 +129,7 @@ export const deleteSemester = async (req: AuthRequest, res: Response) => {
   const name = normalizeSemesterName(req.params?.name);
 
   try {
-    const count = await (prisma.trainingScore as any).count({
+    const count = await (prisma as any).trainingscore.count({
       where: { semester_id: name },
     });
 
@@ -204,7 +204,7 @@ export const updateSemester = async (req: AuthRequest, res: Response) => {
     });
 
     if (normalizedNewName !== currentName) {
-      await (prisma.trainingScore as any).updateMany({
+      await (prisma as any).trainingscore.updateMany({
         where: { semester_id: currentName },
         data: { semester_id: normalizedNewName },
       });

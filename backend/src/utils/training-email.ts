@@ -93,16 +93,21 @@ const parseJsonLike = (input: unknown) => {
 };
 
 const getTransporter = () => {
-  if (transporter !== undefined) return transporter;
-
   const user = process.env.GMAIL_USER;
   const pass = process.env.GMAIL_APP_PASSWORD;
 
   if (!user || !pass) {
-    console.warn('[Email] Missing GMAIL_USER or GMAIL_APP_PASSWORD, skip sending mail');
+    console.warn('[Email] Missing GMAIL_USER or GMAIL_APP_PASSWORD, skip sending mail. Check your .env file.');
     transporter = null;
     return transporter;
   }
+
+  // If transporter was previously null (config missing), try re-initializing if config now exists
+  if (transporter === null) {
+    transporter = undefined;
+  }
+
+  if (transporter !== undefined) return transporter;
 
   try {
     const nodemailer = getNodemailer();
@@ -347,6 +352,7 @@ export async function sendSubmissionReceivedEmail(data: SubmissionReceivedEmailD
       </div>
     `;
 
+    console.log(`[Email] Attempting to send submission email to: ${data.studentEmail}`);
     const info = await activeTransporter.sendMail({
       from,
       to: data.studentEmail,
@@ -439,6 +445,7 @@ export async function sendApprovalEmail(data: EmailApprovalData): Promise<EmailS
     }
     */
 
+    console.log(`[Email] Attempting to send approval email to: ${data.studentEmail}`);
     const info = await activeTransporter.sendMail({
       from,
       to: data.studentEmail,

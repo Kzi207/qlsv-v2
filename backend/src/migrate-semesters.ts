@@ -6,7 +6,7 @@ async function main() {
   console.log('Migrating semester data...');
 
   // 1. Lấy tất cả tên học kỳ duy nhất từ TrainingScore
-  const scores = await prisma.trainingScore.findMany({
+  const scores = await (prisma as any).trainingscore.findMany({
     select: { semester: true }
   });
 
@@ -30,13 +30,13 @@ async function main() {
   }
 
   // 3. Cập nhật trainingScore.semester_id
-  const allScores = await (prisma.trainingScore as any).findMany();
+  const allScores = await (prisma as any).trainingscore.findMany();
   for (const score of allScores) {
     const semValue = (score as any).semester;
     if (semValue) {
         const name = typeof semValue === 'string' ? semValue : (semValue as any).name;
         if (name) {
-            await prisma.trainingScore.update({
+            await (prisma as any).trainingscore.update({
                 where: { id: score.id },
                 data: { semester_id: name.trim() }
             });

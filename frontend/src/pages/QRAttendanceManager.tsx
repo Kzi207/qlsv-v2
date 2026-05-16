@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import {
+  AlertTriangle,
   Calendar,
   CheckCircle2,
+  Globe,
   Link as LinkIcon,
   Loader2,
   MapPin,
@@ -10,6 +12,7 @@ import {
   Play,
   QrCode,
   RefreshCw,
+  ShieldAlert,
   ShieldCheck,
   Users,
   XCircle,
@@ -87,6 +90,7 @@ interface SessionSummaryResponse {
       id: number;
       name: string;
       username: string;
+      student_code?: string;
     };
     details: Record<string, unknown> | null;
   }>;
@@ -106,7 +110,7 @@ const parseCoordinatesFromText = (input: string) => {
   if (!text) return null;
 
   if (text.includes('maps.app.goo.gl')) {
-    toast.error('Link maps.app.goo.gl khong chua toa do. Vui long mo link day du hoac nhap lat,lng.');
+    toast.error('Link maps.app.goo.gl không chứa tọa độ. Vui lòng mở link đầy đủ hoặc nhập lat,lng.');
     return null;
   }
 
@@ -144,6 +148,7 @@ const QRAttendanceManager = () => {
     lat: 0,
     lng: 0,
   });
+  const [isFullscreenQR, setIsFullscreenQR] = useState(false);
 
   const selectedSession = useMemo(
     () => sessions.find((session) => session.id === selectedSessionId) || null,
@@ -165,7 +170,7 @@ const QRAttendanceManager = () => {
       }));
     } catch (error) {
       console.error('Failed to fetch classes', error);
-      toast.error('Khong the tai danh sach lop');
+      toast.error('Không thể tải danh sách lớp');
     }
   };
 
@@ -181,7 +186,7 @@ const QRAttendanceManager = () => {
       setSessions(res.data);
     } catch (error) {
       console.error('Failed to fetch sessions', error);
-      toast.error('Khong the tai danh sach phien diem danh');
+      toast.error('Không thể tải danh sách phiên điểm danh');
     } finally {
       setSessionsLoading(false);
     }
@@ -195,7 +200,7 @@ const QRAttendanceManager = () => {
     } catch (error) {
       console.error('Failed to fetch summary', error);
       if (!silent) {
-        toast.error('Khong the tai thong ke phien diem danh');
+        toast.error('Không thể tải thống kê phiên điểm danh');
       }
     } finally {
       if (!silent) setSummaryLoading(false);
@@ -234,7 +239,6 @@ const QRAttendanceManager = () => {
     if (!selectedSession?.id || !selectedSession.isActive) return;
     const interval = setInterval(() => {
       void fetchSummary(selectedSession.id, true);
-      void fetchSessions();
     }, 8000);
 
     return () => clearInterval(interval);
@@ -247,17 +251,17 @@ const QRAttendanceManager = () => {
   const applyGoogleMapsInput = () => {
     const parsed = parseCoordinatesFromText(mapInput);
     if (!parsed) {
-      toast.error('Khong doc duoc toa do tu du lieu da dan');
+      toast.error('Không đọc được tọa độ từ dữ liệu đã dán');
       return;
     }
 
     updateCoordinates(parsed.lat, parsed.lng);
-    toast.success('Da ap dung toa do tu Google Maps');
+    toast.success('Đã áp dụng tọa độ từ Google Maps');
   };
 
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
-      toast.error('Trinh duyet khong ho tro dinh vi');
+      toast.error('Trình duyệt không hỗ trợ định vị');
       return;
     }
 
@@ -265,9 +269,9 @@ const QRAttendanceManager = () => {
       (pos) => {
         updateCoordinates(pos.coords.latitude, pos.coords.longitude);
         setGpsAccuracy(typeof pos.coords.accuracy === 'number' ? pos.coords.accuracy : null);
-        toast.success('Da lay vi tri hien tai');
+        toast.success('Đã lấy vị trí hiện tại');
       },
-      () => toast.error('Khong the lay GPS. Vui long cap quyen hoac nhap link Google Maps'),
+      () => toast.error('Không thể lấy GPS. Vui lòng cấp quyền hoặc nhập link Google Maps'),
       {
         enableHighAccuracy: true,
         timeout: 15000,
@@ -280,19 +284,19 @@ const QRAttendanceManager = () => {
     event.preventDefault();
 
     if (!newSession.class_id) {
-      toast.error('Vui long chon lop cho phien diem danh');
+      toast.error('Vui lòng chọn lớp cho phiên điểm danh');
       return;
     }
 
     if (!newSession.lat || !newSession.lng) {
-      toast.error('Vui long nhap vi tri GPS hoac Google Maps truoc khi tao phien');
+      toast.error('Vui lòng nhập vị trí GPS hoặc Google Maps trước khi tạo phiên');
       return;
     }
 
     setCreating(true);
     try {
       await api.post('/attendance/session', newSession);
-      toast.success('Da tao phien diem danh QR moi');
+      toast.success('Đã tạo phiên điểm danh QR mới');
       setNewSession((prev) => ({
         ...prev,
         title: '',
@@ -300,7 +304,7 @@ const QRAttendanceManager = () => {
       }));
       await fetchSessions();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Khong the tao phien diem danh');
+      toast.error(error.response?.data?.message || 'Không thể tạo phiên điểm danh');
     } finally {
       setCreating(false);
     }
@@ -309,23 +313,24 @@ const QRAttendanceManager = () => {
   const handleEndSession = async (sessionId: number) => {
     try {
       await api.patch(`/attendance/sessions/${sessionId}/end`);
-      toast.success('Da ket thuc phien diem danh');
+      toast.success('Đã kết thúc phiên điểm danh');
       await fetchSessions();
       if (selectedSessionId === sessionId) {
         await fetchSummary(sessionId);
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Khong the ket thuc phien');
+      toast.error(error.response?.data?.message || 'Không thể kết thúc phiên');
     }
   };
 
   return (
+    <>
     <div className="space-y-8">
       <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/30">
-        <h2 className="text-3xl font-extrabold text-slate-900">Quan ly diem danh QR theo lop</h2>
+        <h2 className="text-3xl font-extrabold text-slate-900">Quản lý điểm danh QR theo lớp</h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-500">
-          Moi phien QR gan voi mot lop cu the. Sinh vien quet thanh cong khi nam trong ban kinh cua phien va
-          vuot qua doi chieu IP/toa do voi ho so xac minh dau tien luu trong database.
+          Mỗi phiên QR gắn với một lớp cụ thể. Sinh viên quét thành công khi nằm trong bán kính của phiên và
+          vượt qua đối chiếu IP/tọa độ với hồ sơ xác minh đầu tiên lưu trong database.
         </p>
       </div>
 
@@ -335,21 +340,21 @@ const QRAttendanceManager = () => {
             <QrCode className="h-6 w-6 text-primary-600" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-slate-800">Tao phien diem danh moi</h3>
-            <p className="text-sm text-slate-500">Chon lop, dat vi tri va ban kinh QR truoc khi bat dau.</p>
+            <h3 className="text-xl font-bold text-slate-800">Tạo phiên điểm danh mới</h3>
+            <p className="text-sm text-slate-500">Chọn lớp, đặt vị trí và bán kính QR trước khi bắt đầu.</p>
           </div>
         </div>
 
         <form onSubmit={handleCreateSession} className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-700">Lop hoc</label>
+            <label className="text-sm font-bold text-slate-700">Lớp học</label>
             <select
               required
               value={newSession.class_id}
               onChange={(event) => setNewSession((prev) => ({ ...prev, class_id: event.target.value }))}
               className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-primary-500"
             >
-              <option value="">Chon lop</option>
+              <option value="">Chọn lớp</option>
               {classes.map((classItem) => (
                 <option key={classItem.name} value={classItem.name}>
                   {classItem.name} ({classItem.studentCount} SV)
@@ -361,7 +366,7 @@ const QRAttendanceManager = () => {
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
               <Calendar size={14} />
-              Ngay hoc
+              Ngày học
             </label>
             <input
               type="date"
@@ -373,30 +378,30 @@ const QRAttendanceManager = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-700">Ten phien / tiet hoc</label>
+            <label className="text-sm font-bold text-slate-700">Tên phiên / tiết học</label>
             <input
               type="text"
               required
               value={newSession.title}
               onChange={(event) => setNewSession((prev) => ({ ...prev, title: event.target.value }))}
-              placeholder="VD: Tiet 1-3"
+              placeholder="VD: Tiết 1-3"
               className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-700">Mon hoc</label>
+            <label className="text-sm font-bold text-slate-700">Môn học</label>
             <input
               type="text"
               value={newSession.subject}
               onChange={(event) => setNewSession((prev) => ({ ...prev, subject: event.target.value }))}
-              placeholder="VD: Cong nghe phan mem"
+              placeholder="VD: Công nghệ phần mềm"
               className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-700">Ban kinh diem danh (m)</label>
+            <label className="text-sm font-bold text-slate-700">Bán kính điểm danh (m)</label>
             <input
               type="number"
               required
@@ -413,14 +418,14 @@ const QRAttendanceManager = () => {
           <div className="space-y-2 md:col-span-2">
             <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
               <LinkIcon size={14} />
-              Link Google Maps hoac chuoi lat,lng
+              Link Google Maps hoặc chuỗi lat,lng
             </label>
             <div className="flex flex-col gap-3 lg:flex-row">
               <input
                 type="text"
                 value={mapInput}
                 onChange={(event) => setMapInput(event.target.value)}
-                placeholder="Dan link Google Maps co toa do hoac chuoi 10.030243,105.768411"
+                placeholder="Dán link Google Maps có tọa độ hoặc chuỗi 10.030243,105.768411"
                 className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-primary-500"
               />
               <button
@@ -428,13 +433,13 @@ const QRAttendanceManager = () => {
                 onClick={applyGoogleMapsInput}
                 className="inline-flex items-center justify-center rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-bold text-sky-700 transition hover:bg-sky-100"
               >
-                Ap dung tu Maps
+                Áp dụng từ Maps
               </button>
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-700">Vi do</label>
+            <label className="text-sm font-bold text-slate-700">Vĩ độ</label>
             <input
               type="number"
               min={-90}
@@ -447,7 +452,7 @@ const QRAttendanceManager = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-700">Kinh do</label>
+            <label className="text-sm font-bold text-slate-700">Kinh độ</label>
             <input
               type="number"
               min={-180}
@@ -462,10 +467,10 @@ const QRAttendanceManager = () => {
           <div className="flex flex-col gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 md:col-span-2 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-2 text-sm text-slate-600">
               <div className="flex flex-wrap gap-6 font-mono">
-                <span>Lat: {newSession.lat ? newSession.lat.toFixed(6) : '--'}</span>
-                <span>Lng: {newSession.lng ? newSession.lng.toFixed(6) : '--'}</span>
+                <span>Vĩ độ: {newSession.lat ? newSession.lat.toFixed(6) : '--'}</span>
+                <span>Kinh độ: {newSession.lng ? newSession.lng.toFixed(6) : '--'}</span>
               </div>
-              <p>Do chinh xac GPS: <strong>{gpsAccuracy !== null ? `${Math.round(gpsAccuracy)} m` : 'Chua co du lieu'}</strong></p>
+              <p>Độ chính xác GPS: <strong>{gpsAccuracy !== null ? `${Math.round(gpsAccuracy)} m` : 'Chưa có dữ liệu'}</strong></p>
               {previewGoogleMapsUrl && (
                 <a
                   href={previewGoogleMapsUrl}
@@ -474,7 +479,7 @@ const QRAttendanceManager = () => {
                   className="inline-flex items-center gap-2 text-sm font-bold text-sky-700 hover:text-sky-800"
                 >
                   <LinkIcon size={14} />
-                  Mo vi tri nay tren Google Maps
+                  Mở vị trí này trên Google Maps
                 </a>
               )}
             </div>
@@ -485,7 +490,7 @@ const QRAttendanceManager = () => {
               className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all hover:border-primary-400"
             >
               <Navigation className="h-4 w-4" />
-              Lay vi tri GPS
+              Lấy vị trí GPS
             </button>
           </div>
 
@@ -496,7 +501,7 @@ const QRAttendanceManager = () => {
           >
             <span className="flex items-center justify-center gap-3">
               {creating ? <Loader2 className="h-5 w-5 animate-spin" /> : <Play className="h-5 w-5" />}
-              Bat dau phien diem danh
+              Bắt đầu phiên điểm danh
             </span>
           </button>
         </form>
@@ -505,8 +510,8 @@ const QRAttendanceManager = () => {
       <div className="space-y-5 rounded-[2rem] border border-slate-100 bg-white p-6 shadow-xl shadow-slate-200/30">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h3 className="text-xl font-bold text-slate-800">Thong ke diem danh theo lop</h3>
-            <p className="text-sm text-slate-500">Chon lop va phien de xem ti le diem danh va danh sach sinh vien.</p>
+            <h3 className="text-xl font-bold text-slate-800">Thống kê điểm danh theo lớp</h3>
+            <p className="text-sm text-slate-500">Chọn lớp và phiên để xem tỷ lệ điểm danh và danh sách sinh viên.</p>
           </div>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -515,7 +520,7 @@ const QRAttendanceManager = () => {
               onChange={(event) => setClassFilter(event.target.value)}
               className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-primary-500"
             >
-              <option value="">Tat ca cac lop</option>
+              <option value="">Tất cả các lớp</option>
               {classes.map((classItem) => (
                 <option key={classItem.name} value={classItem.name}>
                   {classItem.name}
@@ -529,7 +534,7 @@ const QRAttendanceManager = () => {
               className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-primary-500"
               disabled={sessions.length === 0}
             >
-              <option value="">Chon phien</option>
+              <option value="">Chọn phiên</option>
               {sessions.map((session) => (
                 <option key={session.id} value={session.id}>
                   [{session.class_id}] {session.title} - {new Date(session.sessionDate).toLocaleDateString('vi-VN')}
@@ -542,12 +547,12 @@ const QRAttendanceManager = () => {
         {sessionsLoading ? (
           <div className="rounded-3xl border border-slate-100 bg-slate-50 py-16 text-center text-slate-400">
             <Loader2 className="mx-auto mb-3 h-6 w-6 animate-spin" />
-            Dang tai danh sach phien diem danh...
+            Đang tải danh sách phiên điểm danh...
           </div>
         ) : sessions.length === 0 ? (
           <div className="rounded-3xl border-2 border-dashed border-slate-200 py-16 text-center text-slate-400">
             <QrCode className="mx-auto mb-4 h-16 w-16 opacity-20" />
-            <p className="font-medium">Chua co phien diem danh nao phu hop bo loc hien tai</p>
+            <p className="font-medium">Chưa có phiên điểm danh nào phù hợp bộ lọc hiện tại</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
@@ -560,7 +565,7 @@ const QRAttendanceManager = () => {
                         {selectedSession.class_id}
                       </div>
                       <h4 className="text-xl font-bold text-slate-800">{selectedSession.title}</h4>
-                      <p className="mt-1 text-sm text-slate-500">{selectedSession.subject || 'Khong co mon hoc'}</p>
+                      <p className="mt-1 text-sm text-slate-500">{selectedSession.subject || 'Không có môn học'}</p>
                     </div>
                     <div
                       className={`rounded-full px-3 py-1 text-xs font-bold ${
@@ -569,7 +574,7 @@ const QRAttendanceManager = () => {
                           : 'border border-slate-200 bg-white text-slate-500'
                       }`}
                     >
-                      {selectedSession.isActive ? 'Dang hoat dong' : 'Da ket thuc'}
+                      {selectedSession.isActive ? 'Đang hoạt động' : 'Đã kết thúc'}
                     </div>
                   </div>
 
@@ -580,17 +585,31 @@ const QRAttendanceManager = () => {
                     </p>
                     <p className="flex items-center gap-2">
                       <MapPin size={14} className="text-primary-500" />
-                      Ban kinh cho phep: {selectedSession.radius}m
+                      Bán kính cho phép: {selectedSession.radius}m
                     </p>
                     <p className="flex items-center gap-2">
                       <Users size={14} className="text-primary-500" />
-                      Da diem danh: {selectedSession.attendeeCount}
+                      Đã điểm danh: {selectedSession.attendeeCount}
                     </p>
                   </div>
 
                   {selectedSession.isActive && (
-                    <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-inner">
-                      <QRCodeSVG value={selectedSession.qrToken} size={190} level="H" includeMargin />
+                    <div 
+                      onClick={() => setIsFullscreenQR(true)}
+                      className="group relative mt-5 cursor-zoom-in rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-inner transition-all hover:border-primary-300 hover:bg-slate-50"
+                    >
+                      <QRCodeSVG 
+                        value={`${window.location.origin}/qr/${selectedSession.qrToken}`} 
+                        size={190} 
+                        level="H" 
+                        includeMargin 
+                        className="mx-auto"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-white/60 opacity-0 transition-opacity group-hover:opacity-100 rounded-2xl">
+                        <span className="flex items-center gap-2 text-sm font-black text-primary-600 uppercase italic">
+                          <QrCode size={18} /> Phóng to
+                        </span>
+                      </div>
                     </div>
                   )}
 
@@ -601,7 +620,7 @@ const QRAttendanceManager = () => {
                       className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700"
                     >
                       <RefreshCw size={14} />
-                      Lam moi
+                      Làm mới
                     </button>
                     {selectedSession.isActive && (
                       <button
@@ -610,7 +629,7 @@ const QRAttendanceManager = () => {
                         className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700"
                       >
                         <XCircle size={14} />
-                        Ket thuc
+                        Kết thúc
                       </button>
                     )}
                   </div>
@@ -622,85 +641,152 @@ const QRAttendanceManager = () => {
               {summaryLoading || !summary ? (
                 <div className="rounded-[2rem] border border-slate-100 bg-slate-50 py-20 text-center text-slate-400">
                   <Loader2 className="mx-auto mb-3 h-6 w-6 animate-spin" />
-                  Dang tai thong ke phien...
+                  Đang tải thống kê phiên...
                 </div>
               ) : (
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:grid-cols-4">
-                    <div className="rounded-3xl border border-emerald-100 bg-emerald-50 p-4">
-                      <p className="text-xs font-bold uppercase tracking-wider text-emerald-600">Da diem danh</p>
+                    <div className="group rounded-3xl border border-emerald-100 bg-emerald-50 p-5 transition-all hover:shadow-md hover:shadow-emerald-100/50">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold uppercase tracking-wider text-emerald-600">Đã điểm danh</p>
+                        <CheckCircle2 size={18} className="text-emerald-500" />
+                      </div>
                       <p className="mt-2 text-3xl font-black text-emerald-700">{summary.stats.checkedIn}</p>
                     </div>
-                    <div className="rounded-3xl border border-red-100 bg-red-50 p-4">
-                      <p className="text-xs font-bold uppercase tracking-wider text-red-600">Chua diem danh</p>
+                    <div className="group rounded-3xl border border-red-100 bg-red-50 p-5 transition-all hover:shadow-md hover:shadow-red-100/50">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold uppercase tracking-wider text-red-600">Chưa điểm danh</p>
+                        <XCircle size={18} className="text-red-500" />
+                      </div>
                       <p className="mt-2 text-3xl font-black text-red-700">{summary.stats.absentCount}</p>
                     </div>
-                    <div className="rounded-3xl border border-blue-100 bg-blue-50 p-4">
-                      <p className="text-xs font-bold uppercase tracking-wider text-blue-600">Tong sinh vien</p>
+                    <div className="group rounded-3xl border border-blue-100 bg-blue-50 p-5 transition-all hover:shadow-md hover:shadow-blue-100/50">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold uppercase tracking-wider text-blue-600">Tổng sinh viên</p>
+                        <Users size={18} className="text-blue-500" />
+                      </div>
                       <p className="mt-2 text-3xl font-black text-blue-700">{summary.stats.totalStudents}</p>
                     </div>
-                    <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                      <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Ty le</p>
+                    <div className="group rounded-3xl border border-slate-200 bg-slate-50 p-5 transition-all hover:shadow-md hover:shadow-slate-200/50">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Tỷ lệ</p>
+                        <RefreshCw size={18} className="text-slate-400" />
+                      </div>
                       <p className="mt-2 text-3xl font-black text-slate-700">{summary.stats.attendanceRate}%</p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
-                    <div className="rounded-3xl border border-slate-100 bg-white p-4">
-                      <p className="flex items-center gap-2 text-sm font-bold text-slate-700">
-                        <ShieldCheck size={16} className="text-primary-500" />
-                        Ho so lan dau
-                      </p>
-                      <p className="mt-2 text-2xl font-black text-slate-800">{summary.stats.baselineCreatedCount}</p>
-                      <p className="text-sm text-slate-500">So sinh vien duoc luu moc IP/toa do lan dau trong phien nay.</p>
+                    <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition-all hover:border-primary-200">
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-full bg-primary-50 p-2 text-primary-600">
+                          <ShieldCheck size={20} />
+                        </div>
+                        <p className="text-sm font-bold text-slate-700">Hồ sơ lần đầu</p>
+                      </div>
+                      <p className="mt-3 text-2xl font-black text-slate-800">{summary.stats.baselineCreatedCount}</p>
+                      <p className="mt-1 text-[11px] leading-relaxed text-slate-500">Sinh viên được lưu mốc IP/tọa độ lần đầu.</p>
                     </div>
-                    <div className="rounded-3xl border border-slate-100 bg-white p-4">
-                      <p className="text-sm font-bold text-slate-700">Xac minh IP</p>
-                      <p className="mt-2 text-2xl font-black text-slate-800">{summary.stats.verifiedIpCount}</p>
-                      <p className="text-sm text-slate-500">So lan diem danh hop le theo IP ho so.</p>
+
+                    <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition-all hover:border-sky-200">
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-full bg-sky-50 p-2 text-sky-600">
+                          <Globe size={20} />
+                        </div>
+                        <p className="text-sm font-bold text-slate-700">Xác minh IP</p>
+                      </div>
+                      <p className="mt-3 text-2xl font-black text-slate-800">{summary.stats.verifiedIpCount}</p>
+                      <p className="mt-1 text-[11px] leading-relaxed text-slate-500">Hợp lệ theo địa chỉ IP mạng.</p>
                     </div>
-                    <div className="rounded-3xl border border-slate-100 bg-white p-4">
-                      <p className="text-sm font-bold text-slate-700">Xac minh vi tri</p>
-                      <p className="mt-2 text-2xl font-black text-slate-800">{summary.stats.verifiedLocationCount}</p>
-                      <p className="text-sm text-slate-500">So lan diem danh hop le theo toa do ho so.</p>
+
+                    <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition-all hover:border-indigo-200">
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-full bg-indigo-50 p-2 text-indigo-600">
+                          <MapPin size={20} />
+                        </div>
+                        <p className="text-sm font-bold text-slate-700">Xác minh vị trí</p>
+                      </div>
+                      <p className="mt-3 text-2xl font-black text-slate-800">{summary.stats.verifiedLocationCount}</p>
+                      <p className="mt-1 text-[11px] leading-relaxed text-slate-500">Hợp lệ theo tọa độ GPS hồ sơ.</p>
                     </div>
-                    <div className="rounded-3xl border border-amber-100 bg-amber-50 p-4">
-                      <p className="text-sm font-bold text-amber-700">Canh bao khoang cach</p>
-                      <p className="mt-2 text-2xl font-black text-amber-800">{summary.stats.suspiciousCheckIns || 0}</p>
-                      <p className="text-sm text-amber-700">Lan check-in sat bien ban kinh (&gt;= 85%).</p>
+
+                    <div className="rounded-3xl border border-amber-100 bg-amber-50/50 p-5 shadow-sm transition-all hover:border-amber-300">
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-full bg-amber-100 p-2 text-amber-600">
+                          <AlertTriangle size={20} />
+                        </div>
+                        <p className="text-sm font-bold text-amber-800">Khoảng cách</p>
+                      </div>
+                      <p className="mt-3 text-2xl font-black text-amber-900">{summary.stats.suspiciousCheckIns || 0}</p>
+                      <p className="mt-1 text-[11px] leading-relaxed text-amber-700">Check-in sát biên bán kính (&gt;= 85%).</p>
                     </div>
-                    <div className="rounded-3xl border border-rose-100 bg-rose-50 p-4">
-                      <p className="text-sm font-bold text-rose-700">Thu nghiem gian lan</p>
-                      <p className="mt-2 text-2xl font-black text-rose-800">{summary.stats.riskAttempts || 0}</p>
-                      <p className="text-sm text-rose-700">So lan he thong tu choi do rui ro QR.</p>
+
+                    <div className="rounded-3xl border border-rose-100 bg-rose-50/50 p-5 shadow-sm transition-all hover:border-rose-300">
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-full bg-rose-100 p-2 text-rose-600">
+                          <ShieldAlert size={20} />
+                        </div>
+                        <p className="text-sm font-bold text-rose-800">Rủi ro QR</p>
+                      </div>
+                      <p className="mt-3 text-2xl font-black text-rose-900">{summary.stats.riskAttempts || 0}</p>
+                      <p className="mt-1 text-[11px] leading-relaxed text-rose-700">Hệ thống từ chối do dấu hiệu gian lận.</p>
                     </div>
                   </div>
 
                   {Array.isArray(summary.riskWarnings) && summary.riskWarnings.length > 0 && (
                     <div className="overflow-hidden rounded-[2rem] border border-rose-100 bg-white shadow-sm">
                       <div className="border-b border-rose-100 bg-rose-50 px-5 py-4">
-                        <h4 className="font-bold text-rose-700">Canh bao gian lan gan day</h4>
+                        <h4 className="font-bold text-rose-700">Cảnh báo gian lận gần đây</h4>
                       </div>
                       <div className="max-h-72 overflow-y-auto">
                         {summary.riskWarnings.map((warning) => {
                           const details = warning.details || {};
-                          const reason =
-                            typeof details.reason === 'string' ? details.reason : 'QR_RISK';
-                          const severity =
-                            typeof details.severity === 'string' ? details.severity : 'MEDIUM';
+                          const reason = typeof details.reason === 'string' ? details.reason : 'QR_RISK';
+                          const severity = typeof details.severity === 'string' ? details.severity : 'MEDIUM';
+
+                          const reasonMap: Record<string, string> = {
+                            OUTSIDE_SESSION_RADIUS: 'Ngoài bán kính phiên',
+                            IP_MISMATCH: 'Sai lệch IP hồ sơ',
+                            LOCATION_MISMATCH: 'Sai lệch vị trí hồ sơ',
+                            STALE_TOKEN: 'Mã QR hết hạn',
+                            DEVICE_ID_MISMATCH: 'Sai lệch thiết bị',
+                            QR_RISK: 'Rủi ro bảo mật QR',
+                          };
+                          const severityMap: Record<string, string> = {
+                            LOW: 'THẤP',
+                            MEDIUM: 'TRUNG BÌNH',
+                            HIGH: 'CAO',
+                            CRITICAL: 'NGHIÊM TRỌNG',
+                          };
+
+                          const reasonDisplay = reasonMap[reason] || reason;
+                          const severityDisplay = severityMap[severity] || severity;
 
                           return (
-                            <div key={warning.id} className="border-b border-slate-100 px-5 py-4 text-sm last:border-b-0">
-                              <div className="flex flex-wrap items-center justify-between gap-2">
-                                <p className="font-bold text-slate-800">{reason}</p>
-                                <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-black text-rose-700">
-                                  {severity}
-                                </span>
+                            <div key={warning.id} className="group border-b border-rose-100/50 px-5 py-4 transition-all hover:bg-rose-50/30 last:border-b-0">
+                              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 font-bold text-rose-700">
+                                    {warning.actor?.name?.charAt(0) || '?'}
+                                  </div>
+                                  <div>
+                                    <p className="font-bold text-slate-900">{warning.actor?.name || 'Không xác định'}</p>
+                                    <p className="text-[11px] font-medium text-slate-500">MSSV: {warning.actor?.student_code || '---'}</p>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex flex-wrap items-center gap-2 sm:text-right">
+                                  <div className="flex flex-col sm:items-end">
+                                    <p className="text-[13px] font-bold text-rose-600">{reasonDisplay}</p>
+                                    <p className="text-[10px] font-medium text-slate-400">
+                                      {new Date(warning.createdAt).toLocaleString('vi-VN')}
+                                    </p>
+                                  </div>
+                                  <span className="rounded-full bg-rose-100 px-3 py-1 text-[10px] font-black tracking-wider text-rose-700">
+                                    {severityDisplay}
+                                  </span>
+                                </div>
                               </div>
-                              <p className="mt-1 text-xs text-slate-500">
-                                {new Date(warning.createdAt).toLocaleString('vi-VN')}
-                                {warning.actor?.name ? ` - ${warning.actor.name}` : ''}
-                              </p>
                             </div>
                           );
                         })}
@@ -710,16 +796,16 @@ const QRAttendanceManager = () => {
 
                   <div className="overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-sm">
                     <div className="border-b border-slate-100 px-5 py-4">
-                      <h4 className="font-bold text-slate-800">Danh sach sinh vien cua lop {summary.session.class_id}</h4>
+                      <h4 className="font-bold text-slate-800">Danh sách sinh viên của lớp {summary.session.class_id}</h4>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="min-w-full text-sm">
                         <thead className="bg-slate-50">
                           <tr>
-                            <th className="px-4 py-3 text-left font-bold text-slate-500">Sinh vien</th>
-                            <th className="px-4 py-3 text-left font-bold text-slate-500">Trang thai</th>
-                            <th className="px-4 py-3 text-left font-bold text-slate-500">Thoi gian</th>
-                            <th className="px-4 py-3 text-left font-bold text-slate-500">Xac minh</th>
+                            <th className="px-4 py-3 text-left font-bold text-slate-500">Sinh viên</th>
+                            <th className="px-4 py-3 text-left font-bold text-slate-500">Trạng thái</th>
+                            <th className="px-4 py-3 text-left font-bold text-slate-500">Thời gian</th>
+                            <th className="px-4 py-3 text-left font-bold text-slate-500">Xác minh</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -735,12 +821,12 @@ const QRAttendanceManager = () => {
                                 {student.attendance ? (
                                   <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
                                     <CheckCircle2 size={14} />
-                                    Da diem danh
+                                    Đã điểm danh
                                   </span>
                                 ) : (
                                   <span className="inline-flex items-center gap-2 rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-700">
                                     <XCircle size={14} />
-                                    Chua diem danh
+                                    Chưa điểm danh
                                   </span>
                                 )}
                               </td>
@@ -752,23 +838,23 @@ const QRAttendanceManager = () => {
                               <td className="px-4 py-4">
                                 {student.attendance ? (
                                   <div className="space-y-1 text-xs text-slate-600">
-                                    <p>{student.attendance.baselineCreated ? 'Lan dau luu ho so' : 'Khop ho so da luu'}</p>
-                                    <p>IP: {student.attendance.verifiedIp ? 'Hop le' : 'Khong hop le'}</p>
-                                    <p>Vi tri: {student.attendance.verifiedLocation ? 'Hop le' : 'Khong hop le'}</p>
+                                    <p>{student.attendance.baselineCreated ? 'Lần đầu lưu hồ sơ' : 'Khớp hồ sơ đã lưu'}</p>
+                                    <p>IP: {student.attendance.verifiedIp ? 'Hợp lệ' : 'Không hợp lệ'}</p>
+                                    <p>Vị trí: {student.attendance.verifiedLocation ? 'Hợp lệ' : 'Không hợp lệ'}</p>
                                     {student.attendance.sessionDistance !== null && student.attendance.sessionDistance !== undefined && (
-                                      <p>Lech tam phien: {Math.round(student.attendance.sessionDistance)}m</p>
+                                      <p>Lệch tâm phiên: {Math.round(student.attendance.sessionDistance)}m</p>
                                     )}
                                     {student.attendance.profileDistance !== null && student.attendance.profileDistance !== undefined && (
-                                      <p>Lech ho so: {Math.round(student.attendance.profileDistance)}m</p>
+                                      <p>Lệch hồ sơ: {Math.round(student.attendance.profileDistance)}m</p>
                                     )}
                                   </div>
                                 ) : student.profile ? (
                                   <div className="space-y-1 text-xs text-slate-500">
-                                    <p>Da co ho so xac minh</p>
-                                    <p>Check-in hop le: {student.profile.totalVerifiedCheckIns}</p>
+                                    <p>Đã có hồ sơ xác minh</p>
+                                    <p>Check-in hợp lệ: {student.profile.totalVerifiedCheckIns}</p>
                                   </div>
                                 ) : (
-                                  <span className="text-xs italic text-slate-400">Chua co ho so QR</span>
+                                  <span className="text-xs italic text-slate-400">Chưa có hồ sơ QR</span>
                                 )}
                               </td>
                             </tr>
@@ -784,6 +870,43 @@ const QRAttendanceManager = () => {
         )}
       </div>
     </div>
+    
+    {/* Fullscreen QR Modal */}
+    {isFullscreenQR && selectedSession && (
+      <div 
+        className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-900/95 backdrop-blur-2xl p-6 transition-all"
+        onClick={() => setIsFullscreenQR(false)}
+      >
+        <button 
+          className="absolute right-8 top-8 rounded-full bg-white/10 p-3 text-white transition-all hover:bg-white/20"
+          onClick={() => setIsFullscreenQR(false)}
+        >
+          <XCircle size={32} />
+        </button>
+        
+        <div className="mb-8 text-center text-white">
+          <h2 className="text-4xl font-black tracking-tight uppercase italic">{selectedSession.title}</h2>
+          <p className="mt-2 text-xl font-medium text-slate-300">Quét mã để điểm danh • {selectedSession.class_id}</p>
+        </div>
+
+        <div className="relative rounded-[3rem] bg-white p-10 shadow-[0_0_80px_rgba(59,130,246,0.3)] ring-12 ring-white/10">
+          <QRCodeSVG 
+            value={`${window.location.origin}/qr/${selectedSession.qrToken}`} 
+            size={Math.min(window.innerWidth - 100, window.innerHeight - 300, 500)} 
+            level="H" 
+            includeMargin 
+          />
+          <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-primary-600 px-6 py-2 text-sm font-black uppercase tracking-widest text-white shadow-xl shadow-primary-900/50">
+            QR Token: {selectedSession.qrToken.slice(0, 8)}...
+          </div>
+        </div>
+
+        <p className="mt-12 text-slate-400 font-bold uppercase tracking-widest animate-pulse">
+          Sinh viên ngồi cuối lớp có thể dùng Zoom 2x/4x để quét
+        </p>
+      </div>
+    )}
+    </>
   );
 };
 

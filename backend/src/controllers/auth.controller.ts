@@ -8,11 +8,12 @@ import { decrypt } from '../utils/crypto';
 import { logAudit } from '../utils/logger';
 
 const getJwtSecret = () => process.env.JWT_SECRET || 'secret';
+const EXPERIENCE_CLASS_ID = 'CNDT2411';
 
 const toSafeUser = (user: any) => ({
   id: user.id,
   username: user.username,
-  name: user.name,
+  name: user.role === 'STUDENT' && user.student ? user.student.name : user.name,
   email: user.email,
   phone: user.phone,
   role: String(user.role || '').toUpperCase(),
@@ -22,6 +23,7 @@ const toSafeUser = (user: any) => ({
   student: user.student ? {
     id: user.student.id,
     mssv: user.student.student_code,
+    name: user.student.name,
     birthday: decrypt(user.student.birthday),
     gender: decrypt(user.student.gender),
     id_card: decrypt(user.student.id_card),
@@ -45,7 +47,7 @@ export const login = async (req: Request, res: Response) => {
       include: {
         student: {
           include: {
-            Renamedclass: {
+            class: {
               include: {
                 major: true
               }
@@ -105,6 +107,151 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
+export const register = async (req: Request, res: Response) => {
+  const name = String(req.body?.name || '').trim();
+  const usernameRaw = String(req.body?.username || '').trim();
+  const emailRaw = String(req.body?.email || '').trim().toLowerCase();
+  const password = String(req.body?.password || '');
+
+  if (!name || !usernameRaw || !emailRaw || !password) {
+    return res.status(400).json({ message: 'Name, username, email and password are required' });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ message: 'Password must be at least 6 characters' });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(emailRaw)) {
+    return res.status(400).json({ message: 'Invalid email format' });
+  }
+
+  const username = usernameRaw.toUpperCase();
+
+  try {
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { username },
+          { email: emailRaw },
+        ],
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+      },
+    });
+
+    if (existingUser) {
+      if (existingUser.username === username) {
+        return res.status(400).json({ message: 'Username already exists' });
+      }
+      if (existingUser.email === emailRaw) {
+        return res.status(400).json({ message: 'Email already exists' });
+      }
+    }
+
+    const existingStudent = await prisma.student.findFirst({
+      where: {
+        OR: [
+          { student_code: username },
+          { email: emailRaw },
+        ],
+      },
+      select: {
+        id: true,
+        student_code: true,
+        email: true,
+      },
+    });
+
+    if (existingStudent) {
+      if (existingStudent.student_code === username) {
+        return res.status(400).json({ message: 'Student code already exists' });
+      }
+      if (existingStudent.email === emailRaw) {
+        return res.status(400).json({ message: 'Email already exists' });
+      }
+    }
+
+    await (prisma as any).renamedclass.upsert({
+      where: { name: EXPERIENCE_CLASS_ID },
+      update: { updatedAt: new Date() },
+      create: {
+        name: EXPERIENCE_CLASS_ID,
+        updatedAt: new Date(),
+      },
+    });
+
+    const classSize = await prisma.student.count({
+      where: { class_id: EXPERIENCE_CLASS_ID },
+    });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const student = await prisma.student.create({
+      data: {
+        name,
+        student_code: username,
+        email: emailRaw,
+        class_id: EXPERIENCE_CLASS_ID,
+        order_number: classSize + 1,
+        updatedAt: new Date(),
+      },
+    });
+
+    let createdUser: any = null;
+    try {
+      createdUser = await prisma.user.create({
+        data: {
+          username,
+          password: hashedPassword,
+          name,
+          email: emailRaw,
+          role: 'STUDENT',
+          studentId: student.id,
+          class_id: EXPERIENCE_CLASS_ID,
+          updatedAt: new Date(),
+        },
+      });
+    } catch (userError) {
+      await prisma.student.delete({
+        where: { id: student.id },
+      });
+      throw userError;
+    }
+
+    await logAudit({
+      userId: createdUser.id,
+      action: 'TEMP_EXPERIENCE_REGISTER',
+      targetType: 'student',
+      targetId: String(student.id),
+      details: {
+        class_id: EXPERIENCE_CLASS_ID,
+        username,
+      },
+      req,
+    });
+
+    return res.status(201).json({
+      message: `Registration successful. You were assigned to class ${EXPERIENCE_CLASS_ID}`,
+      account: {
+        username,
+        class_id: EXPERIENCE_CLASS_ID,
+      },
+    });
+  } catch (error: any) {
+    console.error('Register error full details:', error);
+
+    if (error?.code === 'P2002') {
+      return res.status(400).json({ message: 'Account data already exists' });
+    }
+
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
 export const me = async (req: Request, res: Response) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
@@ -138,7 +285,7 @@ export const me = async (req: Request, res: Response) => {
       include: {
         student: {
           include: {
-            Renamedclass: {
+            class: {
               include: {
                 major: true
               }

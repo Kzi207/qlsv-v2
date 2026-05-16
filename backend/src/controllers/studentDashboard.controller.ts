@@ -12,7 +12,7 @@ export const getStudentDashboardStats = async (req: AuthRequest, res: Response) 
       where: { id: Number(studentId) },
       include: {
         grade: true,
-        Renamedclass: true,
+        class: true,
         trainingscore: {
           orderBy: { semester_id: 'desc' } as any,
           take: 1

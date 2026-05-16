@@ -487,6 +487,19 @@ exports.Prisma.ServicerequestScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.OnestopserviceScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  description: 'description',
+  icon: 'icon',
+  category: 'category',
+  color: 'color',
+  route: 'route',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.StudentattendanceprofileScalarFieldEnum = {
   id: 'id',
   student_id: 'student_id',
@@ -820,6 +833,15 @@ exports.Prisma.servicerequestOrderByRelevanceFieldEnum = {
   details: 'details'
 };
 
+exports.Prisma.onestopserviceOrderByRelevanceFieldEnum = {
+  title: 'title',
+  description: 'description',
+  icon: 'icon',
+  category: 'category',
+  color: 'color',
+  route: 'route'
+};
+
 exports.Prisma.studentattendanceprofileOrderByRelevanceFieldEnum = {
   firstIpAddress: 'firstIpAddress',
   lastIpAddress: 'lastIpAddress'
@@ -922,6 +944,7 @@ exports.Prisma.ModelName = {
   semester: 'semester',
   student: 'student',
   servicerequest: 'servicerequest',
+  onestopservice: 'onestopservice',
   studentattendanceprofile: 'studentattendanceprofile',
   studentaward: 'studentaward',
   subject: 'subject',

@@ -271,7 +271,7 @@ export const getMyCurriculum = async (req: AuthRequest, res: Response) => {
     const student = await prisma.student.findUnique({
       where: { id: Number(sId) },
       include: {
-        Renamedclass: {
+        class: {
           include: {
             major: {
               include: {
